@@ -1,12 +1,14 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Button } from "@mui/material";
 import VacancieCard from "../cards/vacancie-card";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { useState } from "react";
 import {AnimatePresence, motion} from "framer-motion";
+import { useRouter } from "next/navigation";
 
 const vacancies = [
   {
+    id: 1,
     title: "Desenvolvedor Frontend React",
     description:
       "Desenvolvimento de interfaces modernas e responsivas utilizando React e TypeScript.",
@@ -14,12 +16,14 @@ const vacancies = [
     level: "Pleno",
   },
   {
+    id: 2,
     title: "Desenvolvedor Backend Node.js",
     description: "Desenvolvimento de APIs RESTful e microsserviços em Node.js.",
     location: "Híbrido - São Paulo",
     level: "Sênior",
   },
   {
+    id: 3,
     title: "UX/UI Designer",
     description:
       "Design de interfaces e experiências de usuário para produtos digitais.",
@@ -27,12 +31,14 @@ const vacancies = [
     level: "Pleno",
   },
   {
+    id: 4,
     title: "Engenheiro de Dados",
     description: "Criação e manutenção de pipelines de dados escaláveis.",
     location: "Remoto",
     level: "Sênior",
   },
   {
+    id: 5,
     title: "Analista de QA",
     description:
       "Garantia de qualidade em aplicações web e mobile.",
@@ -40,6 +46,7 @@ const vacancies = [
     level: "Pleno",
   },
   {
+    id: 6,
     title: "Scrum Master",
     description:
       "Facilitação de cerimônias ágeis e gestão de times.",
@@ -47,12 +54,14 @@ const vacancies = [
     level: "Sênior",
   },
   {
+    id: 7,
     title: "DevOps Engineer",
     description: "Automatização de processos e infraestrutura como código.",
     location: "Remoto",
     level: "Pleno",
   },
   {
+    id: 8,
     title: "Product Owner",
     description:
       "Gestão de backlog e priorização de funcionalidades.",
@@ -60,6 +69,7 @@ const vacancies = [
     level: "Sênior",
   },
   {
+    id: 9,
     title: "Desenvolvedor Mobile Flutter",
     description: "Criação de aplicativos multiplataforma utilizando Flutter.",
     location: "Remoto",
@@ -71,6 +81,7 @@ const MotionBox = motion(Box);
 
 export default function VacanciesSection() {
   const [currentPage, setCurrentPage] = useState(0);
+  const router = useRouter();
   const itemsPerPage = 3;
 
   const handleNextPage = () => {

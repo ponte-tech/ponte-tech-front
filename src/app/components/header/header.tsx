@@ -6,6 +6,7 @@ import OutlinedWhiteButton from "../buttons/outlined-white";
 import { useEffect, useState } from "react";
 import HeaderMobile from "./header-mobile";
 import {scrollToElement} from "@/app/utils/scrollToElement";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
     const theme = useTheme();
@@ -13,6 +14,7 @@ export default function Header() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const isMobile = useMediaQuery("(min-width:1050px)");
     const [isClient, setIsClient] = useState(false);
+    const router = useRouter();
 
     useEffect(() => {
         setIsClient(true);
