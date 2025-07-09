@@ -111,18 +111,17 @@ export default function VagasPage() {
       sx={{
         bgcolor: '#f7f7f7',
         minHeight: '100vh',
+        maxWidth: '90vw',
+        margin: '0 auto',
         py: { xs: 2, sm: 3, md: 4, lg: 6 },
         position: 'relative',
       }}
     >
-      <Container maxWidth="xl" sx={{ px: { xs: 0, lg: 3 } }}>
+      <Container disableGutters maxWidth="xl">
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: {
-              xs: '1fr',
-              lg: '267px 1fr 420px'
-            },
+            gridTemplateColumns: { xs: '1fr', lg: '20% 45% 1fr' },
             gap: { xs: 2, md: 3.5, lg: 4 },
             alignItems: 'flex-start',
             width: '100%',
@@ -133,9 +132,7 @@ export default function VagasPage() {
             <Box
               sx={{
                 gridColumn: '1',
-                width: 267,
-                minWidth: 267,
-                maxWidth: 267,
+                width: "100%",
                 display: 'flex',
                 justifyContent: 'flex-start',
               }}
@@ -157,7 +154,7 @@ export default function VagasPage() {
             }}
           >
             {/* Search bar */}
-            <Box width="100%" sx={{ maxWidth: 832, mx: 'auto', mb: 2.5 }}>
+            <Box width="100%" sx={{ mx: 'auto', mb: 2.5 }}>
               <SearchSection />
             </Box>
 
@@ -176,9 +173,6 @@ export default function VagasPage() {
                 display="flex"
                 justifyContent="space-between"
                 alignItems="center"
-                px={3}
-                pt={3}
-                pb={2}
               >
                 <Typography
                   component="h2"
@@ -197,7 +191,7 @@ export default function VagasPage() {
                   />
                 </Box>
               </Box>
-              <Stack direction="row" spacing={3} px={3} pb={3} alignItems="stretch">
+              <Stack direction="row" overflow="scroll" spacing={3} px={3} pb={3} alignItems="stretch">
                 {highlightVacancies.map((vacancy) => (
                   <VacancyHighlightCard key={vacancy.title} {...vacancy} />
                 ))}
@@ -217,8 +211,6 @@ export default function VagasPage() {
                 display="flex"
                 justifyContent="space-between"
                 alignItems="center"
-                px={3}
-                pt={3}
                 pb={2}
               >
                 
