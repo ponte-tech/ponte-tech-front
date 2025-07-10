@@ -61,7 +61,7 @@ export default function VacancyCard({
         outline: 'none',
         transition: 'all 0.2s',
         '&:hover': {
-          boxShadow: '0 8px 32px 0 rgba(130,112,255,0.08)',
+          boxShadow: '0 8px 32px 0 rgba(43, 43, 43, 0.08)',
         },
         '&:focus': {
           outline: '2px solid #8270FF',

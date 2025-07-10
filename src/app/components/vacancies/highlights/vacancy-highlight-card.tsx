@@ -44,7 +44,7 @@ export default function VacancyHighlightCard({
         cursor: 'pointer',
         transition: 'box-shadow 0.18s',
         '&:hover': {
-          boxShadow: '0 6px 16px 0 rgba(123,97,255,0.10)',
+          boxShadow: '0 8px 32px 0 rgba(43, 43, 43, 0.08)',
         },
       }}
       tabIndex={0}
@@ -112,13 +112,12 @@ export default function VacancyHighlightCard({
       {/* Modalidade */}
       <Box
         sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          mt: 0.5,
           fontWeight: 500,
           fontSize: 13,
-          py: 0.5,
-          px: 1.5,
-          gap: 1.5,
-          display: 'inline-block',
-          mt: 1,
         }}
       >
         <img
@@ -136,11 +135,16 @@ export default function VacancyHighlightCard({
 
       {/* Publicação */}
       <Box
-        fontFamily="'Sora'"
-        fontWeight={300}
-        fontSize={13}
-        color="#888"
-        sx={{ mt: 0.5 }}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          mt: 0.5,
+          fontFamily: "'Sora'",
+          fontWeight: 300,
+          fontSize: 13,
+          color: '#888',
+        }}
       >
         <img
           src="./svg/calendar.svg"
