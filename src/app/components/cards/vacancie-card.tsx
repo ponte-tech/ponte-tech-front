@@ -2,6 +2,7 @@ import { Box, Typography } from "@mui/material";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import PersonIcon from "@mui/icons-material/Person";
 import ContainedPurpleButton from "../buttons/contened-purple";
+import { useRouter } from 'next/navigation';
 
 interface Vacancie {
   title: string;
@@ -12,6 +13,7 @@ interface Vacancie {
 
 export default function VacancieCard({ vacancie }: Readonly<{ vacancie: Vacancie }>) {
   const { title, description, location, level } = vacancie;
+  const   router = useRouter();
 
   return (
       <Box
@@ -98,7 +100,7 @@ export default function VacancieCard({ vacancie }: Readonly<{ vacancie: Vacancie
       </Box>
 
       {/* Botão */}
-      <ContainedPurpleButton width="100%">
+      <ContainedPurpleButton width="100%" onClick={() => router.push('/vagas')}>
         Candidatar-se
       </ContainedPurpleButton>
     </Box>

@@ -17,7 +17,7 @@ const mockVacancies: Vacancy[] = [
   {
     id: 1,
     title: "Desenvolvedor Full Stack",
-    description: "Estamos em busca de um desenvolvedor Full Stack...",
+    description: "Estamos em busca de um desenvolvedor Full Stack...Estamos em busca de um desenvolvedor Full Stack...Estamos em busca de um desenvolvedor Full Stack...Estamos em busca de um desenvolvedor Full Stack...",
     location: "Remoto",
     level: "Júnior",
     salary: "R$ 5.000,00 - R$ 10.000,00",

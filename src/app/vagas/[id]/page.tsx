@@ -260,6 +260,7 @@ Diferenciais:
           </Paper>
         </Container>
       </Box>
+      <Footer />
     </>
   );
 }
