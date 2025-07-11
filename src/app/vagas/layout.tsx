@@ -16,8 +16,6 @@ export default function VagasLayout({
   return (
     <Box
       sx={{
-        display: 'flex',
-        flexDirection: 'column',
         minHeight: '100vh',
         width: '100vw',
         overflowX: 'hidden',

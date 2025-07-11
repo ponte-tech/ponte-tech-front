@@ -165,7 +165,7 @@ const highlightVacancies = [
 
 export default function VagasPage() {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('xl'));
 
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
@@ -197,7 +197,7 @@ export default function VagasPage() {
       sx={{
          bgcolor: '#f7f7f7',
         minHeight: '100vh',
-        maxWidth: '90vw',
+        maxWidth: '100vw',
         margin: '0 auto',
         py: { xs: 2, sm: 3, md: 4, lg: 6 },
         position: 'relative',
@@ -207,7 +207,7 @@ export default function VagasPage() {
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', lg: '20% 50% 1fr' }, // Define colunas da grid
+            gridTemplateColumns: { xs: '1fr', lg: '20% 1fr 20%' }, // Define colunas da grid
             gap: { xs: 2, md: 3.5, lg: 4 }, // Espaço entre colunas
             width: '100%',
           }}
@@ -239,10 +239,7 @@ export default function VagasPage() {
             {/* Destaques com scroll responsivo */}
             <Box
               sx={{
-                borderRadius: 3,
-                boxShadow: '0px 2px 8px 0px rgba(44,39,56,0.02)',
                 width: '100%',
-                p: 0,
                 mb: 0,
                 minHeight: 180,
               }}
@@ -268,18 +265,23 @@ export default function VagasPage() {
               <Stack
                 direction="row"
                 spacing={3}
-                alignItems="stretch"
+                alignItems="center"
+                justifyContent="space-between"
                 sx={{
                   overflowX: { xs: 'auto', md: 'visible' },
                   width: '100%',
                   pt: 4,
                   pb: 2,
-                  px: { xs: 2, md: 0 },
+                  px: 2,
                   scrollSnapType: { xs: 'x mandatory', md: 'none' },
+                  "&::-webkit-scrollbar": { display: "none" }
+                  ,
                 }}
               >
                 {paginatedHighlights.map((vacancy) => (
-                  <Box key={vacancy.title} sx={{ scrollSnapAlign: { xs: 'start', md: 'none' } }}>
+                  <Box 
+                  key={vacancy.title} 
+                  sx={{ scrollSnapAlign: { xs: 'start', md: 'none' } }}>
                     <VacancyHighlightCard {...vacancy} />
                   </Box>
                 ))}
@@ -294,7 +296,7 @@ export default function VagasPage() {
                 width: '100%',
               }}
             >
-              <Box display="flex" justifyContent="space-between" alignItems="center" pb={2}>
+              <Box display="flex" justifyContent="space-between" alignItems="center" pb={3}>
                 <Typography component="h2" fontSize={18} fontWeight={600} fontFamily="'Sora', sans-serif" sx={{ m: 0 }}>
                   Todas as vagas
                 </Typography>
@@ -361,7 +363,7 @@ export default function VagasPage() {
       {/* FAB Detalhes mobile */}
       {isMobile && selectedVacancyId && (
         <Fab
-          color="secondary"
+          color="primary"
           aria-label="Ver detalhes da vaga"
           sx={{
             position: 'fixed',

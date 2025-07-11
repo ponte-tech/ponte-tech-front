@@ -35,8 +35,8 @@ export default function VacancyHighlightCard({
         borderRadius: 3,
         boxShadow: '0 2px 8px 0 rgba(44,39,56,0.02)',
         p: 2.5,
-        width: 240,
-        minHeight: 180,
+        width: 260,
+        minHeight: 200,
         display: 'flex',
         flexDirection: 'column',
         gap: 1,
@@ -88,12 +88,6 @@ export default function VacancyHighlightCard({
             fontSize={16}
             color="#222"
             lineHeight={1.2}
-            sx={{
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              maxWidth: 120,
-            }}
           >
             {title}
           </Typography>
@@ -116,7 +110,7 @@ export default function VacancyHighlightCard({
           alignItems: 'center',
           gap: 1,
           mt: 0.5,
-          fontWeight: 500,
+          fontWeight: 300,
           fontSize: 13,
         }}
       >
@@ -124,8 +118,8 @@ export default function VacancyHighlightCard({
           src="./svg/location.svg"
           alt=""
           style={{
-            width: 16,
-            height: 16,
+            width: 20,
+            height: 20,
             objectFit: 'contain',
           }}
           aria-hidden="true"
@@ -143,15 +137,14 @@ export default function VacancyHighlightCard({
           fontFamily: "'Sora'",
           fontWeight: 300,
           fontSize: 13,
-          color: '#888',
         }}
       >
         <img
           src="./svg/calendar.svg"
           alt=""
           style={{
-            width: 16,
-            height: 16,
+            width: 20,
+            height: 20,
             objectFit: 'contain',
           }}
           aria-hidden="true"

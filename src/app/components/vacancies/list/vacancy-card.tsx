@@ -1,10 +1,6 @@
 'use client';
 
 import { Box, Typography, Stack, Chip } from '@mui/material';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import PersonIcon from '@mui/icons-material/Person';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import WorkIcon from '@mui/icons-material/Work';
 
 export interface Vacancy {
   id: number;
@@ -70,7 +66,7 @@ export default function VacancyCard({
       }}
     >
       {/* HEADER */}
-      <Stack direction="row" spacing={2} alignItems="center" mb={1}>
+      <Stack direction="row" spacing={1} alignItems="center" >
         <img
           src="./svg/code-icon.svg"
           alt=""
@@ -84,22 +80,21 @@ export default function VacancyCard({
         <Typography
           fontFamily="'Sora', sans-serif"
           fontWeight={600}
-          fontSize={22}
+          fontSize={20}
           color="#232323"
           sx={{ lineHeight: 1.1 }}
         >
           {title}
         </Typography>
       </Stack>
-           {/* DESCRIÇÃO */}
+           {/* Descrição */}
       <Typography
         fontFamily="'Sora', sans-serif"
         color="#232323"
         fontSize={16}
-        lineHeight={1.35}
+        lineHeight={1.1}
         sx={{
           mb: 1.2,
-          maxWidth: '98%',
           display: '-webkit-box',
           WebkitLineClamp: 2,
           WebkitBoxOrient: 'vertical',
@@ -109,7 +104,7 @@ export default function VacancyCard({
         {description}
       </Typography>
 
-      {/* INFOS */}
+      {/* Infos */}
       <Stack direction="row" spacing={2.5} flexWrap="wrap" alignItems="center">
         <Stack direction="row" spacing={0.8} alignItems="center">
           <img
