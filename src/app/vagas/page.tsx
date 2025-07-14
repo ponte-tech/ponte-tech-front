@@ -197,17 +197,17 @@ export default function VagasPage() {
       sx={{
          bgcolor: '#f7f7f7',
         minHeight: '100vh',
-        maxWidth: '100vw',
+        maxWidth: '90vw',
         margin: '0 auto',
         py: { xs: 2, sm: 3, md: 4, lg: 6 },
         position: 'relative',
       }}
     >
-      <Container disableGutters maxWidth="xl">
+      <Container disableGutters maxWidth={false}>
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', lg: '20% 1fr 20%' }, // Define colunas da grid
+            gridTemplateColumns: { xs: '1fr', lg: '20% 2fr 1fr' }, // Define colunas da grid
             gap: { xs: 2, md: 3.5, lg: 4 }, // Espaço entre colunas
             width: '100%',
           }}

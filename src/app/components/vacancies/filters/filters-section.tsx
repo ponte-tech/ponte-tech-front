@@ -90,9 +90,7 @@ export default function FiltersSection({ onFiltroChange }: FiltersSectionProps) 
       aria-label="Filtros de busca"
       sx={{
         bgcolor: '#FEFEFE',
-        width: { xs: '100%', md: 267 },
-        minWidth: 219,
-        maxWidth: 267,
+        width: '100%',
         p: { xs: '32px 16px', md: '32px 24px' },
         borderRadius: '16px',
         boxShadow: 1,
