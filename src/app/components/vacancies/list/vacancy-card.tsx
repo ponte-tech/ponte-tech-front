@@ -44,26 +44,23 @@ export default function VacancyCard({
           onSelect?.();
         }
       }}
-      sx={{
-        p: { xs: 2, sm: 3 },
-        bgcolor: '#FFF',
-        borderRadius: '16px',
-        boxShadow: '0 4px 24px 0 rgba(0,0,0,0.04)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 2,
-        cursor: 'pointer',
-        border: isSelected ? '2px solid #8270FF' : '2px solid transparent',
-        outline: 'none',
-        transition: 'all 0.2s',
-        '&:hover': {
+        sx={{
+          p: { xs: 2, sm: 3 },
+          bgcolor: '#FFF',
+          borderRadius: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
+          cursor: 'pointer',
+          transition: 'box-shadow 0.18s',
+          '&:hover': {
           boxShadow: '0 8px 32px 0 rgba(43, 43, 43, 0.08)',
         },
-        '&:focus': {
-          outline: '2px solid #8270FF',
-        },
-        minWidth: 320,
-      }}
+          border: isSelected ? '2px solid #8270FF' : '2px solid transparent',
+          outline: 'none',
+            
+          
+        }}
     >
       {/* HEADER */}
       <Stack direction="row" spacing={1} alignItems="center" >

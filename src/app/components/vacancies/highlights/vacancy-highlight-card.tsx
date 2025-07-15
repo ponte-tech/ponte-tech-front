@@ -23,7 +23,7 @@ export default function VacancyHighlightCard({
   const router = useRouter();
 
   const handleViewDetails = () => {
-    router.push(`/vaga/${id}`);
+    router.push(`/vagas/${id}`);
     onViewDetails?.();
   };
 
@@ -35,8 +35,8 @@ export default function VacancyHighlightCard({
         borderRadius: 3,
         boxShadow: '0 2px 8px 0 rgba(44,39,56,0.02)',
         p: 2.5,
-        width: 260,
-        minHeight: 200,
+        width: 240,
+        minHeight: 180,
         display: 'flex',
         flexDirection: 'column',
         gap: 1,

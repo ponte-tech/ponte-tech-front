@@ -19,14 +19,20 @@ export default function VagasLayout({
         minHeight: '100vh',
         width: '100vw',
         overflowX: 'hidden',
-        bgcolor: '#f9f5ff', 
+        bgcolor: '#f7f7f7', 
       }}
     >
       <Header />
       <Box component="main" sx={{ flexGrow: 1, pt: 8 }}>
         {children}
       </Box>
-      <Footer />
+      <Box
+        sx={{ 
+          width: '100vw',
+          bgcolor: '#f9f5ff'
+         }}>
+        <Footer />
+      </Box>
     </Box>
   );
 }

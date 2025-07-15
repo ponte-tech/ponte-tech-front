@@ -120,45 +120,52 @@ const mockVacancies: Vacancy[] = [
 // Vacancies em destaque
 const highlightVacancies = [
   {
+    id: 1,
     title: "UX/UI design",
     category: "Design",
     location: "Remoto",
     publishedDate: "Publicado há 3 dias",
   },
   {
+    id: 2,
     title: "Dev fullstack",
     category: "Back End",
     location: "Remoto",
     publishedDate: "Publicado há 3 dias",
   },
   {
+    id: 3,
     title: "Product Owner",
     category: "Gestão",
     location: "Híbrido",
     publishedDate: "Publicado há 2 dias",
   },
   {
+    id: 4,
     title: "UX/UI design2",
     category: "Design",
     location: "Remoto",
     publishedDate: "Publicado há 3 dias",
   },
   {
+    id: 5,
     title: "Dev fullstack2",
     category: "Back End",
     location: "Remoto",
     publishedDate: "Publicado há 3 dias",
   },
   {
+    id: 6,
     title: "Product Owner2",
     category: "Gestão",
     location: "Híbrido",
-    publishedDate: "Publicado há 2 dias",
+    publishedDate: "Publicado há 3 dias",
   },
   {
+    id: 7,
     title: "Product Owner 3",
     category: "Back end",
-    location: "Hibrido",
+    location: "Híbrido",
     publishedDate: "Publicado há 3 dias",
   },
 ];
@@ -173,29 +180,38 @@ export default function VagasPage() {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [highlightPage, setHighlightPage] = useState(1);
 
-  const vacanciesPerPage = 3;
+  const vacanciesPerPage = 4;
   const totalVacancyPages = Math.ceil(mockVacancies.length / vacanciesPerPage);
-  const startVacancyIndex = (paginaAtual - 1) * vacanciesPerPage;
-  const paginatedVacancies = mockVacancies.slice(startVacancyIndex, startVacancyIndex + vacanciesPerPage);
+  const paginatedVacancies = mockVacancies.slice(
+    (paginaAtual - 1) * vacanciesPerPage,
+    paginaAtual * vacanciesPerPage
+  );
 
   const highlightPerPage = 3;
   const totalHighlightPages = Math.ceil(highlightVacancies.length / highlightPerPage);
-  const startHighlight = (highlightPage - 1) * highlightPerPage;
-  const paginatedHighlights = highlightVacancies.slice(startHighlight, startHighlight + highlightPerPage);
+  const paginatedHighlights = highlightVacancies.slice(
+    (highlightPage - 1) * highlightPerPage,
+    highlightPage * highlightPerPage
+  );
 
   const selectedVacancy = mockVacancies.find(v => v.id === selectedVacancyId);
 
-  const handleVacancySelect = (vacancyId: number) => {
+  const handleVacancySelect = (vacancyId?: number) => {
+  if (selectedVacancyId === vacancyId) {
+    setSelectedVacancyId(undefined);
+    setMobileDetailsOpen(false);
+  } else {
     setSelectedVacancyId(vacancyId);
     if (isMobile) setMobileDetailsOpen(true);
-  };
+  }
+};
+
 
   return (
-    // Container principal da página
     <Box
       component="main"
       sx={{
-         bgcolor: '#f7f7f7',
+        bgcolor: '#f7f7f7',
         minHeight: '100vh',
         maxWidth: '90vw',
         margin: '0 auto',
@@ -203,197 +219,176 @@ export default function VagasPage() {
         position: 'relative',
       }}
     >
-      <Container disableGutters maxWidth={false}>
+    <Container
+      disableGutters
+      maxWidth={false}
+      sx={{
+        mx: 'auto',
+        display: 'flex',
+        flexDirection: { xs: 'column', lg: 'row' },
+        gap: { xs: 3.5, md: 4 },
+      }}
+    >
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', lg: 'row' },
+          gap: { xs: 3.5, md: 4 },
+        }}
+      >
+        {/* Filtros - Desktop */}
+        {!isMobile && (
+          <Box sx={{ flex: { lg: '1 0 20%' } }}>
+            <FiltersSection onFiltroChange={() => {}} />
+          </Box>
+        )}
+
+        {/* Coluna Central */}
         <Box
           sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', lg: '20% 2fr 1fr' }, // Define colunas da grid
-            gap: { xs: 2, md: 3.5, lg: 4 }, // Espaço entre colunas
+            flex: '2 1 auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 3.5,
             width: '100%',
+            px: { xs: 0 },
           }}
         >
-          {/* Sidebar de filtros (desktop) */}
-          {!isMobile && (
-            <Box sx={{ gridColumn: '1', width: "100%", display: 'flex', justifyContent: 'flex-start' }}>
-              <FiltersSection onFiltroChange={() => {}} />
-            </Box>
-          )}
+          {/* Busca */}
+          <Box sx={{ width: '100%' }}>
+            <SearchSection />
+          </Box>
 
-          {/* Coluna central (busca, destaques, vagas) */}
+          {/* Destaques */}
           <Box
             sx={{
-              gridColumn: { xs: '1', lg: '2' },
-              minWidth: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 3.5,
-              alignItems: 'stretch',
+              width: '100%',
+              minHeight: 180,
+              px: { xs: 1.5, sm: 2, md: 0 },
+              overflowX: { xs: 'auto', md: 'visible' },
+            }}
+          >
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Typography component="h2" fontSize={18} fontWeight={700} fontFamily="'Sora', sans-serif">
+                Vagas em destaque
+              </Typography>
+              <Pagination
+                currentPage={highlightPage}
+                totalPages={totalHighlightPages}
+                onPageChange={setHighlightPage}
+              />
+            </Box>
+            <Stack
+              direction="row"
+              spacing={3}
+              alignItems="center"
+              sx={{
+                overflowX: { xs: 'auto', xl: 'visible' },
+                width: '100%',
+                pt: 3,
+                pb: 1,
+                px: { xs: 2, md: 0 },
+                scrollSnapType: { xs: 'x mandatory' },
+              }}
+            >
+              {paginatedHighlights.map((vacancy) => (
+                <Box
+                  key={vacancy.title}
+                  sx={{
+                    scrollSnapAlign: { xs: 'start', md: 'none' },
+                    flexShrink: 0,
+                  }}
+                >
+                  <VacancyHighlightCard {...vacancy} />
+                </Box>
+              ))}
+            </Stack>
+          </Box>
+
+          {/* Lista de vagas */}
+          <Box
+            sx={{
+              borderRadius: 3,
+              boxShadow: '0px 2px 8px rgba(44,39,56,0.02)',
               width: '100%',
             }}
           >
-            {/* Barra de busca */}
-            <Box width="100%" sx={{ mx: 'auto', mb: 2.5 }}>
-              <SearchSection />
+            <Box display="flex" justifyContent="space-between" alignItems="center" pb={3}>
+              <Typography component="h2" fontSize={18} fontWeight={600} fontFamily="'Sora', sans-serif">
+                Todas as vagas
+              </Typography>
+              <Typography fontSize={14} color="#888" fontWeight={400}>
+                {mockVacancies.length} vagas disponíveis
+              </Typography>
             </Box>
 
-            {/* Destaques com scroll responsivo */}
-            <Box
-              sx={{
-                width: '100%',
-                mb: 0,
-                minHeight: 180,
-              }}
-            >
-              <Box display="flex" justifyContent="space-between" alignItems="center">
-                <Typography
-                  component="h2"
-                  fontSize={18}
-                  fontWeight={700}
-                  fontFamily="'Sora', sans-serif"
-                  sx={{ m: 0 }}
-                >
-                  Vagas em destaque
-                </Typography>
-                <Box>
-                  <Pagination
-                    currentPage={highlightPage}
-                    totalPages={totalHighlightPages}
-                    onPageChange={setHighlightPage}
-                  />
-                </Box>
-              </Box>
-              <Stack
-                direction="row"
-                spacing={3}
-                alignItems="center"
-                justifyContent="space-between"
-                sx={{
-                  overflowX: { xs: 'auto', md: 'visible' },
-                  width: '100%',
-                  pt: 4,
-                  pb: 2,
-                  px: 2,
-                  scrollSnapType: { xs: 'x mandatory', md: 'none' },
-                  "&::-webkit-scrollbar": { display: "none" }
-                  ,
-                }}
-              >
-                {paginatedHighlights.map((vacancy) => (
-                  <Box 
-                  key={vacancy.title} 
-                  sx={{ scrollSnapAlign: { xs: 'start', md: 'none' } }}>
-                    <VacancyHighlightCard {...vacancy} />
-                  </Box>
-                ))}
-              </Stack>
-            </Box>
+            <VacancyListSection
+              onVacancySelect={handleVacancySelect}
+              selectedVacancyId={selectedVacancyId}
+              vacancies={paginatedVacancies}
+            />
 
-            {/* Lista de todas as vagas */}
-            <Box
-              sx={{
-                borderRadius: 3,
-                boxShadow: '0px 2px 8px 0px rgba(44,39,56,0.02)',
-                width: '100%',
-              }}
-            >
-              <Box display="flex" justifyContent="space-between" alignItems="center" pb={3}>
-                <Typography component="h2" fontSize={18} fontWeight={600} fontFamily="'Sora', sans-serif" sx={{ m: 0 }}>
-                  Todas as vagas
-                </Typography>
-                <Typography fontSize={14} color="#888" aria-live="polite" sx={{ fontWeight: 400 }}>
-                  {mockVacancies.length} vagas disponíveis
-                </Typography>
-              </Box>
-              <Box>
-                <VacancyListSection
-                  onVacancySelect={handleVacancySelect}
-                  selectedVacancyId={selectedVacancyId}
-                  vacancies={paginatedVacancies}
-                />
-              </Box>
-              <Box px={3} pb={3} display="flex" justifyContent="center" alignItems="center">
-                <Pagination
-                  currentPage={paginaAtual}
-                  totalPages={totalVacancyPages}
-                  onPageChange={setPaginaAtual}
-                />
-              </Box>
+            <Box pb={3} display="flex" justifyContent="center">
+              <Pagination
+                currentPage={paginaAtual}
+                totalPages={totalVacancyPages}
+                onPageChange={setPaginaAtual}
+              />
             </Box>
           </Box>
-
-          {/* Detalhes da vaga (painel lateral, visível apenas em desktop) */}
-          {!isMobile && (
-            <Box
-              sx={{
-                gridColumn: '3',
-                minWidth: 0,
-                maxWidth: 420,
-                width: '100%',
-                alignSelf: 'flex-start',
-                bgcolor: '#fff',
-                borderRadius: 3,
-                boxShadow: '0px 2px 8px 0px rgba(44,39,56,0.02)',
-                ml: 0,
-                p: 0,
-              }}
-            >
-              <VacancyDetailsSection vacancy={selectedVacancy} />
-            </Box>
-          )}
         </Box>
-      </Container>
 
-      {/* FAB Filtros mobile */}
+        {/* Detalhes - Desktop */}
+        {!isMobile && (
+          <Box
+            sx={{
+              flex: '1 1 420px',
+              maxWidth: 420,
+              width: '100%',
+              alignSelf: 'flex-start',
+              bgcolor: '#fff',
+              borderRadius: 3,
+            }}
+          >
+            <VacancyDetailsSection vacancy={selectedVacancy!} />
+          </Box>
+        )}
+      </Box>
+    </Container>
+
+      {/* FAB Filtros - Mobile */}
       {isMobile && (
         <Fab
           color="primary"
           aria-label="Abrir filtros"
-          sx={{
-            position: 'fixed',
-            bottom: 16,
-            left: 16,
-            zIndex: 1000,
-          }}
+          sx={{ position: 'fixed', bottom: 16, left: 16, zIndex: 1000 }}
           onClick={() => setMobileFiltersOpen(true)}
         >
           <FilterListIcon />
         </Fab>
       )}
 
-      {/* FAB Detalhes mobile */}
+      {/* FAB Detalhes - Mobile */}
       {isMobile && selectedVacancyId && (
         <Fab
           color="primary"
           aria-label="Ver detalhes da vaga"
-          sx={{
-            position: 'fixed',
-            bottom: 16,
-            right: 16,
-            zIndex: 1000,
-          }}
+          sx={{ position: 'fixed', bottom: 16, right: 16, zIndex: 1000 }}
           onClick={() => setMobileDetailsOpen(true)}
         >
           <VisibilityIcon />
         </Fab>
       )}
 
-      {/* Drawer de filtros mobile */}
+      {/* Drawer de filtros - Mobile */}
       <Drawer
         anchor="left"
         open={mobileFiltersOpen}
         onClose={() => setMobileFiltersOpen(false)}
-        sx={{
-          '& .MuiDrawer-paper': {
-            width: { xs: '100%', sm: 320 },
-            maxWidth: '100vw',
-          },
-        }}
+        sx={{ '& .MuiDrawer-paper': { width: { xs: '100%', sm: 320 } } }}
       >
-        <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <IconButton
-            onClick={() => setMobileFiltersOpen(false)}
-            aria-label="Fechar filtros"
-          >
+        <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between'}}>
+          <IconButton onClick={() => setMobileFiltersOpen(false)} aria-label="Fechar filtros">
             <CloseIcon />
           </IconButton>
         </Box>
@@ -402,31 +397,23 @@ export default function VagasPage() {
         </Box>
       </Drawer>
 
-      {/* Drawer de detalhes mobile */}
+      {/* Drawer de detalhes - Mobile */}
       <Drawer
         anchor="right"
         open={mobileDetailsOpen}
         onClose={() => setMobileDetailsOpen(false)}
-        sx={{
-          '& .MuiDrawer-paper': {
-            width: { xs: '100%', sm: 400 },
-            maxWidth: '100vw',
-          },
-        }}
+        sx={{ '& .MuiDrawer-paper': { width: { xs: '100%', sm: 400 } } }}
       >
         <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Box component="h3" fontSize={18} fontWeight={600} m={0}>
+          <Typography component="h3" fontSize={18} fontWeight={600} m={0}>
             Detalhes da Vaga
-          </Box>
-          <IconButton
-            onClick={() => setMobileDetailsOpen(false)}
-            aria-label="Fechar detalhes"
-          >
+          </Typography>
+          <IconButton onClick={() => setMobileDetailsOpen(false)} aria-label="Fechar detalhes">
             <CloseIcon />
           </IconButton>
         </Box>
         <Box sx={{ px: 2, pb: 2 }}>
-          <VacancyDetailsSection vacancy={selectedVacancy} />
+          <VacancyDetailsSection vacancy={selectedVacancy!} />
         </Box>
       </Drawer>
     </Box>

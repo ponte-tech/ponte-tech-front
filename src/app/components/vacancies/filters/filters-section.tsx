@@ -63,6 +63,8 @@ export default function FiltersSection({ onFiltroChange }: FiltersSectionProps) 
     () => Object.fromEntries(FILTERS.map(f => [f.key, new Set()]))
   );
 
+  const isAnyFilterSelected = Object.values(selected).some(set => set.size > 0);
+
   const handleChange = (filterKey: string, option: string) => {
     setSelected(prev => {
       const newSet = new Set(prev[filterKey]);
@@ -98,6 +100,7 @@ export default function FiltersSection({ onFiltroChange }: FiltersSectionProps) 
         flexDirection: 'column',
         gap: '32px',
         alignItems: 'flex-start',
+        minHeight: 400,
       }}
     >
       <Typography 
@@ -150,31 +153,41 @@ export default function FiltersSection({ onFiltroChange }: FiltersSectionProps) 
         </Box>
       ))}
 
-      <Divider sx={{ my: 1 }} />
+      <Divider sx={{ my: 1, alignSelf: 'stretch' }} />
 
-      <Button
-        variant="text"
-        color="inherit"
-        size="medium"
+      <Box
         sx={{
-          alignSelf: 'flex-start',
-          textTransform: 'none',
-          fontFamily: "'Sora', sans-serif",
-          fontSize: 16,
-          fontWeight: 400,
-          color: '#A9A9A9',
-          p: 0,
-          minHeight: 'auto',
-          '&:hover': {
-            bgcolor: 'transparent',
-            textDecoration: 'underline',
-            color: '#8270FF',
-          },
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          width: '100%',
+          mt: 'auto',
         }}
-        onClick={handleClear}
       >
-        Limpar filtro
-      </Button>
+        <Button
+          variant="text"
+          disabled={!isAnyFilterSelected}
+          color="inherit"
+          size="medium"
+          sx={{
+            textTransform: 'none',
+            fontFamily: "'Sora', sans-serif",
+            fontSize: 16,
+            fontWeight: 400,
+            color: !isAnyFilterSelected ? '#A9A9A9' : '#292929',
+            p: 0,
+            minHeight: 'auto',
+            '&:hover': {
+              bgcolor: 'transparent',
+              textDecoration: isAnyFilterSelected ? 'underline' : 'none',
+              color: '#8270FF',
+            },
+          }}
+          onClick={handleClear}
+        >
+          Limpar filtro
+        </Button>
+      </Box>
     </Box>
   );
 }
