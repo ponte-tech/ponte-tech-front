@@ -336,22 +336,34 @@ export default function LoginPage() {
                 <Box sx={{ flex: 1, height: "1px", bgcolor: "divider" }} />
               </Box>
 
-              {/* Link para cadastro */}
+              {/* Links para cadastro */}
               <Box sx={{ textAlign: "center" }}>
                 <Typography
                   variant="body2"
                   sx={{
                     color: "text.secondary",
                     fontSize: { xs: "0.875rem", sm: "0.9375rem" },
+                    mb: 1.5,
                   }}
                 >
-                  Não tem uma conta?{" "}
+                  Não tem uma conta? Cadastre-se como:
+                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: 1.5,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
                   <Link
-                    href="/register"
+                    href="/register?type=aluno"
                     sx={{
                       color: "#8270FF",
                       fontWeight: 600,
                       textDecoration: "none",
+                      fontSize: { xs: "0.875rem", sm: "0.9375rem" },
                       transition: "all 0.2s ease",
                       "&:hover": {
                         textDecoration: "underline",
@@ -359,9 +371,33 @@ export default function LoginPage() {
                       },
                     }}
                   >
-                    Cadastre-se gratuitamente
+                    🎓 Aluno
                   </Link>
-                </Typography>
+                  <Typography
+                    sx={{
+                      color: "text.secondary",
+                      display: { xs: "none", sm: "inline" },
+                    }}
+                  >
+                    •
+                  </Typography>
+                  <Link
+                    href="/register?type=vendedor"
+                    sx={{
+                      color: "#8270FF",
+                      fontWeight: 600,
+                      textDecoration: "none",
+                      fontSize: { xs: "0.875rem", sm: "0.9375rem" },
+                      transition: "all 0.2s ease",
+                      "&:hover": {
+                        textDecoration: "underline",
+                        color: "#6a5dd9",
+                      },
+                    }}
+                  >
+                    💼 Vendedor
+                  </Link>
+                </Box>
               </Box>
             </form>
           </Box>

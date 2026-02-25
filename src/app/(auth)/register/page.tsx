@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/app/hooks/useAuth";
 import {
   Box,
@@ -23,7 +24,12 @@ import {
 } from "@mui/icons-material";
 import Image from "next/image";
 
+type UserType = "aluno" | "vendedor";
+
 export default function RegisterPage() {
+  const searchParams = useSearchParams();
+  const typeParam = searchParams.get("type") as UserType | null;
+  const [userType] = useState<UserType>(typeParam === "vendedor" ? "vendedor" : "aluno");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -48,7 +54,7 @@ export default function RegisterPage() {
     }
 
     try {
-      await register(name, email, password);
+      await register(name, email, password, userType);
     } catch (err) {
       setError("Erro ao criar conta. Tente novamente.");
     }
@@ -176,9 +182,20 @@ export default function RegisterPage() {
                 sx={{
                   color: "text.secondary",
                   fontSize: { xs: "0.875rem", sm: "1rem" },
+                  mb: 1,
                 }}
               >
                 Preencha os dados para começar
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "#8270FF",
+                  fontSize: { xs: "0.875rem", sm: "0.9375rem" },
+                  fontWeight: 600,
+                }}
+              >
+                {userType === "aluno" ? "🎓 Cadastro de Aluno" : "💼 Cadastro de Vendedor"}
               </Typography>
             </Box>
 

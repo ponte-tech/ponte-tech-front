@@ -2,10 +2,10 @@
 
 import { Box, Toolbar } from "@mui/material";
 import { ReactNode, useState } from "react";
-import Sidebar from "./components/Sidebar";
-import Navbar from "./components/Navbar";
+import Sidebar from "../(dashboard)/dashboard/components/Sidebar";
+import Navbar from "../(dashboard)/dashboard/components/Navbar";
 
-export default function DashboardLayout({
+export default function CursosLayout({
   children,
 }: {
   children: ReactNode;
