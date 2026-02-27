@@ -1,11 +1,11 @@
 "use client";
 
-import { Box, List, ListItem, useMediaQuery, useTheme } from "@mui/material";
+import { Box, List, ListItem, useMediaQuery, useTheme, Grid } from "@mui/material";
 import ContainedPurpleButton from "../buttons/contened-purple";
 import OutlinedWhiteButton from "../buttons/outlined-white";
 import { useEffect, useState } from "react";
 import HeaderMobile from "./header-mobile";
-import {scrollToElement} from "@/app/utils/scrollToElement";
+import { scrollToElement } from "@/app/utils/scrollToElement";
 
 export default function Header() {
     const theme = useTheme();

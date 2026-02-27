@@ -1,15 +1,7 @@
 "use client";
 
-import {
-  Box,
-  Paper,
-  Typography,
-  TextField,
-  Button,
-  Avatar,
-  Divider,
-  Grid,
-} from "@mui/material";
+import { Box, Paper, Typography, TextField, Button, Avatar, Divider, Grid } from "@mui/material";
+
 import { useAuth } from "@/app/hooks/useAuth";
 import { useState } from "react";
 
@@ -31,7 +23,7 @@ export default function ProfilePage() {
       </Typography>
 
       <Grid container spacing={3}>
-        <Grid xs={12} md={4}>
+        <Grid item xs={12} md={4}>
           <Paper elevation={2} sx={{ p: 3, textAlign: "center" }}>
             <Avatar
               sx={{
@@ -61,7 +53,7 @@ export default function ProfilePage() {
           </Paper>
         </Grid>
 
-        <Grid xs={12} md={8}>
+        <Grid item xs={12} md={8}>
           <Paper elevation={2} sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom fontWeight={600}>
               Informações Pessoais
@@ -69,7 +61,7 @@ export default function ProfilePage() {
             <Divider sx={{ mb: 3 }} />
 
             <Grid container spacing={2}>
-              <Grid xs={12}>
+              <Grid item xs={12}>
                 <TextField
                   fullWidth
                   label="Nome Completo"
@@ -77,7 +69,7 @@ export default function ProfilePage() {
                   onChange={(e) => setName(e.target.value)}
                 />
               </Grid>
-              <Grid xs={12}>
+              <Grid item xs={12}>
                 <TextField
                   fullWidth
                   label="Email"
@@ -86,7 +78,7 @@ export default function ProfilePage() {
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </Grid>
-              <Grid xs={12}>
+              <Grid item xs={12}>
                 <TextField
                   fullWidth
                   label="Telefone"
@@ -95,7 +87,7 @@ export default function ProfilePage() {
                   placeholder="(00) 00000-0000"
                 />
               </Grid>
-              <Grid xs={12}>
+              <Grid item xs={12}>
                 <TextField
                   fullWidth
                   label="Cargo"

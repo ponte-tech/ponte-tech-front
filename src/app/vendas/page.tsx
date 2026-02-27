@@ -1,40 +1,8 @@
 "use client";
 
-import {
-  Box,
-  Container,
-  Typography,
-  Grid,
-  Card,
-  CardMedia,
-  CardContent,
-  CardActions,
-  Button,
-  Chip,
-  TextField,
-  MenuItem,
-  InputAdornment,
-  alpha,
-  Stack,
-  Divider,
-  AppBar,
-  Toolbar,
-  IconButton,
-  Paper,
-} from "@mui/material";
-import {
-  Search as SearchIcon,
-  Star as StarIcon,
-  Schedule as ScheduleIcon,
-  Person as PersonIcon,
-  TrendingUp as TrendingUpIcon,
-  School as SchoolIcon,
-  ArrowForward as ArrowForwardIcon,
-  Menu as MenuIcon,
-  ShoppingCart as ShoppingCartIcon,
-  Storefront as StorefrontIcon,
-  CheckCircle as CheckCircleIcon,
-} from "@mui/icons-material";
+import { Box, Container, Typography, Card, CardMedia, CardContent, CardActions, Button, Chip, TextField, MenuItem, InputAdornment, alpha, Stack, Divider, AppBar, Toolbar, IconButton, Paper, Grid } from "@mui/material";
+
+import { Search as SearchIcon, Star as StarIcon, Schedule as ScheduleIcon, Person as PersonIcon, TrendingUp as TrendingUpIcon, School as SchoolIcon, ArrowForward as ArrowForwardIcon, Menu as MenuIcon, ShoppingCart as ShoppingCartIcon, Storefront as StorefrontIcon, CheckCircle as CheckCircleIcon } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import cursosService from "@/app/services/cursosService";
@@ -355,7 +323,7 @@ export default function VendasPage() {
               const quaseEsgotado = vagasRestantes <= 5 && vagasRestantes > 0;
 
               return (
-                <Grid item xs={12} sm={6} md={4} lg={3} key={curso.id}>
+                <Grid xs={12} sm={6} md={4} lg={3} key={curso.id}>
                   <Card
                     sx={{
                       height: "100%",

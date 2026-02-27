@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Toolbar } from "@mui/material";
+import { Box, Toolbar, Grid } from "@mui/material";
 import { ReactNode, useState } from "react";
 import Sidebar from "../(dashboard)/dashboard/components/Sidebar";
 import Navbar from "../(dashboard)/dashboard/components/Navbar";

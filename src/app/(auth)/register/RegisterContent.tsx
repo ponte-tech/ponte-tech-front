@@ -3,25 +3,8 @@
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/app/hooks/useAuth";
-import {
-  Box,
-  TextField,
-  Button,
-  Typography,
-  Link,
-  Alert,
-  IconButton,
-  InputAdornment,
-  Fade,
-} from "@mui/material";
-import {
-  Person as PersonIcon,
-  Email as EmailIcon,
-  Lock as LockIcon,
-  Visibility,
-  VisibilityOff,
-  ArrowBack,
-} from "@mui/icons-material";
+import { Box, TextField, Button, Typography, Link, Alert, IconButton, InputAdornment, Fade, Grid } from "@mui/material";
+import { Person as PersonIcon, Email as EmailIcon, Lock as LockIcon, Visibility, VisibilityOff, ArrowBack } from "@mui/icons-material";
 import Image from "next/image";
 
 type UserType = "aluno" | "vendedor";

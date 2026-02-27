@@ -1,6 +1,6 @@
 "use client";
 
-import { Box } from "@mui/material";
+import { Box, Grid } from "@mui/material";
 import Header from "./components/header/header";
 import Footer from "./components/footer/footer";
 import WhatsAppButton from "./components/social-icons/whatsapp-button";

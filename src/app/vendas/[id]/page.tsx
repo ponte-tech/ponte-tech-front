@@ -1,39 +1,8 @@
 "use client";
 
-import {
-  Box,
-  Container,
-  Typography,
-  Grid,
-  Card,
-  CardContent,
-  Button,
-  Chip,
-  Stack,
-  Divider,
-  AppBar,
-  Toolbar,
-  Avatar,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Paper,
-  Alert,
-  CircularProgress,
-} from "@mui/material";
-import {
-  School as SchoolIcon,
-  Schedule as ScheduleIcon,
-  Person as PersonIcon,
-  CalendarToday as CalendarIcon,
-  CheckCircle as CheckCircleIcon,
-  Star as StarIcon,
-  People as PeopleIcon,
-  ArrowBack as ArrowBackIcon,
-  ShoppingCart as ShoppingCartIcon,
-  Verified as VerifiedIcon,
-} from "@mui/icons-material";
+import { Box, Container, Typography, Card, CardContent, Button, Chip, Stack, Divider, AppBar, Toolbar, Avatar, List, ListItem, ListItemIcon, ListItemText, Paper, Alert, CircularProgress, Grid } from "@mui/material";
+
+import { School as SchoolIcon, Schedule as ScheduleIcon, Person as PersonIcon, CalendarToday as CalendarIcon, CheckCircle as CheckCircleIcon, Star as StarIcon, People as PeopleIcon, ArrowBack as ArrowBackIcon, ShoppingCart as ShoppingCartIcon, Verified as VerifiedIcon } from "@mui/icons-material";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import cursosService from "@/app/services/cursosService";

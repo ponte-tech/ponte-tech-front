@@ -1,4 +1,4 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Grid } from "@mui/material";
 import SmallInfoCard from "../cards/small-info";
 
 export default function MethodologySection() {

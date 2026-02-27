@@ -1,6 +1,6 @@
 "use client";
 
-import { Box } from "@mui/material";
+import { Box, Grid } from "@mui/material";
 import HomeSection from "./components/home/home-section";
 import AboutSection from "./components/about/about-section";
 import OutsourcingSection from "./components/outsourcing/outsourcing-section";

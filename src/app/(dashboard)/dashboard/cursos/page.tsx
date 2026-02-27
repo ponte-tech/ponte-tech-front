@@ -1,20 +1,7 @@
 "use client";
 
-import {
-  Box,
-  Card,
-  CardContent,
-  CardMedia,
-  Typography,
-  Button,
-  Chip,
-  Grid,
-  TextField,
-  MenuItem,
-  CircularProgress,
-  Pagination,
-  alpha,
-} from "@mui/material";
+import { Box, Card, CardContent, CardMedia, Typography, Button, Chip, TextField, MenuItem, CircularProgress, Pagination, alpha, Grid } from "@mui/material";
+
 import { Add as AddIcon, Search as SearchIcon } from "@mui/icons-material";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -201,7 +188,7 @@ export default function CursosPage() {
         <>
           <Grid container spacing={3}>
             {filteredCursos.map((curso) => (
-              <Grid item xs={12} sm={6} md={4} key={curso.id}>
+              <Grid xs={12} sm={6} md={4} key={curso.id}>
                 <Card
                   sx={{
                     height: "100%",

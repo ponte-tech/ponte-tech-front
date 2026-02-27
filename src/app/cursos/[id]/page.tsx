@@ -1,27 +1,8 @@
 "use client";
 
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Chip,
-  CircularProgress,
-  Grid,
-  Divider,
-  Avatar,
-  alpha,
-} from "@mui/material";
-import {
-  ArrowBack as ArrowBackIcon,
-  Edit as EditIcon,
-  Person as PersonIcon,
-  CalendarToday as CalendarIcon,
-  Schedule as ScheduleIcon,
-  People as PeopleIcon,
-  School as SchoolIcon,
-} from "@mui/icons-material";
+import { Box, Card, CardContent, Typography, Button, Chip, CircularProgress, Divider, Avatar, alpha, Grid } from "@mui/material";
+
+import { ArrowBack as ArrowBackIcon, Edit as EditIcon, Person as PersonIcon, CalendarToday as CalendarIcon, Schedule as ScheduleIcon, People as PeopleIcon, School as SchoolIcon } from "@mui/icons-material";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import cursosService from "@/app/services/cursosService";

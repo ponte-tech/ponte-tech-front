@@ -1,6 +1,6 @@
 "use client";
 
-import { Chip } from "@mui/material";
+import { Chip, Grid } from "@mui/material";
 
 const statusConfig: Record<string, { bgcolor: string; color: string; label: string }> = {
   RASCUNHO: { bgcolor: "#FFF3E0", color: "#E65100", label: "Rascunho" },

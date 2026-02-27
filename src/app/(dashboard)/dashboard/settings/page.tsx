@@ -1,16 +1,7 @@
 "use client";
 
-import {
-  Box,
-  Paper,
-  Typography,
-  Switch,
-  FormControlLabel,
-  Divider,
-  Button,
-  TextField,
-  Grid,
-} from "@mui/material";
+import { Box, Paper, Typography, Switch, FormControlLabel, Divider, Button, TextField, Grid } from "@mui/material";
+
 import { useState } from "react";
 
 export default function SettingsPage() {
@@ -25,7 +16,7 @@ export default function SettingsPage() {
       </Typography>
 
       <Grid container spacing={3}>
-        <Grid xs={12} md={6}>
+        <Grid item xs={12} md={6}>
           <Paper elevation={2} sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom fontWeight={600}>
               Notificações
@@ -55,7 +46,7 @@ export default function SettingsPage() {
           </Paper>
         </Grid>
 
-        <Grid xs={12} md={6}>
+        <Grid item xs={12} md={6}>
           <Paper elevation={2} sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom fontWeight={600}>
               Aparência
@@ -74,7 +65,7 @@ export default function SettingsPage() {
           </Paper>
         </Grid>
 
-        <Grid xs={12}>
+        <Grid item xs={12}>
           <Paper elevation={2} sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom fontWeight={600}>
               Alterar Senha
@@ -82,7 +73,7 @@ export default function SettingsPage() {
             <Divider sx={{ mb: 3 }} />
 
             <Grid container spacing={2}>
-              <Grid xs={12}>
+              <Grid item xs={12}>
                 <TextField
                   fullWidth
                   type="password"
@@ -90,7 +81,7 @@ export default function SettingsPage() {
                   autoComplete="current-password"
                 />
               </Grid>
-              <Grid xs={12} sm={6}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
                   type="password"
@@ -98,7 +89,7 @@ export default function SettingsPage() {
                   autoComplete="new-password"
                 />
               </Grid>
-              <Grid xs={12} sm={6}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
                   type="password"
@@ -117,7 +108,7 @@ export default function SettingsPage() {
           </Paper>
         </Grid>
 
-        <Grid xs={12}>
+        <Grid item xs={12}>
           <Paper elevation={2} sx={{ p: 3, borderColor: "error.main" }}>
             <Typography variant="h6" gutterBottom fontWeight={600} color="error">
               Zona de Perigo

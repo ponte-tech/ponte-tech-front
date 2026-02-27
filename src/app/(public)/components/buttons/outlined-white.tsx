@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, BoxProps } from '@mui/material';
+import { Box, BoxProps, Grid } from "@mui/material";
 import { ReactNode, ElementType } from 'react';
 
 type OutlinedWhiteButtonProps<C extends ElementType = 'div'> = {

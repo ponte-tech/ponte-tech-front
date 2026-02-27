@@ -1,8 +1,8 @@
-import {Box, Typography} from "@mui/material";
+import { Box, Typography, Grid } from "@mui/material";
 import ContainedPurpleButton from "../buttons/contened-purple";
 import OutlinedWhiteButton from "../buttons/outlined-white";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
-import {scrollToElement} from "@/app/utils/scrollToElement";
+import { scrollToElement } from "@/app/utils/scrollToElement";
 
 export default function HomeSection() {
     return (

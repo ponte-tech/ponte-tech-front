@@ -1,47 +1,12 @@
 "use client";
 
-import {
-  Box,
-  Container,
-  Typography,
-  Grid,
-  Card,
-  CardContent,
-  Button,
-  TextField,
-  CircularProgress,
-  Alert,
-  AppBar,
-  Toolbar,
-  Stepper,
-  Step,
-  StepLabel,
-  Divider,
-  Checkbox,
-  FormControlLabel,
-  Paper,
-  Stack,
-  InputAdornment,
-  IconButton,
-} from "@mui/material";
-import {
-  School as SchoolIcon,
-  Person as PersonIcon,
-  Home as HomeIcon,
-  Payment as PaymentIcon,
-  CheckCircle as CheckCircleIcon,
-  Visibility as VisibilityIcon,
-  VisibilityOff as VisibilityOffIcon,
-} from "@mui/icons-material";
+import { Box, Container, Typography, Card, CardContent, Button, TextField, CircularProgress, Alert, AppBar, Toolbar, Stepper, Step, StepLabel, Divider, Checkbox, FormControlLabel, Paper, Stack, InputAdornment, IconButton, Grid } from "@mui/material";
+
+import { School as SchoolIcon, Person as PersonIcon, Home as HomeIcon, Payment as PaymentIcon, CheckCircle as CheckCircleIcon, Visibility as VisibilityIcon, VisibilityOff as VisibilityOffIcon } from "@mui/icons-material";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import matriculaService from "@/app/services/matriculaService";
-import {
-  CreateMatriculaRequest,
-  AlunoMatriculaRequest,
-  Endereco,
-  MatriculaInfoResponse,
-} from "@/app/types/api";
+import { CreateMatriculaRequest, AlunoMatriculaRequest, Endereco, MatriculaInfoResponse } from "@/app/types/api";
 
 const steps = ["Dados Pessoais", "Endereço", "Confirmação"];
 

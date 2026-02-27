@@ -2,24 +2,8 @@
 
 import { useState } from "react";
 import { useAuth } from "@/app/hooks/useAuth";
-import {
-  Box,
-  TextField,
-  Button,
-  Typography,
-  Link,
-  Alert,
-  IconButton,
-  InputAdornment,
-  Fade,
-} from "@mui/material";
-import {
-  Email as EmailIcon,
-  Lock as LockIcon,
-  Visibility,
-  VisibilityOff,
-  ArrowBack,
-} from "@mui/icons-material";
+import { Box, TextField, Button, Typography, Link, Alert, IconButton, InputAdornment, Fade, Grid } from "@mui/material";
+import { Email as EmailIcon, Lock as LockIcon, Visibility, VisibilityOff, ArrowBack } from "@mui/icons-material";
 import Image from "next/image";
 
 export default function LoginPage() {

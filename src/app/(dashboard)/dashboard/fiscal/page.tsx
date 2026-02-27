@@ -1,24 +1,8 @@
 "use client";
 
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  TextField,
-  MenuItem,
-  Grid,
-  CircularProgress,
-  Alert,
-  Chip,
-  alpha,
-} from "@mui/material";
-import {
-  Add as AddIcon,
-  Search as SearchIcon,
-  Warning as WarningIcon,
-} from "@mui/icons-material";
+import { Box, Card, CardContent, Typography, Button, TextField, MenuItem, CircularProgress, Alert, Chip, alpha, Grid } from "@mui/material";
+
+import { Add as AddIcon, Search as SearchIcon, Warning as WarningIcon } from "@mui/icons-material";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import fiscalService from "@/app/services/fiscalService";
@@ -167,7 +151,7 @@ export default function FiscalPage() {
       ) : (
         <Grid container spacing={3}>
           {notas.map((nota) => (
-            <Grid item xs={12} sm={6} md={4} key={nota.nota_id}>
+            <Grid xs={12} sm={6} md={4} key={nota.nota_id}>
               <Card
                 sx={{
                   height: "100%",

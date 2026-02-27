@@ -1,37 +1,8 @@
 "use client";
 
-import {
-  Box,
-  Container,
-  Typography,
-  Grid,
-  Card,
-  CardContent,
-  Button,
-  TextField,
-  CircularProgress,
-  Alert,
-  AppBar,
-  Toolbar,
-  Stepper,
-  Step,
-  StepLabel,
-  Divider,
-  Checkbox,
-  FormControlLabel,
-  Paper,
-  Stack,
-  InputAdornment,
-  IconButton,
-} from "@mui/material";
-import {
-  School as SchoolIcon,
-  Person as PersonIcon,
-  Home as HomeIcon,
-  CheckCircle as CheckCircleIcon,
-  Visibility as VisibilityIcon,
-  VisibilityOff as VisibilityOffIcon,
-} from "@mui/icons-material";
+import { Box, Container, Typography, Card, CardContent, Button, TextField, CircularProgress, Alert, AppBar, Toolbar, Stepper, Step, StepLabel, Divider, Checkbox, FormControlLabel, Paper, Stack, InputAdornment, IconButton, Grid } from "@mui/material";
+
+import { School as SchoolIcon, Person as PersonIcon, Home as HomeIcon, CheckCircle as CheckCircleIcon, Visibility as VisibilityIcon, VisibilityOff as VisibilityOffIcon } from "@mui/icons-material";
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";

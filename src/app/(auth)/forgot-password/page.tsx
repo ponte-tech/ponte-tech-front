@@ -1,21 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Box,
-  TextField,
-  Button,
-  Typography,
-  Link,
-  Alert,
-  InputAdornment,
-  Fade,
-} from "@mui/material";
-import {
-  Email as EmailIcon,
-  ArrowBack,
-  CheckCircle,
-} from "@mui/icons-material";
+import { Box, TextField, Button, Typography, Link, Alert, InputAdornment, Fade, Grid } from "@mui/material";
+import { Email as EmailIcon, ArrowBack, CheckCircle } from "@mui/icons-material";
 import Image from "next/image";
 
 export default function ForgotPasswordPage() {

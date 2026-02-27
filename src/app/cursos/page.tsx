@@ -1,41 +1,7 @@
 "use client";
 
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Chip,
-  TextField,
-  MenuItem,
-  CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  IconButton,
-  Tooltip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  Alert,
-  TablePagination,
-  Snackbar,
-} from "@mui/material";
-import {
-  Add as AddIcon,
-  Search as SearchIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Visibility as VisibilityIcon,
-  Share as ShareIcon,
-} from "@mui/icons-material";
+import { Box, Card, CardContent, Typography, Button, Chip, TextField, MenuItem, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Tooltip, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Alert, TablePagination, Snackbar, Grid } from "@mui/material";
+import { Add as AddIcon, Search as SearchIcon, Edit as EditIcon, Delete as DeleteIcon, Visibility as VisibilityIcon, Share as ShareIcon } from "@mui/icons-material";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import cursosService from "@/app/services/cursosService";

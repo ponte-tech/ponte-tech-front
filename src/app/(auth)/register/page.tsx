@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import { Box, CircularProgress } from "@mui/material";
+import { Box, CircularProgress, Grid } from "@mui/material";
 import RegisterContent from "./RegisterContent";
 
 function RegisterFallback() {

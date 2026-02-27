@@ -1,22 +1,8 @@
 "use client";
 
-import {
-  Box,
-  Paper,
-  Typography,
-  Card,
-  CardContent,
-  Grid,
-  alpha,
-  IconButton,
-} from "@mui/material";
-import {
-  TrendingUp,
-  People,
-  School,
-  ShoppingCart,
-  MoreVert,
-} from "@mui/icons-material";
+import { Box, Paper, Typography, Card, CardContent, alpha, IconButton, Grid } from "@mui/material";
+
+import { TrendingUp, People, School, ShoppingCart, MoreVert } from "@mui/icons-material";
 import { useAuth } from "@/app/hooks/useAuth";
 
 const stats = [
@@ -92,7 +78,7 @@ export default function DashboardPage() {
       {/* Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {stats.map((stat, index) => (
-          <Grid item xs={12} sm={6} lg={3} key={index}>
+          <Grid xs={12} sm={6} lg={3} key={index}>
             <Card
               elevation={0}
               sx={{
@@ -173,7 +159,7 @@ export default function DashboardPage() {
       {/* Content Grid */}
       <Grid container spacing={3}>
         {/* Recent Activities */}
-        <Grid item xs={12} lg={8}>
+        <Grid xs={12} lg={8}>
           <Paper
             elevation={0}
             sx={{
@@ -243,7 +229,7 @@ export default function DashboardPage() {
         </Grid>
 
         {/* Quick Stats */}
-        <Grid item xs={12} lg={4}>
+        <Grid xs={12} lg={4}>
           <Paper
             elevation={0}
             sx={{

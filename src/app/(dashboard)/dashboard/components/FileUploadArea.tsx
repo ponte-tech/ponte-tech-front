@@ -1,12 +1,8 @@
 "use client";
 
 import { useState, useRef, DragEvent } from "react";
-import { Box, Typography, IconButton, alpha } from "@mui/material";
-import {
-  CloudUpload as CloudUploadIcon,
-  InsertDriveFile as FileIcon,
-  Close as CloseIcon,
-} from "@mui/icons-material";
+import { Box, Typography, IconButton, alpha, Grid } from "@mui/material";
+import { CloudUpload as CloudUploadIcon, InsertDriveFile as FileIcon, Close as CloseIcon } from "@mui/icons-material";
 import { formatFileSize } from "@/app/utils/format-utils";
 
 interface FileUploadAreaProps {
