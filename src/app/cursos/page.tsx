@@ -36,7 +36,7 @@ import {
   Visibility as VisibilityIcon,
   Share as ShareIcon,
 } from "@mui/icons-material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import cursosService from "@/app/services/cursosService";
 import { CursoListItem, CursoStatus, CursoNivel } from "@/app/types/api";
@@ -82,10 +82,10 @@ export default function CursosPage() {
   const isAdmin = user?.userType === "admin";
   const isVendedor = user?.userType === "vendedor";
 
-  const loadCursos = async () => {
+  const loadCursos = useCallback(async () => {
     setLoading(true);
     try {
-      const filters: any = { page: page + 1, limit: rowsPerPage };
+      const filters: Record<string, string | number> = { page: page + 1, limit: rowsPerPage };
       if (filterStatus) filters.status = filterStatus;
       if (filterNivel) filters.nivel = filterNivel;
 
@@ -97,11 +97,11 @@ export default function CursosPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, rowsPerPage, filterStatus, filterNivel]);
 
   useEffect(() => {
     loadCursos();
-  }, [page, rowsPerPage, filterStatus, filterNivel]);
+  }, [loadCursos]);
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -129,7 +129,7 @@ export default function CursosPage() {
     setDeleteError(null);
   };
 
-  const handleDeleteConfirm = async () => {
+  const handleDeleteConfirm = useCallback(async () => {
     if (!cursoToDelete) return;
 
     try {
@@ -142,10 +142,11 @@ export default function CursosPage() {
 
       // Recarrega a lista para garantir que está atualizada
       loadCursos();
-    } catch (error: any) {
-      setDeleteError(error.message || "Erro ao excluir curso");
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Erro ao excluir curso";
+      setDeleteError(errorMessage);
     }
-  };
+  }, [cursoToDelete, cursos, loadCursos]);
 
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
@@ -153,7 +154,7 @@ export default function CursosPage() {
     setDeleteError(null);
   };
 
-  const handleShare = async (curso: CursoListItem) => {
+  const handleShare = useCallback(async (curso: CursoListItem) => {
     if (!user?.codigoVendedor) {
       setSnackbarMessage("Código de vendedor não encontrado");
       setSnackbarOpen(true);
@@ -166,12 +167,12 @@ export default function CursosPage() {
       await navigator.clipboard.writeText(shareUrl);
       setSnackbarMessage("Link de compartilhamento copiado!");
       setSnackbarOpen(true);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Erro ao copiar link:", error);
       setSnackbarMessage("Erro ao copiar link");
       setSnackbarOpen(true);
     }
-  };
+  }, [user?.codigoVendedor]);
 
   const filteredCursos = cursos.filter((curso) =>
     curso.titulo.toLowerCase().includes(searchTerm.toLowerCase())

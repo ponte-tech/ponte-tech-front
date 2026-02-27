@@ -8,6 +8,7 @@ import {
   RegisterVendedorRequest,
   RegisterProfessorRequest,
   RegisterResponse,
+  UserProfile,
 } from "../types/api";
 import { AxiosResponse } from "axios";
 
@@ -33,8 +34,8 @@ class AuthService {
   /**
    * Seleciona o perfil quando usuário tem múltiplos perfis
    */
-  async selectProfile(perfil: string): Promise<SelectProfileResponse> {
-    const payload: SelectProfileRequest = { perfil: perfil as any };
+  async selectProfile(perfil: UserProfile): Promise<SelectProfileResponse> {
+    const payload: SelectProfileRequest = { perfil };
 
     const response: AxiosResponse<ApiResponse<SelectProfileResponse>> = await api.post(
       "/api/auth/select-profile",

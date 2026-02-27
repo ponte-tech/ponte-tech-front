@@ -13,7 +13,7 @@ import {
   Alert,
 } from "@mui/material";
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from "@mui/icons-material";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import cursosService from "@/app/services/cursosService";
 import { CreateCursoRequest, CursoStatus, CursoNivel } from "@/app/types/api";
@@ -58,10 +58,10 @@ export default function NovoCursoPage() {
     imagem_capa_url: "",
   });
 
-  const handleChange = (field: keyof CreateCursoRequest, value: any) => {
+  const handleChange = useCallback((field: keyof CreateCursoRequest, value: unknown) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setError(null);
-  };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,8 +97,9 @@ export default function NovoCursoPage() {
       setTimeout(() => {
         router.push(`/cursos/${response.id}`);
       }, 1500);
-    } catch (err: any) {
-      setError(err.message || "Erro ao criar curso");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Erro ao criar curso";
+      setError(errorMessage);
       console.error("Erro ao criar curso:", err);
     } finally {
       setLoading(false);

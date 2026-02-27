@@ -34,7 +34,7 @@ import {
   ShoppingCart as ShoppingCartIcon,
   Verified as VerifiedIcon,
 } from "@mui/icons-material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import cursosService from "@/app/services/cursosService";
 import { Curso, CursoNivel } from "@/app/types/api";
@@ -60,23 +60,24 @@ export default function CursoPublicoPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadCurso();
-  }, [cursoId]);
-
-  const loadCurso = async () => {
+  const loadCurso = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const data = await cursosService.getById(cursoId);
       setCurso(data);
-    } catch (err: any) {
-      setError(err.message || "Erro ao carregar curso");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Erro ao carregar curso";
+      setError(errorMessage);
       console.error("Erro ao carregar curso:", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [cursoId]);
+
+  useEffect(() => {
+    loadCurso();
+  }, [loadCurso]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -416,20 +417,22 @@ export default function CursoPublicoPage() {
                         fontWeight: 700,
                       }}
                     >
-                      {curso.professor.nome_completo.charAt(0)}
+                      {curso.professor.nome.charAt(0)}
                     </Avatar>
                     <Box>
                       <Typography variant="h6" fontWeight={600}>
-                        {curso.professor.nome_completo}
+                        {curso.professor.nome}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
                         Instrutor Verificado
                       </Typography>
                     </Box>
                   </Box>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    {curso.professor.email}
-                  </Typography>
+                  {curso.professor.especialidade && (
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      {curso.professor.especialidade}
+                    </Typography>
+                  )}
                 </CardContent>
               </Card>
             )}

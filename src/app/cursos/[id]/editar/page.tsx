@@ -13,7 +13,7 @@ import {
   Alert,
 } from "@mui/material";
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from "@mui/icons-material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import cursosService from "@/app/services/cursosService";
 import { UpdateCursoRequest, CursoStatus, CursoNivel, Curso } from "@/app/types/api";
@@ -44,11 +44,7 @@ export default function EditarCursoPage() {
 
   const [formData, setFormData] = useState<UpdateCursoRequest>({});
 
-  useEffect(() => {
-    loadCurso();
-  }, [cursoId]);
-
-  const loadCurso = async () => {
+  const loadCurso = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -71,18 +67,23 @@ export default function EditarCursoPage() {
         objetivos_curso: data.objetivos_curso || "",
         imagem_capa_url: data.imagem_capa_url || "",
       });
-    } catch (err: any) {
-      setError(err.message || "Erro ao carregar curso");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Erro ao carregar curso";
+      setError(errorMessage);
       console.error("Erro ao carregar curso:", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [cursoId]);
 
-  const handleChange = (field: keyof UpdateCursoRequest, value: any) => {
+  useEffect(() => {
+    loadCurso();
+  }, [loadCurso]);
+
+  const handleChange = useCallback((field: keyof UpdateCursoRequest, value: unknown) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setError(null);
-  };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,8 +117,9 @@ export default function EditarCursoPage() {
       setTimeout(() => {
         router.push(`/cursos/${cursoId}`);
       }, 1500);
-    } catch (err: any) {
-      setError(err.message || "Erro ao atualizar curso");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Erro ao atualizar curso";
+      setError(errorMessage);
       console.error("Erro ao atualizar curso:", err);
     } finally {
       setSaving(false);

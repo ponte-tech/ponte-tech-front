@@ -32,7 +32,7 @@ import {
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon,
 } from "@mui/icons-material";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import authService from "@/app/services/authService";
@@ -71,7 +71,7 @@ export default function CadastroVendedorPage() {
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
 
-  const handleChange = (field: keyof RegisterVendedorRequest, value: any) => {
+  const handleChange = (field: keyof RegisterVendedorRequest, value: unknown) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setError(null);
   };
@@ -219,8 +219,9 @@ export default function CadastroVendedorPage() {
       const response = await authService.registerVendedor(formData);
       setCodigoVendedor(response.codigo_vendedor || "");
       setSuccess(true);
-    } catch (err: any) {
-      setError(err.message || "Erro ao cadastrar vendedor");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Erro ao cadastrar vendedor";
+      setError(errorMessage);
       console.error("Erro ao cadastrar vendedor:", err);
       setSubmitting(false);
     }

@@ -58,7 +58,7 @@ export default function NovoCursoPage() {
     imagem_capa_url: "",
   });
 
-  const handleChange = (field: keyof CreateCursoRequest, value: any) => {
+  const handleChange = (field: keyof CreateCursoRequest, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setError(null);
   };
@@ -97,8 +97,9 @@ export default function NovoCursoPage() {
       setTimeout(() => {
         router.push(`/dashboard/cursos/${response.id}`);
       }, 1500);
-    } catch (err: any) {
-      setError(err.message || "Erro ao criar curso");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro ao criar curso";
+      setError(message);
       console.error("Erro ao criar curso:", err);
     } finally {
       setLoading(false);

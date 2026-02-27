@@ -22,7 +22,7 @@ import {
   People as PeopleIcon,
   School as SchoolIcon,
 } from "@mui/icons-material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import cursosService from "@/app/services/cursosService";
 import { Curso, CursoStatus, CursoNivel } from "@/app/types/api";
@@ -59,23 +59,24 @@ export default function CursoDetalhePage() {
   const isAdmin = user?.userType === "admin";
   const cursoId = params.id as string;
 
-  useEffect(() => {
-    loadCurso();
-  }, [cursoId]);
-
-  const loadCurso = async () => {
+  const loadCurso = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const data = await cursosService.getById(cursoId);
       setCurso(data);
-    } catch (err: any) {
-      setError(err.message || "Erro ao carregar curso");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro ao carregar curso";
+      setError(message);
       console.error("Erro ao carregar curso:", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [cursoId]);
+
+  useEffect(() => {
+    loadCurso();
+  }, [loadCurso]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {

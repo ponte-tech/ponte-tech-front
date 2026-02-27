@@ -16,7 +16,7 @@ import {
   alpha,
 } from "@mui/material";
 import { Add as AddIcon, Search as SearchIcon } from "@mui/icons-material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import cursosService from "@/app/services/cursosService";
 import { CursoListItem, CursoStatus, CursoNivel } from "@/app/types/api";
@@ -55,10 +55,15 @@ export default function CursosPage() {
 
   const isAdmin = user?.userType === "admin";
 
-  const loadCursos = async () => {
+  const loadCursos = useCallback(async () => {
     setLoading(true);
     try {
-      const filters: any = { page, limit: 9 };
+      const filters: {
+        page: number;
+        limit: number;
+        status?: CursoStatus;
+        nivel?: CursoNivel;
+      } = { page, limit: 9 };
       if (filterStatus) filters.status = filterStatus;
       if (filterNivel) filters.nivel = filterNivel;
 
@@ -70,11 +75,11 @@ export default function CursosPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, filterStatus, filterNivel]);
 
   useEffect(() => {
     loadCursos();
-  }, [page, filterStatus, filterNivel]);
+  }, [loadCursos]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {

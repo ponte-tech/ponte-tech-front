@@ -6,7 +6,7 @@ import { setCookie, getCookie, deleteCookie } from "@/app/lib/cookies";
 import authService from "@/app/services/authService";
 import { User as ApiUser, UserProfile } from "@/app/types/api";
 
-type UserType = "aluno" | "vendedor" | "professor" | "admin";
+type UserType = "aluno" | "vendedor" | "professor" | "admin" | "colaborador" | "contador";
 
 interface User {
   id: string;
@@ -92,8 +92,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         router.push("/dashboard");
       }
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || "Erro ao fazer login";
+    } catch (err: unknown) {
+      let errorMessage = "Erro ao fazer login";
+      if (err instanceof Error) {
+        errorMessage = err.message;
+        const axiosErr = err as unknown as { response?: { data?: { message?: string } } };
+        if (axiosErr.response?.data?.message) {
+          errorMessage = axiosErr.response.data.message;
+        }
+      }
       setError(errorMessage);
       console.error("Erro no login:", err);
       throw new Error(errorMessage);
@@ -125,8 +132,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       router.push("/dashboard");
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || "Erro ao selecionar perfil";
+    } catch (err: unknown) {
+      let errorMessage = "Erro ao selecionar perfil";
+      if (err instanceof Error) {
+        errorMessage = err.message;
+        const axiosErr = err as unknown as { response?: { data?: { message?: string } } };
+        if (axiosErr.response?.data?.message) {
+          errorMessage = axiosErr.response.data.message;
+        }
+      }
       setError(errorMessage);
       console.error("Erro ao selecionar perfil:", err);
       throw new Error(errorMessage);

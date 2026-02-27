@@ -20,6 +20,8 @@ import {
   Settings as SettingsIcon,
   Logout as LogoutIcon,
   School as SchoolIcon,
+  AccessTime as AccessTimeIcon,
+  ReceiptLong as ReceiptLongIcon,
 } from "@mui/icons-material";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/app/hooks/useAuth";
@@ -34,17 +36,30 @@ interface SidebarProps {
   onMobileClose: () => void;
 }
 
-const menuItems = [
-  { text: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
-  { text: "Cursos", icon: <SchoolIcon />, path: "/cursos" },
-  { text: "Perfil", icon: <PersonIcon />, path: "/dashboard/profile" },
-  { text: "Configurações", icon: <SettingsIcon />, path: "/dashboard/settings" },
-];
+const getMenuItems = (userType?: string) => {
+  const isColaborador = userType === "colaborador";
+  const isAdmin = userType === "admin";
+  const isContador = userType === "contador";
+
+  return [
+    { text: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
+    { text: "Cursos", icon: <SchoolIcon />, path: "/cursos" },
+    ...((isColaborador || isAdmin) ? [
+      { text: "Timesheet", icon: <AccessTimeIcon />, path: "/dashboard/timesheet" },
+    ] : []),
+    ...((isColaborador || isAdmin || isContador) ? [
+      { text: "Fiscal", icon: <ReceiptLongIcon />, path: "/dashboard/fiscal" },
+    ] : []),
+    { text: "Perfil", icon: <PersonIcon />, path: "/dashboard/profile" },
+    { text: "Configurações", icon: <SettingsIcon />, path: "/dashboard/settings" },
+  ];
+};
 
 export default function Sidebar({ open, mobileOpen, onMobileClose }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const menuItems = getMenuItems(user?.userType);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 

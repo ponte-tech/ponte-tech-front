@@ -1,5 +1,5 @@
 // Tipos base de resposta da API
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   message?: string;
   data?: T;
@@ -7,7 +7,7 @@ export interface ApiResponse<T = any> {
 }
 
 // Tipos de perfil de usuário
-export type UserProfile = "admin" | "vendedor" | "professor" | "aluno";
+export type UserProfile = "admin" | "vendedor" | "professor" | "aluno" | "colaborador" | "contador";
 
 // Tipos de usuário
 export interface User {
@@ -178,7 +178,7 @@ export interface CreateCursoRequest {
   imagem_capa_url?: string;
 }
 
-export interface UpdateCursoRequest extends Partial<CreateCursoRequest> {}
+export type UpdateCursoRequest = Partial<CreateCursoRequest>;
 
 // Tipos de Matrícula
 export interface Endereco {
@@ -239,4 +239,179 @@ export interface CreateMatriculaResponse {
   status_matricula: string;
   status_pagamento: string;
   pagamento: PagamentoInfo;
+}
+
+// ===== TIMESHEET TYPES =====
+
+export type ApontamentoStatus = "RASCUNHO" | "SUBMETIDO" | "APROVADO";
+export type FechamentoStatus = "ABERTO" | "SUBMETIDO" | "APROVADO" | "RECUSADO";
+export type FeriadoTipo = "nacional" | "estadual" | "municipal";
+
+export interface CreateApontamentoRequest {
+  data: string;
+  horas: number;
+  descricao?: string;
+}
+
+export interface UpdateApontamentoRequest {
+  data?: string;
+  horas?: number;
+  descricao?: string;
+}
+
+export interface ApontamentoResponse {
+  id: string;
+  user_id: string;
+  data: string;
+  horas: number;
+  descricao: string;
+  status: ApontamentoStatus;
+  data_criacao: string;
+  data_atualizacao?: string;
+}
+
+export interface MesResponse {
+  ano_mes: string;
+  user_id: string;
+  total_horas: number;
+  horas_submetidas: number;
+  horas_aprovadas: number;
+  status: FechamentoStatus;
+  data_fechamento: string | null;
+  lancamentos: ApontamentoResponse[];
+}
+
+export interface FeriadoResponse {
+  data: string;
+  descricao: string;
+  tipo: FeriadoTipo;
+  data_criacao?: string;
+}
+
+export interface CreateFeriadoRequest {
+  data: string;
+  descricao: string;
+  tipo: FeriadoTipo;
+}
+
+export interface UpdateFeriadoRequest {
+  descricao?: string;
+  tipo?: FeriadoTipo;
+}
+
+export interface AtualizarStatusFechamentoRequest {
+  user_id: string;
+  ano_mes: string;
+  status: "APROVADO" | "RECUSADO" | "PENDENTE";
+  motivo?: string;
+}
+
+export interface FechamentoListItem {
+  id: string;
+  user_id: string;
+  user_nome: string;
+  ano_mes: string;
+  total_horas: number;
+  status: FechamentoStatus;
+  data_submissao?: string;
+}
+
+export interface TimesheetConfigResponse {
+  horas_maximas_dia: number;
+  horas_minimas_mes: number;
+  permitir_horas_extras: boolean;
+  taxa_hora_extra: number;
+  data_atualizacao?: string;
+}
+
+export interface TimesheetConfigRequest {
+  horas_maximas_dia: number;
+  horas_minimas_mes: number;
+  permitir_horas_extras: boolean;
+  taxa_hora_extra: number;
+}
+
+export interface AuditoriaFechamentoItem {
+  id: string;
+  ano_mes: string;
+  status_anterior: string;
+  status_novo: string;
+  usuario_admin: string;
+  motivo: string;
+  data_alteracao: string;
+}
+
+// ===== FISCAL TYPES =====
+
+export type NotaFiscalStatus = "PENDENTE" | "APROVADO" | "RECUSADO" | "PAGO";
+
+export interface ArquivoFiscalResponse {
+  arquivo_id: string;
+  nome_original: string;
+  content_type: string;
+  tamanho_bytes: number;
+  data_upload: string;
+}
+
+export interface NotaFiscalResponse {
+  nota_id: string;
+  user_id: string;
+  user_nome?: string;
+  ano_mes: string;
+  numero_nota: string;
+  data_emissao: string;
+  valor_nota: number;
+  status: NotaFiscalStatus;
+  is_atrasado: boolean;
+  comentario_recusa: string | null;
+  data_upload: string;
+  data_aprovacao: string | null;
+  data_pagamento: string | null;
+  data_atualizacao: string | null;
+  arquivos: ArquivoFiscalResponse[];
+}
+
+export interface NotaFiscalListResponse {
+  total: number;
+  items: NotaFiscalResponse[];
+}
+
+export interface CreateNotaFiscalRequest {
+  ano_mes: string;
+  numero_nota: string;
+  data_emissao: string;
+  valor_nota: number;
+}
+
+export interface UpdateNotaFiscalRequest {
+  numero_nota?: string;
+  data_emissao?: string;
+  valor_nota?: number;
+}
+
+export interface AtualizarStatusNotaRequest {
+  status: "APROVADO" | "RECUSADO" | "PAGO";
+  comentario?: string;
+}
+
+export interface DownloadZipItem {
+  nota_id: string;
+  arquivo_id: string;
+}
+
+export interface DownloadZipRequest {
+  items: DownloadZipItem[];
+}
+
+export interface FiscalConfigResponse {
+  prazo_maximo_dia: number;
+  tolerancia_valor_pct: number;
+  bloquear_pagamento_sem_nota: boolean;
+  data_atualizacao?: string;
+}
+
+export interface FiscalConfigRequest {
+  prazo_maximo_dia: number;
+  tolerancia_valor_pct: number;
+  bloquear_pagamento_sem_nota: boolean;
 }
