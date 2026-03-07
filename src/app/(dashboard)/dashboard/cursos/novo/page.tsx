@@ -236,10 +236,10 @@ export default function NovoCursoPage() {
                       label="Valor (R$)"
                       type="number"
                       required
+                      inputProps={{ step: "0.01", min: "0" }}
                       value={formData.valor}
-                      onChange={(e) => handleChange("valor", parseFloat(e.target.value))}
+                      onChange={(e) => handleChange("valor", parseFloat(e.target.value) || 0)}
                       disabled={loading}
-                      inputProps={{ min: 0, step: 0.01 }}
                     />
                   </Grid>
                   <Grid item xs={12} md={6}>
@@ -260,10 +260,10 @@ export default function NovoCursoPage() {
                       label="Data de Início"
                       type="date"
                       required
+                      InputLabelProps={{ shrink: true }}
                       value={formData.data_inicio}
                       onChange={(e) => handleChange("data_inicio", e.target.value)}
                       disabled={loading}
-                      InputLabelProps={{ shrink: true }}
                     />
                   </Grid>
                   <Grid item xs={12} md={6}>
@@ -272,10 +272,10 @@ export default function NovoCursoPage() {
                       label="Data de Término"
                       type="date"
                       required
+                      InputLabelProps={{ shrink: true }}
                       value={formData.data_fim}
                       onChange={(e) => handleChange("data_fim", e.target.value)}
                       disabled={loading}
-                      InputLabelProps={{ shrink: true }}
                     />
                   </Grid>
                   <Grid item xs={12}>

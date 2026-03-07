@@ -1,7 +1,6 @@
 "use client";
 
-import { Box, Card, CardContent, Typography, Button, TextField, CircularProgress, Alert, Switch, FormControlLabel, Grid } from "@mui/material";
-
+import { Box, Card, CardContent, Typography, Button, TextField, CircularProgress, Alert, FormControl, InputLabel, Select, MenuItem, Grid } from "@mui/material";
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from "@mui/icons-material";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -18,10 +17,11 @@ export default function TimesheetConfigPage() {
   const [success, setSuccess] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<TimesheetConfigRequest>({
-    horas_maximas_dia: 8,
-    horas_minimas_mes: 160,
-    permitir_horas_extras: true,
-    taxa_hora_extra: 1.5,
+    multiplicadores: { NORMAL: 1, EXTRA: 1.5, FERIADO: 2 },
+    limites_diarios: { NORMAL: 8 },
+    limites_mensais: { NORMAL: 160 },
+    limite_submissao_dia: 5,
+    comportamento_atraso: "PERMITIR_ATRASADO",
   });
 
   const isAdmin = user?.userType === "admin";
@@ -31,13 +31,13 @@ export default function TimesheetConfigPage() {
     try {
       const config = await timesheetService.adminGetConfig();
       setFormData({
-        horas_maximas_dia: config.horas_maximas_dia,
-        horas_minimas_mes: config.horas_minimas_mes,
-        permitir_horas_extras: config.permitir_horas_extras,
-        taxa_hora_extra: config.taxa_hora_extra,
+        multiplicadores: config.multiplicadores || { NORMAL: 1, EXTRA: 1.5, FERIADO: 2 },
+        limites_diarios: config.limites_diarios || { NORMAL: 8 },
+        limites_mensais: config.limites_mensais || { NORMAL: 160 },
+        limite_submissao_dia: config.limite_submissao_dia || 5,
+        comportamento_atraso: config.comportamento_atraso || "PERMITIR_ATRASADO",
       });
     } catch (err: unknown) {
-      // Config may not exist yet, use defaults
       console.error("Erro ao carregar configuração:", err);
     } finally {
       setLoading(false);
@@ -59,8 +59,8 @@ export default function TimesheetConfigPage() {
     setSuccess(null);
 
     try {
-      if (formData.horas_maximas_dia <= 0 || formData.horas_maximas_dia > 24) {
-        throw new Error("Horas máximas por dia devem estar entre 1 e 24");
+      if (formData.limite_submissao_dia <= 0) {
+        throw new Error("Limite de submissão deve ser maior que 0");
       }
 
       await timesheetService.adminUpsertConfig(formData);
@@ -119,20 +119,95 @@ export default function TimesheetConfigPage() {
             <Card>
               <CardContent sx={{ p: 3 }}>
                 <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Regras de Horas
+                  Multiplicadores de Horas
+                </Typography>
+                <Grid container spacing={2} sx={{ mt: 1 }}>
+                  <Grid item xs={12} md={4}>
+                    <TextField
+                      fullWidth
+                      label="Horas Normais (multiplicador)"
+                      type="number"
+                      required
+                      value={formData.multiplicadores.NORMAL || 1}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          multiplicadores: {
+                            ...prev.multiplicadores,
+                            NORMAL: parseFloat(e.target.value),
+                          },
+                        }))
+                      }
+                      disabled={saving}
+                      inputProps={{ min: 0.5, max: 3, step: 0.1 }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <TextField
+                      fullWidth
+                      label="Horas Extras (multiplicador)"
+                      type="number"
+                      required
+                      value={formData.multiplicadores.EXTRA || 1.5}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          multiplicadores: {
+                            ...prev.multiplicadores,
+                            EXTRA: parseFloat(e.target.value),
+                          },
+                        }))
+                      }
+                      disabled={saving}
+                      inputProps={{ min: 0.5, max: 3, step: 0.1 }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <TextField
+                      fullWidth
+                      label="Horas Feriado (multiplicador)"
+                      type="number"
+                      required
+                      value={formData.multiplicadores.FERIADO || 2}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          multiplicadores: {
+                            ...prev.multiplicadores,
+                            FERIADO: parseFloat(e.target.value),
+                          },
+                        }))
+                      }
+                      disabled={saving}
+                      inputProps={{ min: 0.5, max: 3, step: 0.1 }}
+                    />
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12}>
+            <Card>
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h6" fontWeight="600" gutterBottom>
+                  Limites
                 </Typography>
                 <Grid container spacing={2} sx={{ mt: 1 }}>
                   <Grid item xs={12} md={6}>
                     <TextField
                       fullWidth
-                      label="Horas Máximas por Dia"
+                      label="Limite Diário (horas)"
                       type="number"
                       required
-                      value={formData.horas_maximas_dia}
+                      value={formData.limites_diarios.NORMAL || 8}
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
-                          horas_maximas_dia: parseFloat(e.target.value),
+                          limites_diarios: {
+                            ...prev.limites_diarios,
+                            NORMAL: parseFloat(e.target.value),
+                          },
                         }))
                       }
                       disabled={saving}
@@ -142,14 +217,17 @@ export default function TimesheetConfigPage() {
                   <Grid item xs={12} md={6}>
                     <TextField
                       fullWidth
-                      label="Horas Mínimas por Mês"
+                      label="Limite Mensal (horas)"
                       type="number"
                       required
-                      value={formData.horas_minimas_mes}
+                      value={formData.limites_mensais.NORMAL || 160}
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
-                          horas_minimas_mes: parseFloat(e.target.value),
+                          limites_mensais: {
+                            ...prev.limites_mensais,
+                            NORMAL: parseFloat(e.target.value),
+                          },
                         }))
                       }
                       disabled={saving}
@@ -157,47 +235,40 @@ export default function TimesheetConfigPage() {
                     />
                   </Grid>
                   <Grid item xs={12} md={6}>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={formData.permitir_horas_extras}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              permitir_horas_extras: e.target.checked,
-                            }))
-                          }
-                          disabled={saving}
-                          sx={{
-                            "& .MuiSwitch-switchBase.Mui-checked": { color: "#8270FF" },
-                            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                              bgcolor: "#8270FF",
-                            },
-                          }}
-                        />
+                    <TextField
+                      fullWidth
+                      label="Dias para Submissão"
+                      type="number"
+                      required
+                      value={formData.limite_submissao_dia}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          limite_submissao_dia: parseInt(e.target.value),
+                        }))
                       }
-                      label="Permitir Horas Extras"
+                      disabled={saving}
+                      inputProps={{ min: 1, max: 30 }}
                     />
                   </Grid>
-                  {formData.permitir_horas_extras && (
-                    <Grid item xs={12} md={6}>
-                      <TextField
-                        fullWidth
-                        label="Taxa Hora Extra (multiplicador)"
-                        type="number"
-                        value={formData.taxa_hora_extra}
+                  <Grid item xs={12} md={6}>
+                    <FormControl fullWidth disabled={saving}>
+                      <InputLabel>Comportamento Atraso</InputLabel>
+                      <Select
+                        value={formData.comportamento_atraso}
+                        label="Comportamento Atraso"
                         onChange={(e) =>
                           setFormData((prev) => ({
                             ...prev,
-                            taxa_hora_extra: parseFloat(e.target.value),
+                            comportamento_atraso: e.target.value as "BLOQUEAR" | "PERMITIR_ATRASADO",
                           }))
                         }
-                        disabled={saving}
-                        inputProps={{ min: 1, max: 3, step: 0.1 }}
-                        helperText="Ex: 1.5 = 50% adicional"
-                      />
-                    </Grid>
-                  )}
+                      >
+                        <MenuItem value="BLOQUEAR">Bloquear Submissão Atrasada</MenuItem>
+                        <MenuItem value="PERMITIR_ATRASADO">Permitir Submissão Atrasada</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
                 </Grid>
               </CardContent>
             </Card>

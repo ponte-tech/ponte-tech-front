@@ -8,11 +8,12 @@ import {
   FeriadoResponse,
   CreateFeriadoRequest,
   UpdateFeriadoRequest,
-  AtualizarStatusFechamentoRequest,
+  AtualizarStatusFechamentosRequest,
   FechamentoListItem,
   TimesheetConfigRequest,
   TimesheetConfigResponse,
   AuditoriaFechamentoItem,
+  AuditoriaLancamentoItem,
 } from "../types/api";
 import { AxiosResponse } from "axios";
 
@@ -24,8 +25,8 @@ interface ListFechamentosFilters {
 class TimesheetService {
   // ===== COLABORADOR =====
 
-  async createLancamento(data: CreateApontamentoRequest): Promise<ApontamentoResponse> {
-    const response: AxiosResponse<ApiResponse<ApontamentoResponse>> = await api.post(
+  async createLancamento(data: CreateApontamentoRequest): Promise<ApontamentoResponse[]> {
+    const response: AxiosResponse<ApiResponse<ApontamentoResponse[]>> = await api.post(
       "/api/colaborador/timesheet/lancamentos",
       data
     );
@@ -122,7 +123,7 @@ class TimesheetService {
 
   // ===== ADMIN =====
 
-  async adminUpdateFechamentoStatus(data: AtualizarStatusFechamentoRequest): Promise<void> {
+  async adminUpdateFechamentoStatus(data: AtualizarStatusFechamentosRequest): Promise<void> {
     const response: AxiosResponse<ApiResponse<unknown>> = await api.put(
       "/api/admin/timesheet/fechamentos/status",
       data
@@ -206,6 +207,17 @@ class TimesheetService {
     if (!response.data.success) {
       throw new Error(response.data.message || "Erro ao excluir feriado");
     }
+  }
+
+  async adminGetAuditoriaLancamento(id: string): Promise<AuditoriaLancamentoItem[]> {
+    const response: AxiosResponse<ApiResponse<{ auditoria: AuditoriaLancamentoItem[] }>> =
+      await api.get(`/api/admin/timesheet/auditoria-lancamento/${id}`);
+
+    if (!response.data.success || !response.data.data) {
+      throw new Error(response.data.message || "Erro ao carregar auditoria de lançamento");
+    }
+
+    return response.data.data.auditoria;
   }
 }
 

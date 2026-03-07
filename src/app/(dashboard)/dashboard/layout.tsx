@@ -34,7 +34,6 @@ export default function DashboardLayout({
           flexGrow: 1,
           minHeight: "100vh",
           bgcolor: "#f8f9fa",
-          ml: { xs: 0, md: sidebarOpen ? "280px" : "80px" },
           transition: "margin 0.3s ease-in-out",
         }}
       >

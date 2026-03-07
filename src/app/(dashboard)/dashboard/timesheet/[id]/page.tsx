@@ -24,8 +24,9 @@ export default function LancamentoDetailPage() {
 
   const [formData, setFormData] = useState({
     data: "",
-    horas: 8,
-    descricao: "",
+    hora_inicio: "",
+    hora_fim: "",
+    observacao: "",
   });
 
   const loadLancamento = useCallback(async () => {
@@ -35,8 +36,9 @@ export default function LancamentoDetailPage() {
       setLancamento(data);
       setFormData({
         data: data.data,
-        horas: data.horas,
-        descricao: data.descricao || "",
+        hora_inicio: data.hora_inicio,
+        hora_fim: data.hora_fim,
+        observacao: data.observacao || "",
       });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro ao carregar lançamento";
@@ -64,7 +66,8 @@ export default function LancamentoDetailPage() {
 
     try {
       if (!formData.data) throw new Error("Selecione a data");
-      if (formData.horas <= 0 || formData.horas > 24) throw new Error("Horas devem estar entre 0 e 24");
+      if (!formData.hora_inicio) throw new Error("Selecione a hora de início");
+      if (!formData.hora_fim) throw new Error("Selecione a hora de término");
 
       await timesheetService.updateLancamento(id, formData);
       setSuccess("Lançamento atualizado com sucesso!");
@@ -148,7 +151,7 @@ export default function LancamentoDetailPage() {
             <StatusChip status={lancamento.status} size="medium" />
           </Box>
           <Typography variant="body2" color="text.secondary">
-            Criado em {formatDateTime(lancamento.data_criacao)}
+            Criado em {formatDateTime(lancamento.data_cadastro)}
           </Typography>
         </Box>
       </Box>
@@ -189,26 +192,38 @@ export default function LancamentoDetailPage() {
                     <Grid item xs={12} md={6}>
                       <TextField
                         fullWidth
-                        label="Horas"
-                        type="number"
+                        label="Hora Início"
+                        type="time"
                         required
-                        value={formData.horas}
-                        onChange={(e) => handleChange("horas", parseFloat(e.target.value))}
+                        value={formData.hora_inicio}
+                        onChange={(e) => handleChange("hora_inicio", e.target.value)}
                         disabled={saving}
-                        inputProps={{ min: 0.5, max: 24, step: 0.5 }}
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        label="Hora Fim"
+                        type="time"
+                        required
+                        value={formData.hora_fim}
+                        onChange={(e) => handleChange("hora_fim", e.target.value)}
+                        disabled={saving}
+                        InputLabelProps={{ shrink: true }}
                       />
                     </Grid>
                     <Grid item xs={12}>
                       <TextField
                         fullWidth
-                        label="Descrição"
+                        label="Observação"
                         multiline
                         rows={3}
-                        value={formData.descricao}
-                        onChange={(e) => handleChange("descricao", e.target.value)}
+                        value={formData.observacao}
+                        onChange={(e) => handleChange("observacao", e.target.value)}
                         disabled={saving}
                         inputProps={{ maxLength: 500 }}
-                        helperText={`${formData.descricao.length}/500 caracteres`}
+                        helperText={`${formData.observacao.length}/500 caracteres`}
                       />
                     </Grid>
                   </Grid>
@@ -269,16 +284,20 @@ export default function LancamentoDetailPage() {
                 <Typography variant="body1" fontWeight={500}>{formatDate(lancamento.data)}</Typography>
               </Grid>
               <Grid item xs={12} md={4}>
-                <Typography variant="body2" color="text.secondary">Horas</Typography>
-                <Typography variant="body1" fontWeight={500}>{formatHours(lancamento.horas)}</Typography>
+                <Typography variant="body2" color="text.secondary">Hora Início</Typography>
+                <Typography variant="body1" fontWeight={500}>{lancamento.hora_inicio}</Typography>
               </Grid>
               <Grid item xs={12} md={4}>
                 <Typography variant="body2" color="text.secondary">Status</Typography>
                 <StatusChip status={lancamento.status} />
               </Grid>
+              <Grid item xs={12} md={4}>
+                <Typography variant="body2" color="text.secondary">Hora Fim</Typography>
+                <Typography variant="body1" fontWeight={500}>{lancamento.hora_fim}</Typography>
+              </Grid>
               <Grid item xs={12}>
-                <Typography variant="body2" color="text.secondary">Descrição</Typography>
-                <Typography variant="body1">{lancamento.descricao || "Sem descrição"}</Typography>
+                <Typography variant="body2" color="text.secondary">Observação</Typography>
+                <Typography variant="body1">{lancamento.observacao || "Sem observação"}</Typography>
               </Grid>
             </Grid>
           </CardContent>

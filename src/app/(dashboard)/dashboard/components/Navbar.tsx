@@ -1,7 +1,7 @@
 "use client";
 
-import { AppBar, Toolbar, Typography, IconButton, Avatar, Box, Menu, MenuItem, Badge, Divider, alpha, ListItemIcon, ListItemText, Grid } from "@mui/material";
-import { Notifications as NotificationsIcon, Person as PersonIcon, Logout as LogoutIcon, Menu as MenuIcon, MenuOpen as MenuOpenIcon } from "@mui/icons-material";
+import { AppBar, Toolbar, Typography, IconButton, Avatar, Box, Menu, MenuItem, Badge, Divider, alpha, ListItemIcon, ListItemText, Grid, CircularProgress } from "@mui/material";
+import { Notifications as NotificationsIcon, Person as PersonIcon, Logout as LogoutIcon, Menu as MenuIcon, MenuOpen as MenuOpenIcon, SwapHoriz as SwapHorizIcon, CheckCircle as CheckCircleIcon } from "@mui/icons-material";
 import { useAuth } from "@/app/hooks/useAuth";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -16,9 +16,10 @@ interface NavbarProps {
 }
 
 export default function Navbar({ onMenuClick, onSidebarToggle, sidebarOpen }: NavbarProps) {
-  const { user, logout } = useAuth();
+  const { user, logout, selectProfile } = useAuth();
   const router = useRouter();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [switchingProfile, setSwitchingProfile] = useState(false);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -31,6 +32,18 @@ export default function Navbar({ onMenuClick, onSidebarToggle, sidebarOpen }: Na
   const handleProfile = () => {
     router.push("/dashboard/profile");
     handleMenuClose();
+  };
+
+  const handleSwitchProfile = async (perfil: string) => {
+    try {
+      setSwitchingProfile(true);
+      await selectProfile(perfil as any);
+      handleMenuClose();
+    } catch (error) {
+      console.error("Erro ao trocar perfil:", error);
+    } finally {
+      setSwitchingProfile(false);
+    }
   };
 
   const handleLogout = () => {
@@ -217,6 +230,69 @@ export default function Navbar({ onMenuClick, onSidebarToggle, sidebarOpen }: Na
               </Typography>
             </Box>
             <Divider />
+
+            {/* Profile Selector - Mostra apenas se tiver múltiplos perfis */}
+            {user?.perfis && user.perfis.length > 1 && (
+              <>
+                <Box sx={{ px: 2, py: 1 }}>
+                  <Typography variant="caption" sx={{ fontWeight: 600, color: "text.secondary", display: "block", mb: 1 }}>
+                    PERFIL ATIVO
+                  </Typography>
+                  {user.perfis.map((perfil) => {
+                    const isActive = user.userType === perfil;
+                    const perfisLabels: Record<string, string> = {
+                      admin: "👨‍💼 Administrador",
+                      colaborador: "👷 Colaborador",
+                      contador: "📊 Contador",
+                      vendedor: "💼 Vendedor",
+                      professor: "👨‍🏫 Professor",
+                      aluno: "🎓 Aluno",
+                    };
+
+                    return (
+                      <MenuItem
+                        key={perfil}
+                        onClick={() => handleSwitchProfile(perfil)}
+                        disabled={switchingProfile}
+                        sx={{
+                          py: 1,
+                          pl: 4,
+                          pr: 2,
+                          bgcolor: isActive ? alpha("#8270FF", 0.1) : "transparent",
+                          borderLeft: isActive ? "3px solid #8270FF" : "3px solid transparent",
+                          transition: "all 0.2s ease-in-out",
+                          "&:hover": {
+                            bgcolor: alpha("#8270FF", 0.08),
+                          },
+                          "&:disabled": {
+                            opacity: 0.7,
+                          },
+                        }}
+                      >
+                        <ListItemIcon sx={{ minWidth: 28, color: "inherit" }}>
+                          {switchingProfile && isActive ? (
+                            <CircularProgress size={16} />
+                          ) : isActive ? (
+                            <CheckCircleIcon fontSize="small" sx={{ color: "#8270FF" }} />
+                          ) : (
+                            <SwapHorizIcon fontSize="small" sx={{ opacity: 0.5 }} />
+                          )}
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={perfisLabels[perfil] || perfil}
+                          primaryTypographyProps={{
+                            fontSize: "0.8125rem",
+                            fontWeight: isActive ? 600 : 500,
+                          }}
+                        />
+                      </MenuItem>
+                    );
+                  })}
+                </Box>
+                <Divider />
+              </>
+            )}
+
             <MenuItem
               onClick={handleProfile}
               sx={{

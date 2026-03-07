@@ -16,7 +16,7 @@ const statusOptions: { value: FechamentoStatus | ""; label: string }[] = [
   { value: "ABERTO", label: "Aberto" },
   { value: "SUBMETIDO", label: "Submetido" },
   { value: "APROVADO", label: "Aprovado" },
-  { value: "RECUSADO", label: "Recusado" },
+  { value: "REJEITADO", label: "Recusado" },
 ];
 
 export default function FechamentosPage() {
@@ -30,8 +30,8 @@ export default function FechamentosPage() {
   const [filterAnoMes, setFilterAnoMes] = useState(getCurrentAnoMes());
   const [selected, setSelected] = useState<string[]>([]);
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
-  const [actionType, setActionType] = useState<"APROVADO" | "RECUSADO">("APROVADO");
-  const [motivo, setMotivo] = useState("");
+  const [actionType, setActionType] = useState<"APROVADO" | "REJEITADO">("APROVADO");
+  const [comentario, setComentario] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
 
   const isAdmin = user?.userType === "admin";
@@ -82,9 +82,9 @@ export default function FechamentosPage() {
     }
   };
 
-  const openActionDialog = (type: "APROVADO" | "RECUSADO") => {
+  const openActionDialog = (type: "APROVADO" | "REJEITADO") => {
     setActionType(type);
-    setMotivo("");
+    setComentario("");
     setActionDialogOpen(true);
   };
 
@@ -93,17 +93,20 @@ export default function FechamentosPage() {
     setError(null);
     setSuccess(null);
     try {
-      for (const key of selected) {
+      // Novo formato: batch request com acao e comentario
+      const fechamentosArray = selected.map((key) => {
         const [userId, anoMes] = key.split(":");
-        await timesheetService.adminUpdateFechamentoStatus({
-          user_id: userId,
-          ano_mes: anoMes,
-          status: actionType,
-          motivo: motivo || undefined,
-        });
-      }
+        return { user_id: userId, ano_mes: anoMes };
+      });
+
+      await timesheetService.adminUpdateFechamentoStatus({
+        acao: actionType,
+        comentario: comentario || undefined,
+        fechamentos: fechamentosArray,
+      });
+
       setSuccess(
-        `${selected.length} fechamento(s) ${actionType === "APROVADO" ? "aprovado(s)" : "recusado(s)"} com sucesso!`
+        `${selected.length} fechamento(s) ${actionType === "APROVADO" ? "aprovado(s)" : "rejeitado(s)"} com sucesso!`
       );
       setSelected([]);
       setActionDialogOpen(false);
@@ -211,11 +214,11 @@ export default function FechamentosPage() {
             variant="contained"
             size="small"
             startIcon={<CancelIcon />}
-            onClick={() => openActionDialog("RECUSADO")}
+            onClick={() => openActionDialog("REJEITADO")}
             color="error"
             sx={{ textTransform: "none" }}
           >
-            Recusar
+            Rejeitar
           </Button>
         </Box>
       )}
@@ -295,22 +298,24 @@ export default function FechamentosPage() {
       {/* Action Dialog */}
       <Dialog open={actionDialogOpen} onClose={() => setActionDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>
-          {actionType === "APROVADO" ? "Aprovar Fechamentos" : "Recusar Fechamentos"}
+          {actionType === "APROVADO" ? "Aprovar Fechamentos" : "Rejeitar Fechamentos"}
         </DialogTitle>
         <DialogContent>
           <Typography sx={{ mb: 2 }}>
             {selected.length} fechamento(s) selecionado(s) serão{" "}
-            {actionType === "APROVADO" ? "aprovados" : "recusados"}.
+            {actionType === "APROVADO" ? "aprovados" : "rejeitados"}.
           </Typography>
-          <TextField
-            fullWidth
-            label="Motivo (opcional)"
-            multiline
-            rows={3}
-            value={motivo}
-            onChange={(e) => setMotivo(e.target.value)}
-            placeholder="Informe o motivo..."
-          />
+          {actionType === "REJEITADO" && (
+            <TextField
+              fullWidth
+              label="Motivo (opcional)"
+              multiline
+              rows={3}
+              value={comentario}
+              onChange={(e) => setComentario(e.target.value)}
+              placeholder="Informe o motivo da rejeição..."
+            />
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setActionDialogOpen(false)} disabled={actionLoading}>
@@ -326,7 +331,7 @@ export default function FechamentosPage() {
               ? "Processando..."
               : actionType === "APROVADO"
               ? "Aprovar"
-              : "Recusar"}
+              : "Rejeitar"}
           </Button>
         </DialogActions>
       </Dialog>

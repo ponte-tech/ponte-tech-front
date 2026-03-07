@@ -11,21 +11,22 @@ import { useAuth } from "@/app/hooks/useAuth";
 import { formatDate } from "@/app/utils/format-utils";
 
 const tipoLabels: Record<FeriadoTipo, string> = {
-  nacional: "Nacional",
-  estadual: "Estadual",
-  municipal: "Municipal",
+  NACIONAL: "Nacional",
+  ESTADUAL: "Estadual",
+  MUNICIPAL: "Municipal",
 };
 
 const tipoColors: Record<FeriadoTipo, string> = {
-  nacional: "#1565C0",
-  estadual: "#7B1FA2",
-  municipal: "#E65100",
+  NACIONAL: "#1565C0",
+  ESTADUAL: "#7B1FA2",
+  MUNICIPAL: "#E65100",
 };
 
 const emptyForm: CreateFeriadoRequest = {
   data: "",
-  descricao: "",
-  tipo: "nacional",
+  nome: "",
+  tipo: "NACIONAL",
+  recorrente: false,
 };
 
 export default function FeriadosPage() {
@@ -75,8 +76,9 @@ export default function FeriadosPage() {
     setEditingData(feriado.data);
     setFormData({
       data: feriado.data,
-      descricao: feriado.descricao,
+      nome: feriado.nome,
       tipo: feriado.tipo,
+      recorrente: feriado.recorrente,
     });
     setDialogOpen(true);
   };
@@ -85,14 +87,15 @@ export default function FeriadosPage() {
     setSaving(true);
     setError(null);
     try {
-      if (!formData.data || !formData.descricao) {
+      if (!formData.data || !formData.nome) {
         throw new Error("Preencha todos os campos obrigatórios");
       }
 
       if (editingData) {
         await timesheetService.adminUpdateFeriado(editingData, {
-          descricao: formData.descricao,
+          nome: formData.nome,
           tipo: formData.tipo,
+          recorrente: formData.recorrente,
         });
         setSuccess("Feriado atualizado com sucesso!");
       } else {
@@ -204,7 +207,7 @@ export default function FeriadosPage() {
                       sx={{ "&:hover": { bgcolor: alpha("#8270FF", 0.03) } }}
                     >
                       <TableCell>{formatDate(feriado.data)}</TableCell>
-                      <TableCell>{feriado.descricao}</TableCell>
+                      <TableCell>{feriado.nome}</TableCell>
                       <TableCell>
                         <Chip
                           label={tipoLabels[feriado.tipo]}
@@ -263,8 +266,8 @@ export default function FeriadosPage() {
                 fullWidth
                 label="Descrição"
                 required
-                value={formData.descricao}
-                onChange={(e) => setFormData((prev) => ({ ...prev, descricao: e.target.value }))}
+                value={formData.nome}
+                onChange={(e) => setFormData((prev) => ({ ...prev, nome: e.target.value }))}
                 disabled={saving}
               />
             </Grid>
@@ -309,7 +312,7 @@ export default function FeriadosPage() {
         <DialogContent>
           <Typography>
             Tem certeza que deseja excluir o feriado{" "}
-            <strong>{selectedFeriado?.descricao}</strong>?
+            <strong>{selectedFeriado?.nome}</strong>?
           </Typography>
         </DialogContent>
         <DialogActions>

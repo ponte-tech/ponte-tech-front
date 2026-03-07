@@ -1,12 +1,11 @@
 "use client";
 
 import { Box, Card, CardContent, Typography, Button, TextField, CircularProgress, Alert, Grid } from "@mui/material";
-
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from "@mui/icons-material";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import timesheetService from "@/app/services/timesheetService";
-import { CreateApontamentoRequest } from "@/app/types/api";
+import { CreateApontamentoRequest, LancamentoItemRequest } from "@/app/types/api";
 
 export default function NovoLancamentoPage() {
   const router = useRouter();
@@ -14,13 +13,14 @@ export default function NovoLancamentoPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const [formData, setFormData] = useState<CreateApontamentoRequest>({
+  const [formData, setFormData] = useState<LancamentoItemRequest>({
     data: "",
-    horas: 8,
-    descricao: "",
+    hora_inicio: "",
+    hora_fim: "",
+    observacao: "",
   });
 
-  const handleChange = (field: keyof CreateApontamentoRequest, value: string | number) => {
+  const handleChange = (field: keyof LancamentoItemRequest, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setError(null);
   };
@@ -36,11 +36,19 @@ export default function NovoLancamentoPage() {
         throw new Error("Por favor, selecione a data");
       }
 
-      if (formData.horas <= 0 || formData.horas > 24) {
-        throw new Error("As horas devem estar entre 0 e 24");
+      if (!formData.hora_inicio) {
+        throw new Error("Por favor, selecione a hora de início");
       }
 
-      await timesheetService.createLancamento(formData);
+      if (!formData.hora_fim) {
+        throw new Error("Por favor, selecione a hora de término");
+      }
+
+      const request: CreateApontamentoRequest = {
+        lancamentos: [formData],
+      };
+
+      await timesheetService.createLancamento(request);
       setSuccess(true);
 
       setTimeout(() => {
@@ -105,31 +113,42 @@ export default function NovoLancamentoPage() {
                       InputLabelProps={{ shrink: true }}
                     />
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  <Grid item xs={12} md={3}>
                     <TextField
                       fullWidth
-                      label="Horas"
-                      type="number"
+                      label="Hora Início"
+                      type="time"
                       required
-                      value={formData.horas}
-                      onChange={(e) => handleChange("horas", parseFloat(e.target.value))}
+                      value={formData.hora_inicio}
+                      onChange={(e) => handleChange("hora_inicio", e.target.value)}
                       disabled={loading}
-                      inputProps={{ min: 0.5, max: 24, step: 0.5 }}
-                      helperText="Mínimo 0.5h, máximo 24h"
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={3}>
+                    <TextField
+                      fullWidth
+                      label="Hora Fim"
+                      type="time"
+                      required
+                      value={formData.hora_fim}
+                      onChange={(e) => handleChange("hora_fim", e.target.value)}
+                      disabled={loading}
+                      InputLabelProps={{ shrink: true }}
                     />
                   </Grid>
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
-                      label="Descrição"
+                      label="Observação"
                       multiline
                       rows={3}
-                      value={formData.descricao}
-                      onChange={(e) => handleChange("descricao", e.target.value)}
+                      value={formData.observacao || ""}
+                      onChange={(e) => handleChange("observacao", e.target.value)}
                       disabled={loading}
                       placeholder="Descreva as atividades realizadas"
                       inputProps={{ maxLength: 500 }}
-                      helperText={`${(formData.descricao || "").length}/500 caracteres`}
+                      helperText={`${(formData.observacao || "").length}/500 caracteres`}
                     />
                   </Grid>
                 </Grid>

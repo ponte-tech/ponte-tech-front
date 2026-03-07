@@ -1,95 +1,175 @@
-// Tipos base de resposta da API
+// ===== TYPES BASE =====
+
 export interface ApiResponse<T = unknown> {
   success: boolean;
   message?: string;
   data?: T;
-  errors?: Record<string, string[]>;
+  errors?: {
+    errors?: Record<string, string[]>;
+  } | null;
 }
 
-// Tipos de perfil de usuário
-export type UserProfile = "admin" | "vendedor" | "professor" | "aluno" | "colaborador" | "contador";
+export type UserProfile = "vendedor" | "professor" | "aluno" | "colaborador" | "contador" | "administrador";
 
-// Tipos de usuário
-export interface User {
-  id: string;
-  nome_completo: string;
-  email: string;
-  perfil: UserProfile;
-  perfis?: UserProfile[]; // Quando usuário tem múltiplos perfis
-  status: string;
-  data_cadastro: string;
-  codigo_vendedor?: string; // Apenas para vendedores
-}
+// ===== AUTENTICAÇÃO =====
 
-// Resposta de login
-export interface LoginResponse {
-  user: User;
-  token: string;
-  expires_in: number;
-}
-
-// Resposta de seleção de perfil
-export interface SelectProfileResponse {
-  perfil_ativo: UserProfile;
-  token: string;
-  expires_in: number;
-  codigo_vendedor?: string; // Apenas para vendedores
-}
-
-// Request de login
 export interface LoginRequest {
   email: string;
   senha: string;
 }
 
-// Request de seleção de perfil
+export interface User {
+  id: string;
+  nome_completo: string;
+  email: string;
+  perfis: UserProfile[];
+  status: string;
+  data_cadastro: string;
+  codigo_vendedor?: string;
+}
+
+export interface AuthResponseData {
+  user: User;
+  token: string;
+  expires_in: number;
+}
+
+export interface LoginResponse extends AuthResponseData {}
+
 export interface SelectProfileRequest {
   perfil: UserProfile;
 }
 
-// Request de cadastro de vendedor
-export interface RegisterVendedorRequest {
+export interface SelectProfileResponse extends AuthResponseData {}
+
+// ===== CADASTRO VENDEDOR =====
+
+export interface SignupVendedorRequest {
   nome_completo: string;
-  data_nascimento: string;
-  cpf: string;
   email: string;
-  telefone: string;
   senha: string;
+  cpf: string;
+  data_nascimento: string;
+  telefone: string;
   termos_aceite: boolean;
-  endereco: {
-    cep: string;
-    rua: string;
-    numero: string;
+  endereco?: {
+    cep?: string;
+    rua?: string;
+    numero?: string;
     complemento?: string;
-    cidade: string;
-    estado: string;
+    cidade?: string;
+    estado?: string;
   };
 }
 
-// Request de cadastro de professor
-export interface RegisterProfessorRequest {
+export interface VendedorSignupResponse {
+  id: string;
   nome_completo: string;
-  data_nascimento: string;
-  cpf: string;
   email: string;
-  telefone: string;
-  senha: string;
-  termos_aceite: boolean;
-  especialidade: string;
-  area_atuacao: string;
-  biografia: string;
-  linkedin_url?: string;
+  codigo_vendedor: string;
+  status: string;
+  data_cadastro: string;
 }
 
-// Resposta de cadastro
-export interface RegisterResponse {
+// ===== CADASTRO PROFESSOR =====
+
+export interface SignupProfessorRequest {
+  nome_completo: string;
+  email: string;
+  senha: string;
+  cpf: string;
+  data_nascimento: string;
+  telefone: string;
+  especialidade: string;
+  area_atuacao: string;
+  biografia?: string;
+  linkedin_url?: string;
+  termos_aceite: boolean;
+}
+
+export interface ProfessorSignupResponse {
+  id: string;
+  nome_completo: string;
+  email: string;
+  especialidade: string;
+  status: string;
+  data_cadastro: string;
+}
+
+// ===== CADASTRO COLABORADOR =====
+
+export interface Endereco {
+  cep?: string;
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  estado?: string;
+}
+
+export interface DadosContratuais {
+  data_contratacao?: string;
+  valor_hora?: number;
+  total_hora_mes?: number;
+}
+
+export interface DadosFinanceiros {
+  chave_pix?: string;
+  data_pagamento?: string;
+}
+
+export interface SignupColaboradorRequest {
+  nome_completo: string;
+  cpf: string;
+  cnpj: string;
+  celular: string;
+  senha: string;
+  endereco: Endereco;
+  dados_contratuais: DadosContratuais;
+  dados_financeiros: DadosFinanceiros;
+}
+
+export interface ColaboradorSignupResponse {
+  id: string;
+  nome_completo: string;
+  email: string;
+  cnpj: string;
+  celular: string;
+  status: string;
+  data_cadastro: string;
+}
+
+// ===== CADASTRO CONTADOR =====
+
+export interface SignupContadorRequest {
+  nome_completo: string;
+  email: string;
+  senha: string;
+  cpf: string;
+  celular: string;
+}
+
+export interface ContadorSignupResponse {
   id: string;
   nome_completo: string;
   email: string;
   status: string;
   data_cadastro: string;
-  codigo_vendedor?: string; // Apenas para vendedor
 }
+
+// ===== LEGACY TYPES (keep for backwards compatibility) =====
+
+export type RegisterVendedorRequest = SignupVendedorRequest;
+export type RegisterProfessorRequest = SignupProfessorRequest;
+export type RegisterColaboradorRequest = SignupColaboradorRequest;
+export type RegisterContadorRequest = SignupContadorRequest;
+
+export type RegisterResponse =
+  | VendedorSignupResponse
+  | ProfessorSignupResponse
+  | ColaboradorSignupResponse
+  | ContadorSignupResponse;
 
 // Tipos de curso
 export type CursoStatus = "rascunho" | "aberto_venda" | "em_andamento" | "encerrado";
@@ -181,7 +261,7 @@ export interface CreateCursoRequest {
 export type UpdateCursoRequest = Partial<CreateCursoRequest>;
 
 // Tipos de Matrícula
-export interface Endereco {
+export interface EnderecoMatricula {
   cep: string;
   rua: string;
   numero: string;
@@ -198,7 +278,7 @@ export interface AlunoMatriculaRequest {
   data_nascimento: string;
   senha: string;
   termos_aceite: boolean;
-  endereco: Endereco;
+  endereco: EnderecoMatricula;
 }
 
 export interface CreateMatriculaRequest {
@@ -244,66 +324,87 @@ export interface CreateMatriculaResponse {
 // ===== TIMESHEET TYPES =====
 
 export type ApontamentoStatus = "RASCUNHO" | "SUBMETIDO" | "APROVADO";
-export type FechamentoStatus = "ABERTO" | "SUBMETIDO" | "APROVADO" | "RECUSADO";
-export type FeriadoTipo = "nacional" | "estadual" | "municipal";
+export type FechamentoStatus = "ABERTO" | "SUBMETIDO" | "APROVADO" | "REJEITADO";
+export type FeriadoTipo = "NACIONAL" | "ESTADUAL" | "MUNICIPAL";
+
+export interface LancamentoItemRequest {
+  data: string;
+  hora_inicio: string;
+  hora_fim: string;
+  observacao?: string;
+}
 
 export interface CreateApontamentoRequest {
-  data: string;
-  horas: number;
-  descricao?: string;
+  lancamentos: LancamentoItemRequest[];
 }
 
 export interface UpdateApontamentoRequest {
-  data?: string;
-  horas?: number;
-  descricao?: string;
+  hora_inicio: string;
+  hora_fim: string;
+  observacao?: string;
 }
 
 export interface ApontamentoResponse {
-  id: string;
-  user_id: string;
+  apontamento_id: string;
   data: string;
-  horas: number;
-  descricao: string;
+  hora_inicio: string;
+  hora_fim: string;
+  duracao_minutos: number;
+  duracao_horas_ajustada: number;
+  tipo: "NORMAL" | "EXTRA" | "FERIADO";
   status: ApontamentoStatus;
-  data_criacao: string;
-  data_atualizacao?: string;
+  is_atrasado: boolean;
+  observacao: string;
+  data_cadastro: string;
+  data_atualizacao: string;
+  warnings: string[];
+}
+
+export interface DiaResponse {
+  data: string;
+  lancamentos: ApontamentoResponse[];
+  e_feriado: boolean;
+  nome_feriado?: string;
 }
 
 export interface MesResponse {
-  ano_mes: string;
-  user_id: string;
-  total_horas: number;
-  horas_submetidas: number;
-  horas_aprovadas: number;
-  status: FechamentoStatus;
-  data_fechamento: string | null;
-  lancamentos: ApontamentoResponse[];
+  mes: string;
+  dias: DiaResponse[];
+  feriados: FeriadoResponse[];
 }
 
 export interface FeriadoResponse {
   data: string;
-  descricao: string;
+  nome: string;
   tipo: FeriadoTipo;
+  recorrente: boolean;
   data_criacao?: string;
 }
 
 export interface CreateFeriadoRequest {
   data: string;
-  descricao: string;
+  nome: string;
   tipo: FeriadoTipo;
+  estado?: string;
+  recorrente: boolean;
 }
 
 export interface UpdateFeriadoRequest {
-  descricao?: string;
-  tipo?: FeriadoTipo;
+  nome: string;
+  tipo: FeriadoTipo;
+  estado?: string;
+  recorrente: boolean;
 }
 
-export interface AtualizarStatusFechamentoRequest {
+export interface FechamentoStatusItemRequest {
   user_id: string;
   ano_mes: string;
-  status: "APROVADO" | "RECUSADO" | "PENDENTE";
-  motivo?: string;
+}
+
+export interface AtualizarStatusFechamentosRequest {
+  acao: "APROVADO" | "REJEITADO";
+  comentario?: string;
+  fechamentos: FechamentoStatusItemRequest[];
 }
 
 export interface FechamentoListItem {
@@ -313,31 +414,41 @@ export interface FechamentoListItem {
   ano_mes: string;
   total_horas: number;
   status: FechamentoStatus;
-  data_submissao?: string;
-}
-
-export interface TimesheetConfigResponse {
-  horas_maximas_dia: number;
-  horas_minimas_mes: number;
-  permitir_horas_extras: boolean;
-  taxa_hora_extra: number;
-  data_atualizacao?: string;
+  data_submissao: string;
 }
 
 export interface TimesheetConfigRequest {
-  horas_maximas_dia: number;
-  horas_minimas_mes: number;
-  permitir_horas_extras: boolean;
-  taxa_hora_extra: number;
+  multiplicadores: Record<string, number>;
+  limites_diarios: Record<string, number>;
+  limites_mensais: Record<string, number>;
+  limite_submissao_dia: number;
+  comportamento_atraso: "BLOQUEAR" | "PERMITIR_ATRASADO";
+}
+
+export interface TimesheetConfigResponse {
+  multiplicadores: Record<string, number>;
+  limites_diarios: Record<string, number>;
+  limites_mensais: Record<string, number>;
+  limite_submissao_dia: number;
+  comportamento_atraso: "BLOQUEAR" | "PERMITIR_ATRASADO";
+  data_atualizacao?: string;
 }
 
 export interface AuditoriaFechamentoItem {
   id: string;
   ano_mes: string;
-  status_anterior: string;
-  status_novo: string;
+  status_anterior: "ABERTO" | "SUBMETIDO" | "APROVADO" | "REJEITADO";
+  status_novo: "ABERTO" | "SUBMETIDO" | "APROVADO" | "REJEITADO";
   usuario_admin: string;
   motivo: string;
+  data_alteracao: string;
+}
+
+export interface AuditoriaLancamentoItem {
+  id: string;
+  apontamento_id: string;
+  acao: "CRIADA" | "ATUALIZADA" | "DELETADA";
+  valores_novos: Record<string, unknown>;
   data_alteracao: string;
 }
 
@@ -405,13 +516,13 @@ export interface DownloadZipRequest {
 
 export interface FiscalConfigResponse {
   prazo_maximo_dia: number;
-  tolerancia_valor_pct: number;
+  tolerancia_pct: number;
   bloquear_pagamento_sem_nota: boolean;
   data_atualizacao?: string;
 }
 
 export interface FiscalConfigRequest {
   prazo_maximo_dia: number;
-  tolerancia_valor_pct: number;
+  tolerancia_pct: number;
   bloquear_pagamento_sem_nota: boolean;
 }

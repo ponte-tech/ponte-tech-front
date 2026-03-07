@@ -74,7 +74,7 @@ export default function MatriculaContent() {
     setError(null);
   };
 
-  const handleEnderecoChange = (field: keyof Endereco, value: string) => {
+  const handleEnderecoChange = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       endereco: { ...prev.endereco, [field]: value },

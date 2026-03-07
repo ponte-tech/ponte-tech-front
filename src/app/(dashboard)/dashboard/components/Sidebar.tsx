@@ -1,7 +1,7 @@
 "use client";
 
 import { Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Divider, alpha, Tooltip, useMediaQuery, useTheme, Grid } from "@mui/material";
-import { Dashboard as DashboardIcon, Person as PersonIcon, Settings as SettingsIcon, Logout as LogoutIcon, School as SchoolIcon, AccessTime as AccessTimeIcon, ReceiptLong as ReceiptLongIcon } from "@mui/icons-material";
+import { Dashboard as DashboardIcon, Person as PersonIcon, Settings as SettingsIcon, Logout as LogoutIcon, School as SchoolIcon, AccessTime as AccessTimeIcon, ReceiptLong as ReceiptLongIcon, People as PeopleIcon } from "@mui/icons-material";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/app/hooks/useAuth";
 import Image from "next/image";
@@ -28,6 +28,9 @@ const getMenuItems = (userType?: string) => {
     ] : []),
     ...((isColaborador || isAdmin || isContador) ? [
       { text: "Fiscal", icon: <ReceiptLongIcon />, path: "/dashboard/fiscal" },
+    ] : []),
+    ...(isAdmin ? [
+      { text: "Usuários", icon: <PeopleIcon />, path: "/dashboard/usuarios" },
     ] : []),
     { text: "Perfil", icon: <PersonIcon />, path: "/dashboard/profile" },
     { text: "Configurações", icon: <SettingsIcon />, path: "/dashboard/settings" },

@@ -154,6 +154,43 @@ export default function LoginPage() {
               </Typography>
             </Box>
 
+            {/* Info Perfis */}
+            <Box
+              sx={{
+                mb: 3,
+                p: 2,
+                borderRadius: 2,
+                bgcolor: "rgba(130, 112, 255, 0.05)",
+                border: "1px solid rgba(130, 112, 255, 0.2)",
+              }}
+            >
+              <Typography variant="caption" sx={{ color: "text.secondary", display: "block", mb: 1 }}>
+                ✨ Acesso para:
+              </Typography>
+              <Grid container spacing={1}>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="caption" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                    👨‍💼 Administrador
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="caption" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                    👷 Colaborador
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="caption" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                    📊 Contador
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="caption" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                    💼 Vendedor
+                  </Typography>
+                </Grid>
+              </Grid>
+            </Box>
+
             {/* Alert de erro */}
             {error && (
               <Fade in>

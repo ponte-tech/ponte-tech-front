@@ -2,12 +2,12 @@
 
 import { Box, Card, CardContent, Typography, Button, CircularProgress, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, alpha, Dialog, DialogTitle, DialogContent, DialogActions, Alert, Grid } from "@mui/material";
 import { Add as AddIcon, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, Edit as EditIcon, Delete as DeleteIcon, Send as SendIcon, AccessTime as AccessTimeIcon, CheckCircle as CheckCircleIcon, Schedule as ScheduleIcon } from "@mui/icons-material";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import timesheetService from "@/app/services/timesheetService";
 import { MesResponse, ApontamentoResponse } from "@/app/types/api";
 import { useAuth } from "@/app/hooks/useAuth";
-import { formatDate, formatHours, formatMonthYear, getCurrentAnoMes } from "@/app/utils/format-utils";
+import { formatDate, formatMonthYear, getCurrentAnoMes } from "@/app/utils/format-utils";
 import StatusChip from "../components/StatusChip";
 
 export default function TimesheetPage() {
@@ -52,11 +52,34 @@ export default function TimesheetPage() {
     setAnoMes(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`);
   };
 
+  // Compose lancamentos from dias
+  const lancamentos = useMemo(() => {
+    if (!mesData) return [];
+    return mesData.dias.flatMap((dia) => dia.lancamentos);
+  }, [mesData]);
+
+  // Calculate statistics
+  const stats = useMemo(() => {
+    const totalHoras = lancamentos.reduce((sum, l) => sum + l.duracao_horas_ajustada, 0);
+    const horasSubmetidas = lancamentos
+      .filter((l) => l.status !== "RASCUNHO")
+      .reduce((sum, l) => sum + l.duracao_horas_ajustada, 0);
+    const horasAprovadas = lancamentos
+      .filter((l) => l.status === "APROVADO")
+      .reduce((sum, l) => sum + l.duracao_horas_ajustada, 0);
+
+    return {
+      totalHoras: totalHoras.toFixed(1),
+      horasSubmetidas: horasSubmetidas.toFixed(1),
+      horasAprovadas: horasAprovadas.toFixed(1),
+    };
+  }, [lancamentos]);
+
   const handleDelete = async () => {
     if (!selectedLancamento) return;
     setActionLoading(true);
     try {
-      await timesheetService.deleteLancamento(selectedLancamento.id);
+      await timesheetService.deleteLancamento(selectedLancamento.apontamento_id);
       setDeleteDialogOpen(false);
       setSelectedLancamento(null);
       loadMes();
@@ -71,7 +94,7 @@ export default function TimesheetPage() {
   const handleSubmit = async (lancamento: ApontamentoResponse) => {
     setActionLoading(true);
     try {
-      await timesheetService.submitLancamento(lancamento.id);
+      await timesheetService.submitLancamento(lancamento.apontamento_id);
       loadMes();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro ao submeter lançamento";
@@ -137,7 +160,7 @@ export default function TimesheetPage() {
         <>
           {/* Summary Cards */}
           {mesData && (
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", md: "repeat(4, 1fr)" }, gap: 3, mb: 4 }}>
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", md: "repeat(3, 1fr)" }, gap: 3, mb: 4 }}>
               <Card sx={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
                 <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                   <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: alpha("#8270FF", 0.1) }}>
@@ -145,7 +168,7 @@ export default function TimesheetPage() {
                   </Box>
                   <Box>
                     <Typography variant="body2" color="text.secondary">Total Horas</Typography>
-                    <Typography variant="h5" fontWeight="bold">{formatHours(mesData.total_horas)}</Typography>
+                    <Typography variant="h5" fontWeight="bold">{stats.totalHoras}h</Typography>
                   </Box>
                 </CardContent>
               </Card>
@@ -156,7 +179,7 @@ export default function TimesheetPage() {
                   </Box>
                   <Box>
                     <Typography variant="body2" color="text.secondary">Submetidas</Typography>
-                    <Typography variant="h5" fontWeight="bold">{formatHours(mesData.horas_submetidas)}</Typography>
+                    <Typography variant="h5" fontWeight="bold">{stats.horasSubmetidas}h</Typography>
                   </Box>
                 </CardContent>
               </Card>
@@ -167,18 +190,7 @@ export default function TimesheetPage() {
                   </Box>
                   <Box>
                     <Typography variant="body2" color="text.secondary">Aprovadas</Typography>
-                    <Typography variant="h5" fontWeight="bold">{formatHours(mesData.horas_aprovadas)}</Typography>
-                  </Box>
-                </CardContent>
-              </Card>
-              <Card sx={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-                <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: alpha("#7B1FA2", 0.1) }}>
-                    <ScheduleIcon sx={{ color: "#7B1FA2" }} />
-                  </Box>
-                  <Box>
-                    <Typography variant="body2" color="text.secondary">Status do Mês</Typography>
-                    <StatusChip status={mesData.status} size="medium" />
+                    <Typography variant="h5" fontWeight="bold">{stats.horasAprovadas}h</Typography>
                   </Box>
                 </CardContent>
               </Card>
@@ -193,7 +205,7 @@ export default function TimesheetPage() {
                   Lançamentos
                 </Typography>
               </Box>
-              {!mesData || mesData.lancamentos.length === 0 ? (
+              {!mesData || lancamentos.length === 0 ? (
                 <Box sx={{ textAlign: "center", py: 6 }}>
                   <Typography variant="body1" color="text.secondary" gutterBottom>
                     Nenhum lançamento neste mês
@@ -213,24 +225,28 @@ export default function TimesheetPage() {
                     <TableHead>
                       <TableRow>
                         <TableCell sx={{ fontWeight: 700 }}>Data</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }}>Horas</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }}>Descrição</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Horário</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Duração</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Tipo</TableCell>
                         <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
                         <TableCell sx={{ fontWeight: 700 }} align="right">Ações</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {mesData.lancamentos.map((lancamento) => (
+                      {lancamentos.map((lancamento) => (
                         <TableRow
-                          key={lancamento.id}
+                          key={lancamento.apontamento_id}
                           hover
                           sx={{ cursor: "pointer", "&:hover": { bgcolor: alpha("#8270FF", 0.03) } }}
-                          onClick={() => router.push(`/dashboard/timesheet/${lancamento.id}`)}
+                          onClick={() => router.push(`/dashboard/timesheet/${lancamento.apontamento_id}`)}
                         >
                           <TableCell>{formatDate(lancamento.data)}</TableCell>
-                          <TableCell>{formatHours(lancamento.horas)}</TableCell>
-                          <TableCell sx={{ maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {lancamento.descricao || "-"}
+                          <TableCell>{`${lancamento.hora_inicio} - ${lancamento.hora_fim}`}</TableCell>
+                          <TableCell>{lancamento.duracao_horas_ajustada.toFixed(1)}h</TableCell>
+                          <TableCell>
+                            <Typography variant="body2" color="text.secondary">
+                              {lancamento.tipo}
+                            </Typography>
                           </TableCell>
                           <TableCell>
                             <StatusChip status={lancamento.status} />
@@ -240,7 +256,7 @@ export default function TimesheetPage() {
                               <Box sx={{ display: "flex", gap: 0.5, justifyContent: "flex-end" }}>
                                 <IconButton
                                   size="small"
-                                  onClick={() => router.push(`/dashboard/timesheet/${lancamento.id}`)}
+                                  onClick={() => router.push(`/dashboard/timesheet/${lancamento.apontamento_id}`)}
                                   title="Editar"
                                 >
                                   <EditIcon fontSize="small" />

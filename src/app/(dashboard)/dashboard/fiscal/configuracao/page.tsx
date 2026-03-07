@@ -19,7 +19,7 @@ export default function FiscalConfigPage() {
 
   const [formData, setFormData] = useState<FiscalConfigRequest>({
     prazo_maximo_dia: 10,
-    tolerancia_valor_pct: 2.0,
+    tolerancia_pct: 2.0,
     bloquear_pagamento_sem_nota: false,
   });
 
@@ -31,7 +31,7 @@ export default function FiscalConfigPage() {
       const config = await fiscalService.adminGetConfig();
       setFormData({
         prazo_maximo_dia: config.prazo_maximo_dia,
-        tolerancia_valor_pct: config.tolerancia_valor_pct,
+        tolerancia_pct: config.tolerancia_pct,
         bloquear_pagamento_sem_nota: config.bloquear_pagamento_sem_nota,
       });
     } catch (err: unknown) {
@@ -59,7 +59,7 @@ export default function FiscalConfigPage() {
       if (formData.prazo_maximo_dia < 1 || formData.prazo_maximo_dia > 28) {
         throw new Error("Prazo máximo deve estar entre 1 e 28");
       }
-      if (formData.tolerancia_valor_pct < 0 || formData.tolerancia_valor_pct > 100) {
+      if (formData.tolerancia_pct < 0 || formData.tolerancia_pct > 100) {
         throw new Error("Tolerância deve estar entre 0% e 100%");
       }
 
@@ -146,11 +146,11 @@ export default function FiscalConfigPage() {
                       label="Tolerância de Valor (%)"
                       type="number"
                       required
-                      value={formData.tolerancia_valor_pct}
+                      value={formData.tolerancia_pct}
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
-                          tolerancia_valor_pct: parseFloat(e.target.value),
+                          tolerancia_pct: parseFloat(e.target.value),
                         }))
                       }
                       disabled={saving}

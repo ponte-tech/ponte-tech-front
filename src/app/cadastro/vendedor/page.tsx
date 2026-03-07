@@ -7,7 +7,7 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import authService from "@/app/services/authService";
-import { RegisterVendedorRequest, Endereco } from "@/app/types/api";
+import { RegisterVendedorRequest } from "@/app/types/api";
 
 const steps = ["Dados Pessoais", "Endereço", "Confirmação"];
 
@@ -47,16 +47,16 @@ export default function CadastroVendedorPage() {
     setError(null);
   };
 
-  const handleEnderecoChange = (field: keyof Endereco, value: string) => {
+  const handleEnderecoChange = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
-      endereco: { ...prev.endereco, [field]: value },
+      endereco: { ...prev.endereco, [field]: value } as typeof prev.endereco,
     }));
     setError(null);
   };
 
   const buscarCEP = async () => {
-    const cep = formData.endereco.cep.replace(/\D/g, "");
+    const cep = (formData.endereco?.cep || "").replace(/\D/g, "");
     if (cep.length !== 8) return;
 
     try {
@@ -67,10 +67,12 @@ export default function CadastroVendedorPage() {
         setFormData((prev) => ({
           ...prev,
           endereco: {
-            ...prev.endereco,
-            rua: data.logradouro || prev.endereco.rua,
-            cidade: data.localidade || prev.endereco.cidade,
-            estado: data.uf || prev.endereco.estado,
+            cep: prev.endereco?.cep || "",
+            rua: data.logradouro || prev.endereco?.rua || "",
+            numero: prev.endereco?.numero || "",
+            complemento: prev.endereco?.complemento || "",
+            cidade: data.localidade || prev.endereco?.cidade || "",
+            estado: data.uf || prev.endereco?.estado || "",
           },
         }));
       }
@@ -137,23 +139,23 @@ export default function CadastroVendedorPage() {
     }
 
     if (step === 1) {
-      if (!formData.endereco.cep || formData.endereco.cep.replace(/\D/g, "").length !== 8) {
+      if (!formData.endereco?.cep || (formData.endereco?.cep || "").replace(/\D/g, "").length !== 8) {
         setError("CEP válido é obrigatório");
         return false;
       }
-      if (!formData.endereco.rua || formData.endereco.rua.trim() === "") {
+      if (!formData.endereco?.rua || (formData.endereco?.rua || "").trim() === "") {
         setError("Rua é obrigatória");
         return false;
       }
-      if (!formData.endereco.numero || formData.endereco.numero.trim() === "") {
+      if (!formData.endereco?.numero || (formData.endereco?.numero || "").trim() === "") {
         setError("Número é obrigatório");
         return false;
       }
-      if (!formData.endereco.cidade || formData.endereco.cidade.trim() === "") {
+      if (!formData.endereco?.cidade || (formData.endereco?.cidade || "").trim() === "") {
         setError("Cidade é obrigatória");
         return false;
       }
-      if (!formData.endereco.estado || formData.endereco.estado.trim() === "") {
+      if (!formData.endereco?.estado || (formData.endereco?.estado || "").trim() === "") {
         setError("Estado é obrigatório");
         return false;
       }
@@ -486,7 +488,7 @@ export default function CadastroVendedorPage() {
                       label="CEP"
                       required
                       placeholder="00000-000"
-                      value={formData.endereco.cep}
+                      value={formData.endereco?.cep}
                       onChange={(e) => handleEnderecoChange("cep", formatCEP(e.target.value))}
                       onBlur={buscarCEP}
                       disabled={submitting}
@@ -499,7 +501,7 @@ export default function CadastroVendedorPage() {
                       fullWidth
                       label="Rua"
                       required
-                      value={formData.endereco.rua}
+                      value={formData.endereco?.rua}
                       onChange={(e) => handleEnderecoChange("rua", e.target.value)}
                       disabled={submitting}
                     />
@@ -509,7 +511,7 @@ export default function CadastroVendedorPage() {
                       fullWidth
                       label="Número"
                       required
-                      value={formData.endereco.numero}
+                      value={formData.endereco?.numero}
                       onChange={(e) => handleEnderecoChange("numero", e.target.value)}
                       disabled={submitting}
                     />
@@ -518,7 +520,7 @@ export default function CadastroVendedorPage() {
                     <TextField
                       fullWidth
                       label="Complemento"
-                      value={formData.endereco.complemento}
+                      value={formData.endereco?.complemento}
                       onChange={(e) => handleEnderecoChange("complemento", e.target.value)}
                       disabled={submitting}
                     />
@@ -528,7 +530,7 @@ export default function CadastroVendedorPage() {
                       fullWidth
                       label="Cidade"
                       required
-                      value={formData.endereco.cidade}
+                      value={formData.endereco?.cidade}
                       onChange={(e) => handleEnderecoChange("cidade", e.target.value)}
                       disabled={submitting}
                     />
@@ -539,7 +541,7 @@ export default function CadastroVendedorPage() {
                       label="Estado"
                       required
                       placeholder="SP"
-                      value={formData.endereco.estado}
+                      value={formData.endereco?.estado}
                       onChange={(e) => handleEnderecoChange("estado", e.target.value)}
                       disabled={submitting}
                       inputProps={{ maxLength: 2 }}
@@ -595,10 +597,10 @@ export default function CadastroVendedorPage() {
                         Endereço
                       </Typography>
                       <Typography variant="body1" fontWeight={500}>
-                        {formData.endereco.rua}, {formData.endereco.numero}
-                        {formData.endereco.complemento && ` - ${formData.endereco.complemento}`}
+                        {formData.endereco?.rua}, {formData.endereco?.numero}
+                        {formData.endereco?.complemento && ` - ${formData.endereco?.complemento}`}
                         <br />
-                        {formData.endereco.cidade} - {formData.endereco.estado} • CEP: {formData.endereco.cep}
+                        {formData.endereco?.cidade} - {formData.endereco?.estado} • CEP: {formData.endereco?.cep}
                       </Typography>
                     </Grid>
                   </Grid>

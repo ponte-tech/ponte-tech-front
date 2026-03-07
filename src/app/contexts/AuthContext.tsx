@@ -125,7 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ...user,
           userType: perfil as UserType,
           role: perfil,
-          codigoVendedor: response.codigo_vendedor,
+          codigoVendedor: (response as any).codigo_vendedor,
         };
         localStorage.setItem("user", JSON.stringify(updatedUser));
         setUser(updatedUser);
