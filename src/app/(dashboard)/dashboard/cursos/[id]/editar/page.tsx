@@ -17,6 +17,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import cursosService from "@/app/services/cursosService";
 import { UpdateCursoRequest, CursoStatus, CursoNivel, Curso } from "@/app/types/api";
+import { useAuth } from "@/app/hooks/useAuth";
 
 const statusOptions: { value: CursoStatus; label: string }[] = [
   { value: "rascunho", label: "Rascunho" },
@@ -35,6 +36,7 @@ export default function EditarCursoPage() {
   const router = useRouter();
   const params = useParams();
   const cursoId = params.id as string;
+  const { user } = useAuth();
 
   const [curso, setCurso] = useState<Curso | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,6 +45,13 @@ export default function EditarCursoPage() {
   const [success, setSuccess] = useState(false);
 
   const [formData, setFormData] = useState<UpdateCursoRequest>({});
+
+  // Verificar se o usuário é admin
+  useEffect(() => {
+    if (user && user.userType !== "admin") {
+      router.push("/dashboard/cursos");
+    }
+  }, [user, router]);
 
   useEffect(() => {
     loadCurso();

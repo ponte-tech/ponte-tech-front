@@ -13,7 +13,7 @@ import {
   Alert,
 } from "@mui/material";
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from "@mui/icons-material";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import cursosService from "@/app/services/cursosService";
 import { CreateCursoRequest, CursoStatus, CursoNivel } from "@/app/types/api";
@@ -38,6 +38,13 @@ export default function NovoCursoPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // Verificar se o usuário é admin
+  useEffect(() => {
+    if (user && user.userType !== "admin") {
+      router.push("/dashboard/cursos");
+    }
+  }, [user, router]);
 
   const [formData, setFormData] = useState<CreateCursoRequest>({
     titulo: "",

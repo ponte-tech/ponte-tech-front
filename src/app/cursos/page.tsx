@@ -189,19 +189,21 @@ export default function CursosPage() {
             Gerencie e visualize todos os cursos disponíveis
           </Typography>
         </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => router.push("/cursos/novo")}
-          sx={{
-            bgcolor: "#8270FF",
-            "&:hover": { bgcolor: "#6c5ce7" },
-            textTransform: "none",
-            px: 3,
-          }}
-        >
-          Cadastrar Curso
-        </Button>
+        {isAdmin && (
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => router.push("/cursos/novo")}
+            sx={{
+              bgcolor: "#8270FF",
+              "&:hover": { bgcolor: "#6c5ce7" },
+              textTransform: "none",
+              px: 3,
+            }}
+          >
+            Cadastrar Curso
+          </Button>
+        )}
       </Box>
 
       {/* Filters */}
