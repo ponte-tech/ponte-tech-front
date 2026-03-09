@@ -31,7 +31,9 @@ import {
   Cancel as CancelIcon,
   Payment as PaymentIcon,
   DownloadForOffline as DownloadAllIcon,
+  RemoveCircle as RemovePaymentIcon,
 } from '@mui/icons-material';
+import JSZip from 'jszip';
 import fiscalService from '@/app/services/fiscalService';
 import type { NotaFiscal, StatusNotaFiscal } from '@/app/types/fiscal';
 
@@ -73,6 +75,10 @@ export default function NotasFiscaisSection({ colaboradorId, mes }: NotasFiscais
   const [dialogPagamento, setDialogPagamento] = useState(false);
   const [notaParaPagar, setNotaParaPagar] = useState<NotaFiscal | null>(null);
 
+  // Dialog de confirmação de remoção de pagamento
+  const [dialogRemoverPagamento, setDialogRemoverPagamento] = useState(false);
+  const [notaParaDespagar, setNotaParaDespagar] = useState<NotaFiscal | null>(null);
+
   useEffect(() => {
     loadNotas();
   }, [colaboradorId, mes]);
@@ -110,19 +116,57 @@ export default function NotasFiscaisSection({ colaboradorId, mes }: NotasFiscais
       return;
     }
 
-    // Download each one
-    for (const nota of notasComUrl) {
-      if (nota.arquivo_url) {
-        window.open(nota.arquivo_url, '_blank');
-        // Small delay to prevent browser blocking multiple downloads
-        await new Promise(resolve => setTimeout(resolve, 500));
+    // Se houver apenas 1 nota, baixar diretamente
+    if (notasComUrl.length === 1) {
+      window.open(notasComUrl[0].arquivo_url, '_blank');
+      return;
+    }
+
+    // Se houver mais de 1 nota, criar um ZIP
+    try {
+      const zip = new JSZip();
+
+      // Baixar cada nota e adicionar ao ZIP
+      for (let i = 0; i < notasComUrl.length; i++) {
+        const nota = notasComUrl[i];
+        if (nota.arquivo_url) {
+          try {
+            const response = await fetch(nota.arquivo_url);
+            const blob = await response.blob();
+
+            // Usar nome do arquivo ou gerar um nome baseado no cliente
+            const fileName = nota.arquivo_nome || `${nota.nome_cliente}_${i + 1}.pdf`;
+            zip.file(fileName, blob);
+          } catch (err) {
+            console.error(`Erro ao baixar nota ${nota.nota_fiscal_id}:`, err);
+          }
+        }
       }
+
+      // Gerar o ZIP e fazer download
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(zipBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `notas_fiscais_${mes}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Erro ao criar ZIP:', err);
+      alert('Erro ao preparar download das notas fiscais');
     }
   };
 
   const handlePagarNota = (nota: NotaFiscal) => {
     setNotaParaPagar(nota);
     setDialogPagamento(true);
+  };
+
+  const handleRemoverPagamento = (nota: NotaFiscal) => {
+    setNotaParaDespagar(nota);
+    setDialogRemoverPagamento(true);
   };
 
   const confirmPagamento = async () => {
@@ -140,6 +184,27 @@ export default function NotasFiscaisSection({ colaboradorId, mes }: NotasFiscais
     } catch (err) {
       console.error('Erro ao marcar nota como paga:', err);
       alert('Erro ao marcar nota como paga');
+    } finally {
+      setProcessingNotaId(null);
+    }
+  };
+
+  const confirmRemoverPagamento = async () => {
+    if (!notaParaDespagar) return;
+
+    try {
+      setProcessingNotaId(notaParaDespagar.nota_fiscal_id);
+      // Reverter para status PENDENTE
+      await fiscalService.atualizarStatusNota(notaParaDespagar.nota_fiscal_id, 'PENDENTE');
+
+      // Recarregar lista
+      await loadNotas();
+
+      setDialogRemoverPagamento(false);
+      setNotaParaDespagar(null);
+    } catch (err) {
+      console.error('Erro ao remover pagamento:', err);
+      alert('Erro ao remover pagamento da nota');
     } finally {
       setProcessingNotaId(null);
     }
@@ -172,16 +237,6 @@ export default function NotasFiscaisSection({ colaboradorId, mes }: NotasFiscais
         <Typography variant="h6" fontWeight="600">
           Notas Fiscais ({notas.length})
         </Typography>
-        {notas.length > 0 && (
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<DownloadAllIcon />}
-            onClick={handleDownloadAll}
-          >
-            Baixar Todas
-          </Button>
-        )}
       </Box>
 
       {notas.length === 0 ? (
@@ -196,7 +251,8 @@ export default function NotasFiscaisSection({ colaboradorId, mes }: NotasFiscais
                 <TableCell><strong>Cliente</strong></TableCell>
                 <TableCell><strong>Arquivo</strong></TableCell>
                 <TableCell align="center"><strong>Status</strong></TableCell>
-                <TableCell align="center"><strong>Ações</strong></TableCell>
+                <TableCell align="center"><strong>Download</strong></TableCell>
+                <TableCell align="center"><strong>Pagar</strong></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -232,35 +288,54 @@ export default function NotasFiscaisSection({ colaboradorId, mes }: NotasFiscais
                   </TableCell>
 
                   <TableCell align="center">
-                    <Stack direction="row" spacing={0.5} justifyContent="center">
-                      <Tooltip title="Baixar PDF">
+                    <Tooltip title="Baixar PDF">
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={() => handleDownload(nota)}
+                        disabled={!nota.arquivo_url}
+                      >
+                        <DownloadIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+
+                  <TableCell align="center">
+                    {nota.status === 'PAGA' ? (
+                      <Tooltip title="Remover Pagamento">
                         <IconButton
                           size="small"
-                          color="primary"
-                          onClick={() => handleDownload(nota)}
-                          disabled={!nota.arquivo_url}
+                          color="error"
+                          onClick={() => handleRemoverPagamento(nota)}
+                          disabled={processingNotaId === nota.nota_fiscal_id}
                         >
-                          <DownloadIcon fontSize="small" />
+                          {processingNotaId === nota.nota_fiscal_id ? (
+                            <CircularProgress size={16} />
+                          ) : (
+                            <RemovePaymentIcon fontSize="small" />
+                          )}
                         </IconButton>
                       </Tooltip>
-
-                      {nota.status === 'APROVADA' && (
-                        <Tooltip title="Marcar como Paga">
-                          <IconButton
-                            size="small"
-                            color="success"
-                            onClick={() => handlePagarNota(nota)}
-                            disabled={processingNotaId === nota.nota_fiscal_id}
-                          >
-                            {processingNotaId === nota.nota_fiscal_id ? (
-                              <CircularProgress size={16} />
-                            ) : (
-                              <PaymentIcon fontSize="small" />
-                            )}
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                    </Stack>
+                    ) : (nota.status === 'PENDENTE' || nota.status === 'APROVADA') ? (
+                      <Tooltip title="Marcar como Paga">
+                        <IconButton
+                          size="small"
+                          color="success"
+                          onClick={() => handlePagarNota(nota)}
+                          disabled={processingNotaId === nota.nota_fiscal_id}
+                        >
+                          {processingNotaId === nota.nota_fiscal_id ? (
+                            <CircularProgress size={16} />
+                          ) : (
+                            <PaymentIcon fontSize="small" />
+                          )}
+                        </IconButton>
+                      </Tooltip>
+                    ) : (
+                      <Typography variant="caption" color="text.secondary">
+                        -
+                      </Typography>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -290,6 +365,31 @@ export default function NotasFiscaisSection({ colaboradorId, mes }: NotasFiscais
             disabled={processingNotaId !== null}
           >
             Confirmar Pagamento
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog de Confirmação de Remoção de Pagamento */}
+      <Dialog open={dialogRemoverPagamento} onClose={() => setDialogRemoverPagamento(false)}>
+        <DialogTitle>Remover Pagamento da Nota Fiscal</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Deseja remover o pagamento da nota fiscal de <strong>{notaParaDespagar?.nome_cliente}</strong>?
+          </Typography>
+          <Alert severity="warning" sx={{ mt: 2 }}>
+            Esta ação reverterá o status da nota para "PENDENTE".
+          </Alert>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDialogRemoverPagamento(false)}>Cancelar</Button>
+          <Button
+            onClick={confirmRemoverPagamento}
+            variant="contained"
+            color="error"
+            startIcon={<RemovePaymentIcon />}
+            disabled={processingNotaId !== null}
+          >
+            Confirmar Remoção
           </Button>
         </DialogActions>
       </Dialog>

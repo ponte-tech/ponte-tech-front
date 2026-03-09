@@ -45,6 +45,7 @@ import {
   Payment as PaymentIcon,
   Receipt as ReceiptIcon,
 } from '@mui/icons-material';
+import JSZip from 'jszip';
 import { useAuth } from '@/app/hooks/useAuth';
 import timesheetService from '@/app/services/timesheetService';
 import fiscalService from '@/app/services/fiscalService';
@@ -98,6 +99,7 @@ export default function TimesheetAprovacoesPage() {
   // Filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<StatusMes | ''>('');
+  const [filterNotaFiscalStatus, setFilterNotaFiscalStatus] = useState<string>('');
 
   // Dialogs
   const [dialogAprovacao, setDialogAprovacao] = useState(false);
@@ -190,7 +192,41 @@ export default function TimesheetAprovacoesPage() {
   const colaboradoresFiltrados = colaboradores.filter((colab) => {
     const matchSearch = colab.nome_completo.toLowerCase().includes(searchTerm.toLowerCase());
     const matchStatus = !filterStatus || colab.status_mes === filterStatus;
-    return matchSearch && matchStatus;
+
+    // Filtro de notas fiscais
+    let matchNotaFiscal = true;
+    if (filterNotaFiscalStatus) {
+      const notas = notasFiscaisPorColaborador[colab.colaborador_id] || [];
+      const notasResumo = {
+        total: notas.length,
+        pendente: notas.filter(n => n.status === 'PENDENTE').length,
+        aprovada: notas.filter(n => n.status === 'APROVADA').length,
+        paga: notas.filter(n => n.status === 'PAGA').length,
+        reprovada: notas.filter(n => n.status === 'REPROVADA').length,
+      };
+
+      switch (filterNotaFiscalStatus) {
+        case 'NENHUMA':
+          matchNotaFiscal = notasResumo.total === 0;
+          break;
+        case 'PENDENTE':
+          matchNotaFiscal = notasResumo.pendente > 0;
+          break;
+        case 'APROVADA':
+          matchNotaFiscal = notasResumo.aprovada > 0;
+          break;
+        case 'REPROVADA':
+          matchNotaFiscal = notasResumo.reprovada > 0;
+          break;
+        case 'PAGA':
+          matchNotaFiscal = notasResumo.paga > 0;
+          break;
+        default:
+          matchNotaFiscal = true;
+      }
+    }
+
+    return matchSearch && matchStatus && matchNotaFiscal;
   });
 
   // Estatísticas
@@ -226,14 +262,27 @@ export default function TimesheetAprovacoesPage() {
     if (!selectedColaborador) return;
 
     try {
+      // Aprovar timesheet
       await timesheetService.aprovarMes(selectedColaborador.colaborador_id, selectedColaborador.mes);
+
+      // Aprovar automaticamente todas as notas fiscais pendentes do colaborador
+      const notas = notasFiscaisPorColaborador[selectedColaborador.colaborador_id] || [];
+      const notasPendentes = notas.filter(nota => nota.status === 'PENDENTE');
+
+      if (notasPendentes.length > 0) {
+        await Promise.all(
+          notasPendentes.map(nota =>
+            fiscalService.atualizarStatusNota(nota.nota_fiscal_id, { status: 'APROVADA' })
+          )
+        );
+      }
 
       // Atualizar lista
       await loadColaboradores();
 
       setSnackbar({
         open: true,
-        message: `Timesheet de ${selectedColaborador.nome_completo} aprovado com sucesso!`,
+        message: `Timesheet de ${selectedColaborador.nome_completo} aprovado com sucesso!${notasPendentes.length > 0 ? ` ${notasPendentes.length} nota(s) fiscal(is) aprovada(s) automaticamente.` : ''}`,
         severity: 'success',
       });
       setDialogAprovacao(false);
@@ -324,20 +373,68 @@ export default function TimesheetAprovacoesPage() {
       return;
     }
 
-    // Download each one
-    for (const nota of notasParaDownload) {
-      if (nota.arquivo_url) {
-        window.open(nota.arquivo_url, '_blank');
-        // Small delay to prevent browser blocking multiple downloads
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
+    // Se houver apenas 1 nota, baixar diretamente
+    if (notasParaDownload.length === 1) {
+      window.open(notasParaDownload[0].arquivo_url, '_blank');
+      setSnackbar({
+        open: true,
+        message: 'Download iniciado',
+        severity: 'success',
+      });
+      return;
     }
 
-    setSnackbar({
-      open: true,
-      message: `Iniciando download de ${notasParaDownload.length} nota(s) fiscal(is)`,
-      severity: 'success',
-    });
+    // Se houver mais de 1 nota, criar um ZIP
+    try {
+      setSnackbar({
+        open: true,
+        message: `Preparando download de ${notasParaDownload.length} notas fiscais...`,
+        severity: 'info',
+      });
+
+      const zip = new JSZip();
+
+      // Baixar cada nota e adicionar ao ZIP
+      for (let i = 0; i < notasParaDownload.length; i++) {
+        const nota = notasParaDownload[i];
+        if (nota.arquivo_url) {
+          try {
+            const response = await fetch(nota.arquivo_url);
+            const blob = await response.blob();
+
+            // Usar nome do arquivo ou gerar um nome baseado no cliente
+            const fileName = nota.arquivo_nome || `${nota.nome_cliente}_${nota.nota_fiscal_id.substring(0, 8)}.pdf`;
+            zip.file(fileName, blob);
+          } catch (err) {
+            console.error(`Erro ao baixar nota ${nota.nota_fiscal_id}:`, err);
+          }
+        }
+      }
+
+      // Gerar o ZIP e fazer download
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(zipBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `notas_fiscais_lote_${mesAtual}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      setSnackbar({
+        open: true,
+        message: `Download de ${notasParaDownload.length} notas fiscais concluído!`,
+        severity: 'success',
+      });
+    } catch (err) {
+      console.error('Erro ao criar ZIP:', err);
+      setSnackbar({
+        open: true,
+        message: 'Erro ao preparar download das notas fiscais',
+        severity: 'error',
+      });
+    }
   };
 
   const handlePagarNotasLote = () => {
@@ -415,6 +512,7 @@ export default function TimesheetAprovacoesPage() {
 
   // Download de notas de um colaborador específico
   const handleDownloadNotasColaborador = async (colaboradorId: string) => {
+    const colaborador = colaboradores.find(c => c.colaborador_id === colaboradorId);
     const notas = notasFiscaisPorColaborador[colaboradorId] || [];
     const notasComUrl = notas.filter(n => n.arquivo_url);
 
@@ -427,20 +525,68 @@ export default function TimesheetAprovacoesPage() {
       return;
     }
 
-    // Download each one
-    for (const nota of notasComUrl) {
-      if (nota.arquivo_url) {
-        window.open(nota.arquivo_url, '_blank');
-        // Small delay to prevent browser blocking multiple downloads
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
+    // Se houver apenas 1 nota, baixar diretamente
+    if (notasComUrl.length === 1) {
+      window.open(notasComUrl[0].arquivo_url, '_blank');
+      setSnackbar({
+        open: true,
+        message: 'Download iniciado',
+        severity: 'success',
+      });
+      return;
     }
 
-    setSnackbar({
-      open: true,
-      message: `Iniciando download de ${notasComUrl.length} nota(s) fiscal(is)`,
-      severity: 'success',
-    });
+    // Se houver mais de 1 nota, criar um ZIP
+    try {
+      setSnackbar({
+        open: true,
+        message: `Preparando download de ${notasComUrl.length} notas fiscais...`,
+        severity: 'info',
+      });
+
+      const zip = new JSZip();
+
+      // Baixar cada nota e adicionar ao ZIP
+      for (let i = 0; i < notasComUrl.length; i++) {
+        const nota = notasComUrl[i];
+        if (nota.arquivo_url) {
+          try {
+            const response = await fetch(nota.arquivo_url);
+            const blob = await response.blob();
+
+            // Usar nome do arquivo ou gerar um nome baseado no cliente
+            const fileName = nota.arquivo_nome || `${nota.nome_cliente}_${i + 1}.pdf`;
+            zip.file(fileName, blob);
+          } catch (err) {
+            console.error(`Erro ao baixar nota ${nota.nota_fiscal_id}:`, err);
+          }
+        }
+      }
+
+      // Gerar o ZIP e fazer download
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(zipBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `notas_fiscais_${colaborador?.nome_completo.replace(/\s+/g, '_')}_${mesAtual}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      setSnackbar({
+        open: true,
+        message: `Download de ${notasComUrl.length} notas fiscais concluído!`,
+        severity: 'success',
+      });
+    } catch (err) {
+      console.error('Erro ao criar ZIP:', err);
+      setSnackbar({
+        open: true,
+        message: 'Erro ao preparar download das notas fiscais',
+        severity: 'error',
+      });
+    }
   };
 
   const formatMes = (mes: string) => {
@@ -485,10 +631,10 @@ export default function TimesheetAprovacoesPage() {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
         <Box>
           <Typography variant="h4" fontWeight="bold" gutterBottom>
-            Aprovação de Timesheet
+            Aprovações Mensais
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Gerencie as aprovações de horas dos colaboradores
+            Gerencie aprovações de horas e notas fiscais dos colaboradores
           </Typography>
         </Box>
       </Box>
@@ -612,7 +758,7 @@ export default function TimesheetAprovacoesPage() {
 
             <TextField
               select
-              label="Status"
+              label="Status Timesheet"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value as StatusMes | '')}
               sx={{ minWidth: 200 }}
@@ -623,36 +769,57 @@ export default function TimesheetAprovacoesPage() {
               <MenuItem value="APROVADO">Aprovado</MenuItem>
               <MenuItem value="REPROVADO">Reprovado</MenuItem>
             </TextField>
+
+            <TextField
+              select
+              label="Status Notas Fiscais"
+              value={filterNotaFiscalStatus}
+              onChange={(e) => setFilterNotaFiscalStatus(e.target.value)}
+              sx={{ minWidth: 200 }}
+            >
+              <MenuItem value="">Todos</MenuItem>
+              <MenuItem value="NENHUMA">Sem Notas Fiscais</MenuItem>
+              <MenuItem value="PENDENTE">Com Notas Pendentes</MenuItem>
+              <MenuItem value="APROVADA">Com Notas Aprovadas</MenuItem>
+              <MenuItem value="PAGA">Com Notas Pagas</MenuItem>
+              <MenuItem value="REPROVADA">Com Notas Reprovadas</MenuItem>
+            </TextField>
           </Stack>
         </CardContent>
       </Card>
 
       {/* Ações em lote */}
       {selectedColaboradores.size > 0 && (
-        <Card sx={{ mb: 3, bgcolor: '#f0f7ff', borderColor: '#667eea' }}>
+        <Card sx={{ mb: 3, borderLeft: 4, borderColor: 'primary.main' }}>
           <CardContent>
-            <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
-              <Typography variant="body1" fontWeight="600">
-                {selectedColaboradores.size} colaborador(es) selecionado(s)
-              </Typography>
-              <Stack direction="row" spacing={1}>
-                <Button
-                  variant="outlined"
-                  startIcon={<DownloadIcon />}
-                  onClick={handleDownloadNotasLote}
-                  size="small"
-                >
-                  Baixar Notas Fiscais
-                </Button>
-                <Button
-                  variant="contained"
-                  color="success"
-                  startIcon={<PaymentIcon />}
-                  onClick={handlePagarNotasLote}
-                  size="small"
-                >
-                  Marcar como Pagas
-                </Button>
+            <Stack spacing={2}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Chip
+                  label={`${selectedColaboradores.size} selecionado${selectedColaboradores.size > 1 ? 's' : ''}`}
+                  color="primary"
+                  size="medium"
+                />
+                <Typography variant="body2" color="text.secondary">
+                  Ações em lote para os colaboradores selecionados
+                </Typography>
+              </Box>
+
+              <Stack direction="row" spacing={2} flexWrap="wrap">
+                <Box>
+                  <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+                    Notas Fiscais
+                  </Typography>
+                  <Stack direction="row" spacing={1}>
+                    <Button
+                      variant="contained"
+                      color="success"
+                      startIcon={<PaymentIcon />}
+                      onClick={handlePagarNotasLote}
+                    >
+                      Marcar Aprovadas como Pagas
+                    </Button>
+                  </Stack>
+                </Box>
               </Stack>
             </Stack>
           </CardContent>
@@ -687,8 +854,9 @@ export default function TimesheetAprovacoesPage() {
                     <TableCell align="center"><strong>Horas Lançadas</strong></TableCell>
                     <TableCell align="center"><strong>Horas Contratadas</strong></TableCell>
                     <TableCell align="center"><strong>Progresso</strong></TableCell>
+                    <TableCell align="center"><strong>Status Notas Fiscais</strong></TableCell>
+                    <TableCell align="center"><strong>Status Timesheet</strong></TableCell>
                     <TableCell align="center"><strong>Notas Fiscais</strong></TableCell>
-                    <TableCell align="center"><strong>Status</strong></TableCell>
                     <TableCell align="center"><strong>Ações</strong></TableCell>
                   </TableRow>
                 </TableHead>
@@ -750,23 +918,27 @@ export default function TimesheetAprovacoesPage() {
                         <TableCell align="center">
                           {loadingNotas ? (
                             <CircularProgress size={20} />
+                          ) : notasResumo.total === 0 ? (
+                            <Typography variant="body2" color="text.secondary">
+                              Nenhuma
+                            </Typography>
                           ) : (
-                            <Stack direction="row" spacing={0.5} justifyContent="center" alignItems="center">
-                              <Badge badgeContent={notasResumo.total} color="primary">
-                                <ReceiptIcon fontSize="small" />
-                              </Badge>
-                              <Stack direction="row" spacing={0.5} sx={{ ml: 1 }}>
+                            <Stack spacing={0.5} alignItems="center">
+                              <Typography variant="body2" fontWeight="600">
+                                {notasResumo.total} {notasResumo.total === 1 ? 'Nota' : 'Notas'}
+                              </Typography>
+                              <Stack direction="row" spacing={0.5} flexWrap="wrap" justifyContent="center">
                                 {notasResumo.pendente > 0 && (
-                                  <Chip label={`${notasResumo.pendente}P`} size="small" color="warning" sx={{ height: 20, fontSize: '0.7rem' }} />
+                                  <Chip label={`${notasResumo.pendente} Pendente${notasResumo.pendente > 1 ? 's' : ''}`} size="small" color="warning" sx={{ height: 22, fontSize: '0.7rem' }} />
                                 )}
                                 {notasResumo.aprovada > 0 && (
-                                  <Chip label={`${notasResumo.aprovada}A`} size="small" color="success" sx={{ height: 20, fontSize: '0.7rem' }} />
+                                  <Chip label={`${notasResumo.aprovada} Aprovada${notasResumo.aprovada > 1 ? 's' : ''}`} size="small" color="success" sx={{ height: 22, fontSize: '0.7rem' }} />
                                 )}
                                 {notasResumo.paga > 0 && (
-                                  <Chip label={`${notasResumo.paga}$`} size="small" color="info" sx={{ height: 20, fontSize: '0.7rem' }} />
+                                  <Chip label={`${notasResumo.paga} Paga${notasResumo.paga > 1 ? 's' : ''}`} size="small" color="info" sx={{ height: 22, fontSize: '0.7rem' }} />
                                 )}
                                 {notasResumo.reprovada > 0 && (
-                                  <Chip label={`${notasResumo.reprovada}R`} size="small" color="error" sx={{ height: 20, fontSize: '0.7rem' }} />
+                                  <Chip label={`${notasResumo.reprovada} Reprovada${notasResumo.reprovada > 1 ? 's' : ''}`} size="small" color="error" sx={{ height: 22, fontSize: '0.7rem' }} />
                                 )}
                               </Stack>
                             </Stack>
@@ -782,49 +954,53 @@ export default function TimesheetAprovacoesPage() {
                           />
                         </TableCell>
 
+                        {/* Coluna de Notas Fiscais */}
                         <TableCell align="center">
-                          <Stack direction="row" spacing={1} justifyContent="center">
-                            <Tooltip title="Ver detalhes">
+                          {notasResumo.total > 0 ? (
+                            <Tooltip title={`Baixar ${notasResumo.total} ${notasResumo.total === 1 ? 'Nota Fiscal' : 'Notas Fiscais'}`}>
                               <IconButton
-                                size="small"
+                                color="info"
+                                onClick={() => handleDownloadNotasColaborador(colab.colaborador_id)}
+                              >
+                                <DownloadIcon />
+                              </IconButton>
+                            </Tooltip>
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">
+                              -
+                            </Typography>
+                          )}
+                        </TableCell>
+
+                        {/* Coluna de Ações de Timesheet */}
+                        <TableCell align="center">
+                          <Stack direction="row" spacing={0.5} justifyContent="center">
+                            <Tooltip title="Ver Detalhes">
+                              <IconButton
                                 color="primary"
                                 onClick={() => handleVerDetalhes(colab)}
                               >
-                                <VisibilityIcon fontSize="small" />
+                                <VisibilityIcon />
                               </IconButton>
                             </Tooltip>
 
-                            {notasResumo.total > 0 && (
-                              <Tooltip title="Baixar Notas Fiscais">
-                                <IconButton
-                                  size="small"
-                                  color="info"
-                                  onClick={() => handleDownloadNotasColaborador(colab.colaborador_id)}
-                                >
-                                  <DownloadIcon fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                            )}
-
                             {colab.status_mes === 'AGUARDANDO_APROVACAO' && (
                               <>
-                                <Tooltip title="Aprovar">
+                                <Tooltip title="Aprovar Horas">
                                   <IconButton
-                                    size="small"
                                     color="success"
                                     onClick={() => handleAprovar(colab)}
                                   >
-                                    <CheckCircleIcon fontSize="small" />
+                                    <CheckCircleIcon />
                                   </IconButton>
                                 </Tooltip>
 
-                                <Tooltip title="Reprovar">
+                                <Tooltip title="Reprovar Horas">
                                   <IconButton
-                                    size="small"
                                     color="error"
                                     onClick={() => handleReprovar(colab)}
                                   >
-                                    <CancelIcon fontSize="small" />
+                                    <CancelIcon />
                                   </IconButton>
                                 </Tooltip>
                               </>

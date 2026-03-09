@@ -91,7 +91,7 @@ const menuItems: MenuItem[] = [
     allowedRoles: ["colaborador"]
   },
   {
-    text: "Aprovar Horas",
+    text: "Aprovações Mensais",
     icon: <AccessTimeIcon />,
     path: "/dashboard/timesheet-aprovacoes",
     allowedRoles: ["admin"]

@@ -58,41 +58,8 @@ export default function DetalhesTimesheetDrawer({
       setLoading(true);
       setError(null);
 
-      // TODO: Remover mock quando backend estiver pronto
-      // const data = await timesheetService.getResumoColaborador(colaboradorId, mes);
-
-      // Dados MOCK temporários
-      const mockResumo: ResumoMesResponse = {
-        mes: mes,
-        contratos: [
-          {
-            contrato_id: 'c1',
-            nome_cliente: 'Cliente A',
-            valor_hora: 100,
-            total_hora_mes: 80,
-            horas_lancadas: 75,
-            horas_restantes: 5,
-            valor_total_lancado: 7500,
-            percentual_usado: 93.75,
-          },
-          {
-            contrato_id: 'c2',
-            nome_cliente: 'Cliente B',
-            valor_hora: 120,
-            total_hora_mes: 88,
-            horas_lancadas: 85,
-            horas_restantes: 3,
-            valor_total_lancado: 10200,
-            percentual_usado: 96.59,
-          },
-        ],
-        total_horas_lancadas: 160,
-        total_valor_lancado: 17700,
-        status_mes: 'AGUARDANDO_APROVACAO',
-        data_envio: '2026-03-08T10:00:00Z',
-      };
-
-      setResumo(mockResumo);
+      const data = await timesheetService.getResumoColaborador(colaboradorId, mes);
+      setResumo(data);
     } catch (err) {
       console.error('Erro ao carregar resumo:', err);
       setError('Erro ao carregar detalhes do timesheet');
@@ -131,7 +98,7 @@ export default function DetalhesTimesheetDrawer({
       onClose={onClose}
       PaperProps={{
         sx: {
-          width: { xs: '100%', sm: 600 },
+          width: { xs: '100%', sm: 700, md: 850 },
         },
       }}
     >
