@@ -1,25 +1,21 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
 import {
   Box,
   Card,
   CardContent,
-  Typography,
-  Grid,
-  IconButton,
   Chip,
-  Stack,
-  Tooltip,
-  Badge,
+  useTheme,
 } from '@mui/material';
-import {
-  ChevronLeft as ChevronLeftIcon,
-  ChevronRight as ChevronRightIcon,
-  CheckCircle as CheckIcon,
-  Event as EventIcon,
-} from '@mui/icons-material';
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import listPlugin from '@fullcalendar/list';
+import type { EventClickArg, DateClickArg, DatesSetArg } from '@fullcalendar/core';
 import type { DiaCalendario } from '@/app/types/timesheet';
+import ptBrLocale from '@fullcalendar/core/locales/pt-br';
 
 interface CalendarioHorasProps {
   dias: DiaCalendario[];
@@ -34,203 +30,268 @@ export default function CalendarioHoras({
   onMesChange,
   onDiaClick,
 }: CalendarioHorasProps) {
-  const [, mes] = mesAtual.split('-');
-  const mesNome = new Date(`${mesAtual}-01`).toLocaleDateString('pt-BR', {
-    month: 'long',
-    year: 'numeric',
-  });
+  const theme = useTheme();
 
-  const handlePrevMonth = () => {
-    const [ano, mesNum] = mesAtual.split('-').map(Number);
-    const novaData = new Date(ano, mesNum - 2, 1);
-    const novoMes = `${novaData.getFullYear()}-${String(novaData.getMonth() + 1).padStart(2, '0')}`;
-    onMesChange(novoMes);
+  // Paleta de cores para clientes
+  const clienteColors = [
+    { bg: '#4CAF50', border: '#388E3C', text: '#FFFFFF' }, // Verde
+    { bg: '#2196F3', border: '#1976D2', text: '#FFFFFF' }, // Azul
+    { bg: '#FF9800', border: '#F57C00', text: '#FFFFFF' }, // Laranja
+    { bg: '#9C27B0', border: '#7B1FA2', text: '#FFFFFF' }, // Roxo
+    { bg: '#00BCD4', border: '#0097A7', text: '#FFFFFF' }, // Ciano
+    { bg: '#FF5722', border: '#E64A19', text: '#FFFFFF' }, // Vermelho
+    { bg: '#795548', border: '#5D4037', text: '#FFFFFF' }, // Marrom
+    { bg: '#607D8B', border: '#455A64', text: '#FFFFFF' }, // Cinza azulado
+    { bg: '#E91E63', border: '#C2185B', text: '#FFFFFF' }, // Rosa
+    { bg: '#CDDC39', border: '#AFB42B', text: '#000000' }, // Lima
+  ];
+
+  // Função para gerar cor consistente baseada no nome do cliente
+  const getClienteColor = (nomeCliente: string) => {
+    let hash = 0;
+    for (let i = 0; i < nomeCliente.length; i++) {
+      hash = nomeCliente.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % clienteColors.length;
+    return clienteColors[index];
   };
 
-  const handleNextMonth = () => {
-    const [ano, mesNum] = mesAtual.split('-').map(Number);
-    const novaData = new Date(ano, mesNum, 1);
-    const novoMes = `${novaData.getFullYear()}-${String(novaData.getMonth() + 1).padStart(2, '0')}`;
-    onMesChange(novoMes);
+  // Converter dias do backend para eventos do FullCalendar e coletar clientes únicos
+  const { eventos, clientesUnicos } = useMemo(() => {
+    const eventosArray: any[] = [];
+    const clientesSet = new Set<string>();
+
+    dias.forEach((dia) => {
+      // Adicionar eventos de feriados
+      if (dia.e_feriado) {
+        eventosArray.push({
+          id: `feriado-${dia.data}`,
+          title: dia.nome_feriado || 'Feriado',
+          start: dia.data,
+          allDay: true,
+          backgroundColor: theme.palette.error.light,
+          borderColor: theme.palette.error.main,
+          textColor: theme.palette.error.contrastText,
+          extendedProps: {
+            tipo: 'feriado',
+            data: dia.data,
+          },
+        });
+      }
+
+      // Adicionar eventos de lançamentos
+      if (dia.lancamentos && dia.lancamentos.length > 0) {
+        dia.lancamentos.forEach((lanc, idx) => {
+          const totalHoras = lanc.duracao_horas_ajustada;
+          const clienteColor = getClienteColor(lanc.nome_cliente);
+          clientesSet.add(lanc.nome_cliente);
+
+          eventosArray.push({
+            id: `lanc-${dia.data}-${idx}`,
+            title: `${lanc.nome_cliente} - ${totalHoras.toFixed(2)}h`,
+            start: dia.data,
+            allDay: true,
+            backgroundColor: clienteColor.bg,
+            borderColor: clienteColor.border,
+            textColor: clienteColor.text,
+            extendedProps: {
+              tipo: 'lancamento',
+              data: dia.data,
+              cliente: lanc.nome_cliente,
+              horas: totalHoras,
+            },
+          });
+        });
+      }
+    });
+
+    return {
+      eventos: eventosArray,
+      clientesUnicos: Array.from(clientesSet).sort(),
+    };
+  }, [dias, theme]);
+
+  // Handler de clique em evento
+  const handleEventClick = (info: EventClickArg) => {
+    const data = info.event.extendedProps.data;
+    if (data) {
+      onDiaClick(data);
+    }
   };
 
-  const getDiaSemana = (data: string) => {
-    return new Date(data + 'T12:00:00').getDay();
+  // Handler de clique em data vazia
+  const handleDateClick = (info: DateClickArg) => {
+    onDiaClick(info.dateStr);
   };
 
-  const primeiroDia = dias.length > 0 ? getDiaSemana(dias[0].data) : 0;
+  // Handler de mudança de mês/visualização
+  const handleDatesSet = (info: DatesSetArg) => {
+    const dataInicio = info.start;
+    const novoMes = `${dataInicio.getFullYear()}-${String(dataInicio.getMonth() + 1).padStart(2, '0')}`;
 
-  const renderDia = (dia: DiaCalendario) => {
-    const diaNumero = new Date(dia.data + 'T12:00:00').getDate();
-    const diaSemana = getDiaSemana(dia.data);
-    const isWeekend = diaSemana === 0 || diaSemana === 6;
-    const hasLancamentos = dia.lancamentos && dia.lancamentos.length > 0;
-    const totalHoras = dia.lancamentos?.reduce(
+    // Só atualizar se realmente mudou o mês
+    if (novoMes !== mesAtual) {
+      onMesChange(novoMes);
+    }
+  };
+
+  // Função para renderizar conteúdo da célula do dia
+  const dayCellContent = (arg: any) => {
+    const dia = dias.find(d => d.data === arg.date.toISOString().split('T')[0]);
+    const totalHoras = dia?.lancamentos?.reduce(
       (sum, l) => sum + l.duracao_horas_ajustada,
       0
     ) || 0;
 
     return (
-      <Tooltip
-        key={dia.data}
-        title={
-          <Box>
-            {dia.e_feriado && <Typography variant="caption">{dia.nome_feriado}</Typography>}
-            {hasLancamentos && (
-              <Typography variant="caption">
-                {dia.lancamentos.length} lançamento(s) - {totalHoras.toFixed(2)}h
-              </Typography>
-            )}
-            {!hasLancamentos && !dia.e_feriado && (
-              <Typography variant="caption">Sem lançamentos</Typography>
-            )}
-          </Box>
-        }
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          height: '100%',
+          p: 0.5,
+        }}
       >
         <Box
-          onClick={() => onDiaClick(dia.data)}
           sx={{
-            position: 'relative',
-            cursor: 'pointer',
-            minHeight: 80,
-            border: '1px solid',
-            borderColor: 'divider',
-            borderRadius: 1,
-            p: 1,
-            bgcolor: dia.e_feriado
-              ? 'error.50'
-              : isWeekend
-              ? 'grey.100'
-              : hasLancamentos
-              ? 'success.50'
-              : 'background.paper',
-            '&:hover': {
-              bgcolor: dia.e_feriado
-                ? 'error.100'
-                : isWeekend
-                ? 'grey.200'
-                : hasLancamentos
-                ? 'success.100'
-                : 'action.hover',
-            },
+            fontSize: '0.9rem',
+            fontWeight: 'bold',
+            color: arg.isToday ? theme.palette.primary.main : 'inherit',
           }}
         >
-          <Stack spacing={0.5}>
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Typography
-                variant="body2"
-                fontWeight="bold"
-                color={isWeekend || dia.e_feriado ? 'error.main' : 'text.primary'}
-              >
-                {diaNumero}
-              </Typography>
-              {hasLancamentos && (
-                <CheckIcon color="success" sx={{ fontSize: 16 }} />
-              )}
-              {dia.e_feriado && !hasLancamentos && (
-                <EventIcon color="error" sx={{ fontSize: 16 }} />
-              )}
-            </Box>
-
-            {hasLancamentos && (
-              <Box>
-                <Typography variant="caption" color="text.secondary">
-                  {totalHoras.toFixed(2)}h
-                </Typography>
-                {dia.lancamentos.slice(0, 2).map((lanc, idx) => (
-                  <Typography
-                    key={idx}
-                    variant="caption"
-                    display="block"
-                    sx={{
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {lanc.nome_cliente}
-                  </Typography>
-                ))}
-                {dia.lancamentos.length > 2 && (
-                  <Typography variant="caption" color="text.secondary">
-                    +{dia.lancamentos.length - 2} mais
-                  </Typography>
-                )}
-              </Box>
-            )}
-          </Stack>
+          {arg.dayNumberText}
         </Box>
-      </Tooltip>
+        {totalHoras > 0 && (
+          <Box
+            sx={{
+              fontSize: '0.75rem',
+              color: theme.palette.success.main,
+              fontWeight: 'medium',
+            }}
+          >
+            {totalHoras.toFixed(2)}h
+          </Box>
+        )}
+      </Box>
     );
   };
 
   return (
     <Card>
       <CardContent>
-        {/* Header do Calendário */}
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-          <IconButton onClick={handlePrevMonth} size="small">
-            <ChevronLeftIcon />
-          </IconButton>
-          <Typography variant="h6" fontWeight="bold" textTransform="capitalize">
-            {mesNome}
-          </Typography>
-          <IconButton onClick={handleNextMonth} size="small">
-            <ChevronRightIcon />
-          </IconButton>
+        {/* FullCalendar */}
+        <Box sx={{
+          '& .fc': {
+            fontFamily: theme.typography.fontFamily,
+          },
+          '& .fc-button': {
+            backgroundColor: theme.palette.primary.main,
+            borderColor: theme.palette.primary.main,
+            textTransform: 'none',
+            '&:hover': {
+              backgroundColor: theme.palette.primary.dark,
+              borderColor: theme.palette.primary.dark,
+            },
+            '&:focus': {
+              boxShadow: 'none',
+            },
+          },
+          '& .fc-button-active': {
+            backgroundColor: theme.palette.primary.dark,
+            borderColor: theme.palette.primary.dark,
+          },
+          '& .fc-daygrid-day': {
+            cursor: 'pointer',
+            '&:hover': {
+              backgroundColor: theme.palette.action.hover,
+            },
+          },
+          '& .fc-daygrid-day.fc-day-today': {
+            backgroundColor: `${theme.palette.primary.light}20`,
+          },
+          '& .fc-col-header-cell': {
+            backgroundColor: theme.palette.grey[100],
+            fontWeight: 'bold',
+          },
+          '& .fc-event': {
+            cursor: 'pointer',
+            fontSize: '0.85rem',
+            padding: '2px 4px',
+            borderRadius: '4px',
+            marginBottom: '2px',
+          },
+          '& .fc-daygrid-day-number': {
+            padding: '4px',
+          },
+          '& .fc-day-sat, & .fc-day-sun': {
+            backgroundColor: theme.palette.grey[200],
+          },
+        }}>
+          <FullCalendar
+            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
+            initialView="dayGridMonth"
+            headerToolbar={{
+              left: 'prev,next today',
+              center: 'title',
+              right: 'dayGridMonth,timeGridWeek,listWeek',
+            }}
+            locale={ptBrLocale}
+            events={eventos}
+            eventClick={handleEventClick}
+            dateClick={handleDateClick}
+            datesSet={handleDatesSet}
+            dayCellContent={dayCellContent}
+            height="auto"
+            contentHeight="auto"
+            aspectRatio={1.8}
+            fixedWeekCount={false}
+            showNonCurrentDates={false}
+            editable={false}
+            selectable={true}
+            selectMirror={true}
+            dayMaxEvents={3}
+            eventDisplay="block"
+            displayEventTime={false}
+            weekends={true}
+            buttonText={{
+              today: 'Hoje',
+              month: 'Mês',
+              week: 'Semana',
+              list: 'Lista',
+            }}
+          />
         </Box>
-
-        {/* Dias da Semana */}
-        <Grid container spacing={1} sx={{ mb: 1 }}>
-          {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((dia) => (
-            <Grid item xs key={dia}>
-              <Typography
-                variant="caption"
-                fontWeight="bold"
-                textAlign="center"
-                display="block"
-                color="text.secondary"
-              >
-                {dia}
-              </Typography>
-            </Grid>
-          ))}
-        </Grid>
-
-        {/* Grade do Calendário */}
-        <Grid container spacing={1}>
-          {/* Espaços vazios antes do primeiro dia */}
-          {Array.from({ length: primeiroDia }).map((_, idx) => (
-            <Grid item xs key={`empty-${idx}`}>
-              <Box sx={{ minHeight: 80 }} />
-            </Grid>
-          ))}
-
-          {/* Dias do mês */}
-          {dias.map((dia) => (
-            <Grid item xs key={dia.data}>
-              {renderDia(dia)}
-            </Grid>
-          ))}
-        </Grid>
 
         {/* Legenda */}
         <Box display="flex" gap={2} mt={3} flexWrap="wrap">
-          <Chip
-            label="Com lançamentos"
-            size="small"
-            sx={{ bgcolor: 'success.50' }}
-          />
+          {/* Feriados */}
           <Chip
             label="Feriado"
             size="small"
-            sx={{ bgcolor: 'error.50' }}
+            sx={{
+              bgcolor: theme.palette.error.light,
+              color: theme.palette.error.contrastText,
+            }}
           />
-          <Chip
-            label="Sem lançamentos"
-            size="small"
-            sx={{ bgcolor: 'grey.100' }}
-          />
+
+          {/* Clientes */}
+          {clientesUnicos.map((cliente) => {
+            const color = getClienteColor(cliente);
+            return (
+              <Chip
+                key={cliente}
+                label={cliente}
+                size="small"
+                sx={{
+                  bgcolor: color.bg,
+                  color: color.text,
+                  borderColor: color.border,
+                  border: '1px solid',
+                }}
+              />
+            );
+          })}
         </Box>
       </CardContent>
     </Card>

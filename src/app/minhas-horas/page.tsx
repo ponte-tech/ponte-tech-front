@@ -31,6 +31,7 @@ import type {
 import CalendarioHoras from './components/CalendarioHoras';
 import ResumoHoras from './components/ResumoHoras';
 import FormularioLancamento from './components/FormularioLancamento';
+import StatusMes from './components/StatusMes';
 
 export default function MinhasHorasPage() {
   const router = useRouter();
@@ -156,6 +157,28 @@ export default function MinhasHorasPage() {
     setFormOpen(true);
   };
 
+  const handleEnviarParaAprovacao = async () => {
+    try {
+      setLoading(true);
+      const resumoAtualizado = await timesheetService.enviarMesParaAprovacao(mesAtual);
+      setResumoData(resumoAtualizado);
+      setSnackbar({
+        open: true,
+        message: 'Horas enviadas para aprovação com sucesso!',
+        severity: 'success',
+      });
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setSnackbar({
+        open: true,
+        message: error.response?.data?.message || 'Erro ao enviar para aprovação',
+        severity: 'error',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading && !mesData) {
     return (
       <Box
@@ -209,6 +232,20 @@ export default function MinhasHorasPage() {
         <Alert severity="warning" sx={{ mb: 3 }}>
           Você não possui contratos ativos. Entre em contato com o administrador.
         </Alert>
+      )}
+
+      {/* Status do Mês */}
+      {resumoData && (
+        <StatusMes
+          statusMes={resumoData.status_mes}
+          dataEnvio={resumoData.data_envio}
+          dataAprovacao={resumoData.data_aprovacao}
+          aprovadoPor={resumoData.aprovado_por}
+          motivoReprovacao={resumoData.motivo_reprovacao}
+          totalHoras={resumoData.total_horas_lancadas}
+          onEnviarParaAprovacao={handleEnviarParaAprovacao}
+          loading={loading}
+        />
       )}
 
       {/* Tabs */}

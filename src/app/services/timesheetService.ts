@@ -5,6 +5,7 @@ import type {
   ResumoMesResponse,
   CreateLancamentoRequest,
   Apontamento,
+  ListaTimesheetAprovacaoResponse,
 } from '../types/timesheet';
 import type { ApiResponse } from '../types/api';
 
@@ -70,6 +71,40 @@ export const submeterLancamento = async (id: string): Promise<Apontamento> => {
   return response.data.data!;
 };
 
+// Enviar mês para aprovação
+export const enviarMesParaAprovacao = async (mes: string): Promise<ResumoMesResponse> => {
+  const response = await api.post<ApiResponse<ResumoMesResponse>>(
+    `${BASE_URL}/timesheet/mes/${mes}/enviar`
+  );
+  return response.data.data!;
+};
+
+// Admin - Aprovar mês de um colaborador
+export const aprovarMes = async (colaboradorId: string, mes: string): Promise<void> => {
+  await api.post(`/api/admin/timesheet/${colaboradorId}/mes/${mes}/aprovar`);
+};
+
+// Admin - Reprovar mês de um colaborador
+export const reprovarMes = async (colaboradorId: string, mes: string, motivo: string): Promise<void> => {
+  await api.post(`/api/admin/timesheet/${colaboradorId}/mes/${mes}/reprovar`, { motivo });
+};
+
+// Admin - Listar todos os colaboradores com status de timesheet para um mês
+export const listarColaboradoresTimesheet = async (mes: string): Promise<ListaTimesheetAprovacaoResponse> => {
+  const response = await api.get<ApiResponse<ListaTimesheetAprovacaoResponse>>(
+    `/api/admin/timesheet/mes/${mes}`
+  );
+  return response.data.data!;
+};
+
+// Admin - Obter resumo detalhado de um colaborador para um mês
+export const getResumoColaborador = async (colaboradorId: string, mes: string): Promise<ResumoMesResponse> => {
+  const response = await api.get<ApiResponse<ResumoMesResponse>>(
+    `/api/admin/timesheet/${colaboradorId}/mes/${mes}`
+  );
+  return response.data.data!;
+};
+
 const timesheetServiceExport = {
   getContratos,
   getMesCalendario,
@@ -79,6 +114,11 @@ const timesheetServiceExport = {
   updateLancamento,
   deleteLancamento,
   submeterLancamento,
+  enviarMesParaAprovacao,
+  aprovarMes,
+  reprovarMes,
+  listarColaboradoresTimesheet,
+  getResumoColaborador,
 };
 
 export default timesheetServiceExport;
