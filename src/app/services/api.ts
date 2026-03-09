@@ -2,9 +2,11 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { getCookie, deleteCookie } from "@/app/lib/cookies";
 
 // Base URL da API
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "https://b34hb46zsj.execute-api.us-east-1.amazonaws.com/prod";
+// Em desenvolvimento, usa URL relativa para aproveitar o proxy do Next.js e evitar CORS
+// Em produção, usa a URL completa da API
+const API_BASE_URL = process.env.NODE_ENV === 'development'
+  ? '' // URL relativa - usa o proxy do Next.js configurado em next.config.ts
+  : (process.env.NEXT_PUBLIC_API_URL || "https://b34hb46zsj.execute-api.us-east-1.amazonaws.com/prod");
 
 // Criar instância do Axios
 const api = axios.create({
@@ -20,8 +22,14 @@ api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = getCookie("token");
 
+    console.log('🔑 [API] Token from cookie:', token ? `${token.substring(0, 20)}...` : 'null');
+    console.log('🌐 [API] Request:', config.method?.toUpperCase(), config.url);
+
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('✅ [API] Authorization header added');
+    } else {
+      console.warn('⚠️ [API] No token found - request will be unauthorized');
     }
 
     return config;
@@ -39,6 +47,7 @@ api.interceptors.response.use(
   (error: AxiosError) => {
     if (error.response) {
       const status = error.response.status;
+      const responseData = error.response.data as any;
 
       // Token expirado ou inválido
       if (status === 401) {

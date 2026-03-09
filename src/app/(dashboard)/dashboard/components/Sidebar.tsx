@@ -20,6 +20,10 @@ import {
   Settings as SettingsIcon,
   Logout as LogoutIcon,
   School as SchoolIcon,
+  People as PeopleIcon,
+  AccessTime as AccessTimeIcon,
+  Business as BusinessIcon,
+  PersonOutline as PersonOutlineIcon,
 } from "@mui/icons-material";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/app/hooks/useAuth";
@@ -34,19 +38,94 @@ interface SidebarProps {
   onMobileClose: () => void;
 }
 
-const menuItems = [
-  { text: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
-  { text: "Cursos", icon: <SchoolIcon />, path: "/cursos" },
-  { text: "Perfil", icon: <PersonIcon />, path: "/dashboard/profile" },
-  { text: "Configurações", icon: <SettingsIcon />, path: "/dashboard/settings" },
+interface MenuItem {
+  text: string;
+  icon: JSX.Element;
+  path: string;
+  allowedRoles: string[];
+  isDynamic?: boolean;
+}
+
+const menuItems: MenuItem[] = [
+  {
+    text: "Dashboard",
+    icon: <DashboardIcon />,
+    path: "/dashboard",
+    allowedRoles: ["admin", "aluno", "vendedor", "professor", "colaborador", "contador"]
+  },
+  {
+    text: "Cursos",
+    icon: <SchoolIcon />,
+    path: "/dashboard/cursos",
+    allowedRoles: ["admin", "aluno", "vendedor", "professor"]
+  },
+  {
+    text: "Colaboradores",
+    icon: <PeopleIcon />,
+    path: "/dashboard/colaboradores",
+    allowedRoles: ["admin"]
+  },
+  {
+    text: "Empresas",
+    icon: <BusinessIcon />,
+    path: "/dashboard/empresas",
+    allowedRoles: ["admin"]
+  },
+  {
+    text: "Clientes",
+    icon: <PersonOutlineIcon />,
+    path: "/dashboard/clientes",
+    allowedRoles: ["admin"]
+  },
+  {
+    text: "Minhas Horas",
+    icon: <AccessTimeIcon />,
+    path: "/dashboard/minhas-horas",
+    allowedRoles: ["colaborador"]
+  },
+  {
+    text: "Perfil",
+    icon: <PersonIcon />,
+    path: "/dashboard/profile", // Será sobrescrito dinamicamente para colaboradores
+    allowedRoles: ["admin", "aluno", "vendedor", "professor", "colaborador", "contador"],
+    isDynamic: true
+  },
+  {
+    text: "Configurações",
+    icon: <SettingsIcon />,
+    path: "/dashboard/settings",
+    allowedRoles: ["admin", "aluno", "vendedor", "professor", "colaborador", "contador"]
+  },
 ];
 
 export default function Sidebar({ open, mobileOpen, onMobileClose }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
+  const userRole = user?.userType;
+  const userPerfil = user?.perfil;
+  const userPerfis = user?.perfis;
+  const userId = user?.id || user?.user_id;
+
+  // Check if user is colaborador
+  const isColaborador = userPerfil === 'colaborador' || userPerfis?.includes('colaborador');
+
+  // Filter menu items based on user role
+  const filteredMenuItems = menuItems
+    .filter(item => userRole && item.allowedRoles.includes(userRole))
+    .map(item => {
+      // Override Perfil path for colaboradores
+      if (item.isDynamic && item.text === 'Perfil' && isColaborador && userId) {
+        return {
+          ...item,
+          path: `/dashboard/colaboradores/${userId}/editar`
+        };
+      }
+      return item;
+    });
 
   const handleNavigation = (path: string) => {
     router.push(path);
@@ -109,7 +188,7 @@ export default function Sidebar({ open, mobileOpen, onMobileClose }: SidebarProp
       {/* Menu Items */}
       <Box sx={{ overflow: "auto", flexGrow: 1, px: 2 }}>
         <List sx={{ py: 0 }}>
-          {menuItems.map((item) => {
+          {filteredMenuItems.map((item) => {
             const isActive = pathname === item.path;
             const button = (
               <ListItemButton

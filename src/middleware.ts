@@ -20,6 +20,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Proteção de rota para colaboradores (/minhas-horas)
+  if (pathname.startsWith("/minhas-horas") && !token) {
+    const url = new URL("/login", request.url);
+    url.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(url);
+  }
+
   // Se está logado e tenta acessar páginas de auth, redireciona para dashboard
   if (isAuthRoute && token) {
     return NextResponse.redirect(new URL("/dashboard", request.url));

@@ -49,7 +49,15 @@ export default function Navbar({ onMenuClick, onSidebarToggle, sidebarOpen }: Na
   };
 
   const handleProfile = () => {
-    router.push("/dashboard/profile");
+    // Se for colaborador, redireciona para editar seus dados
+    const isColaborador = user?.perfil === 'colaborador' || user?.perfis?.includes('colaborador');
+    const userId = user?.id || user?.user_id;
+
+    if (isColaborador && userId) {
+      router.push(`/colaboradores/${userId}/editar`);
+    } else {
+      router.push("/dashboard/profile");
+    }
     handleMenuClose();
   };
 

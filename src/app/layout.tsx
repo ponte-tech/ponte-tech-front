@@ -28,6 +28,9 @@ export default function RootLayout({
             style={{ display: "none", visibility: "hidden" }}
           ></iframe>
         </noscript>
+        {/* AVISO: Se houver erro "Duplicate Pixel ID" no console, verifique a configuração
+            do Google Tag Manager (GTM-WNDZZKQL) para garantir que o Meta Pixel
+            (ID: 1039157967847630) não esteja sendo inicializado mais de uma vez */}
         <Script id="gtm-script" strategy="beforeInteractive">
           {`
             (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':

@@ -1,0 +1,85 @@
+import api from "./api";
+import type {
+  Contrato,
+  CreateContratoRequest,
+  UpdateContratoRequest,
+  ListContratosResponse,
+} from "../types/api";
+
+class ContratosService {
+  private baseUrl = "/api/admin/colaboradores";
+
+  /**
+   * Lista todos os contratos de um colaborador
+   */
+  async list(userId: string): Promise<ListContratosResponse> {
+    const response = await api.get<ListContratosResponse>(
+      `${this.baseUrl}/${userId}/contratos`
+    );
+    return response.data;
+  }
+
+  /**
+   * Obtém todos os contratos de um usuário (retorna array)
+   */
+  async getByUserId(userId: string): Promise<Contrato[]> {
+    const response = await this.list(userId);
+    // A API retorna {success: true, data: {contratos: [...]}}
+    const data = (response as any).data || response;
+    return data.contratos || [];
+  }
+
+  /**
+   * Cria um novo contrato para um colaborador
+   */
+  async create(
+    userId: string,
+    data: CreateContratoRequest
+  ): Promise<Contrato> {
+    console.log("🔵 [CONTRATOS SERVICE] Criando contrato para user:", userId);
+    console.log("🔵 [CONTRATOS SERVICE] Payload do contrato:", JSON.stringify(data, null, 2));
+
+    const response = await api.post<Contrato>(
+      `${this.baseUrl}/${userId}/contratos`,
+      data
+    );
+
+    console.log("🟢 [CONTRATOS SERVICE] Contrato criado com sucesso:", response.data);
+    return response.data;
+  }
+
+  /**
+   * Atualiza um contrato existente
+   */
+  async update(
+    userId: string,
+    contratoId: string,
+    data: UpdateContratoRequest
+  ): Promise<Contrato> {
+    const response = await api.put<Contrato>(
+      `${this.baseUrl}/${userId}/contratos/${contratoId}`,
+      data
+    );
+    return response.data;
+  }
+
+  /**
+   * Ativa um contrato (desativa todos os outros)
+   */
+  async activate(userId: string, contratoId: string): Promise<Contrato> {
+    const response = await api.post<Contrato>(
+      `${this.baseUrl}/${userId}/contratos/${contratoId}/activate`
+    );
+    return response.data;
+  }
+
+  /**
+   * Deleta um contrato
+   */
+  async delete(userId: string, contratoId: string): Promise<void> {
+    await api.delete(`${this.baseUrl}/${userId}/contratos/${contratoId}`);
+  }
+}
+
+const contratosService = new ContratosService();
+export default contratosService;
