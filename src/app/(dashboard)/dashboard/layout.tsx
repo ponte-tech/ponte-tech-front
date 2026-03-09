@@ -34,8 +34,8 @@ export default function DashboardLayout({
           flexGrow: 1,
           minHeight: "100vh",
           bgcolor: "#f8f9fa",
-          ml: { xs: 0, md: sidebarOpen ? "280px" : "80px" },
-          transition: "margin 0.3s ease-in-out",
+          width: { xs: "100%", md: sidebarOpen ? "calc(100% - 280px)" : "calc(100% - 80px)" },
+          transition: "width 0.3s ease-in-out",
         }}
       >
         <Navbar
@@ -46,20 +46,11 @@ export default function DashboardLayout({
         <Toolbar sx={{ minHeight: { xs: 64, sm: 70 } }} />
         <Box
           sx={{
-            p: { xs: 2, sm: 3, md: 4 },
+            p: { xs: 2, sm: 3 },
             width: "100%",
-            display: "flex",
-            justifyContent: "center",
           }}
         >
-          <Box
-            sx={{
-              width: "100%",
-              maxWidth: "1400px",
-            }}
-          >
-            {children}
-          </Box>
+          {children}
         </Box>
       </Box>
     </Box>
