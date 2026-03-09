@@ -48,9 +48,13 @@ export default function CursosLayout({
           sx={{
             p: { xs: 2, sm: 3 },
             width: "100%",
+            display: "flex",
+            justifyContent: "center",
           }}
         >
-          {children}
+          <Box sx={{ width: "100%", maxWidth: "1800px", px: { xs: 0, md: 2 } }}>
+            {children}
+          </Box>
         </Box>
       </Box>
     </Box>
