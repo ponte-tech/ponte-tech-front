@@ -193,7 +193,13 @@ export default function Navbar({ onMenuClick, onSidebarToggle, sidebarOpen }: Na
                   fontSize: "0.75rem",
                 }}
               >
-                {user?.userType === "aluno" ? "Aluno" : "Vendedor"}
+                {user?.userType === "admin" ? "Administrador" :
+                 user?.userType === "colaborador" ? "Colaborador" :
+                 user?.userType === "aluno" ? "Aluno" :
+                 user?.userType === "vendedor" ? "Vendedor" :
+                 user?.userType === "professor" ? "Professor" :
+                 user?.userType === "contador" ? "Contador" :
+                 "Usuário"}
               </Typography>
             </Box>
             <Avatar

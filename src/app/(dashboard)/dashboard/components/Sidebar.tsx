@@ -24,6 +24,7 @@ import {
   AccessTime as AccessTimeIcon,
   Business as BusinessIcon,
   PersonOutline as PersonOutlineIcon,
+  Receipt as ReceiptIcon,
 } from "@mui/icons-material";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/app/hooks/useAuth";
@@ -80,8 +81,20 @@ const menuItems: MenuItem[] = [
   {
     text: "Minhas Horas",
     icon: <AccessTimeIcon />,
-    path: "/dashboard/minhas-horas",
+    path: "/minhas-horas",
     allowedRoles: ["colaborador"]
+  },
+  {
+    text: "Notas Fiscais",
+    icon: <ReceiptIcon />,
+    path: "/notas-fiscais",
+    allowedRoles: ["colaborador"]
+  },
+  {
+    text: "Aprovar Horas",
+    icon: <AccessTimeIcon />,
+    path: "/dashboard/timesheet-aprovacoes",
+    allowedRoles: ["admin"]
   },
   {
     text: "Perfil",
@@ -121,7 +134,7 @@ export default function Sidebar({ open, mobileOpen, onMobileClose }: SidebarProp
       if (item.isDynamic && item.text === 'Perfil' && isColaborador && userId) {
         return {
           ...item,
-          path: `/dashboard/colaboradores/${userId}/editar`
+          path: `/colaboradores/${userId}`
         };
       }
       return item;

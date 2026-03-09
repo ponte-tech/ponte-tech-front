@@ -24,6 +24,7 @@ import {
 } from '@mui/icons-material';
 import timesheetService from '@/app/services/timesheetService';
 import type { ResumoMesResponse, ResumoContratoMes } from '@/app/types/timesheet';
+import NotasFiscaisSection from './NotasFiscaisSection';
 
 interface DetalhesTimesheetDrawerProps {
   open: boolean;
@@ -322,6 +323,16 @@ export default function DetalhesTimesheetDrawer({
                 </Stack>
               )}
             </Box>
+
+            {/* Notas Fiscais */}
+            {colaboradorId && (
+              <Box>
+                <NotasFiscaisSection
+                  colaboradorId={colaboradorId}
+                  mes={mes}
+                />
+              </Box>
+            )}
           </Stack>
         ) : null}
       </Box>

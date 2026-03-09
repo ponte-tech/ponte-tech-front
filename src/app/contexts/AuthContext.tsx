@@ -101,7 +101,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.user.perfis && response.user.perfis.length > 1) {
         router.push("/select-profile");
       } else {
-        router.push("/dashboard");
+        // Redirecionar baseado no perfil do usuário
+        if (perfilAtivo === "colaborador") {
+          router.push("/minhas-horas");
+        } else {
+          router.push("/dashboard");
+        }
       }
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || "Erro ao fazer login";
@@ -135,7 +140,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(updatedUser);
       }
 
-      router.push("/dashboard");
+      // Redirecionar baseado no perfil selecionado
+      if (perfil === "colaborador") {
+        router.push("/minhas-horas");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || "Erro ao selecionar perfil";
       setError(errorMessage);

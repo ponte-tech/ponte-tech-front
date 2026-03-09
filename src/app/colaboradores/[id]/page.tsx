@@ -65,17 +65,17 @@ export default function ColaboradorDetalhePage() {
   }, [user, isAdmin, isColaborador, colaboradorId, router]);
 
   useEffect(() => {
-    if (isAdmin) {
+    if (isAdmin || isColaborador) {
       loadColaborador();
       loadContratos();
     }
-  }, [colaboradorId, isAdmin]);
+  }, [colaboradorId, isAdmin, isColaborador]);
 
   const loadColaborador = async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await colaboradoresService.getById(colaboradorId);
+      const data = await colaboradoresService.getById(colaboradorId, isColaborador);
       setColaborador(data);
     } catch (err: any) {
       setError(err.message || "Erro ao carregar colaborador");
@@ -121,10 +121,6 @@ export default function ColaboradorDetalhePage() {
     return cep.replace(/(\d{5})(\d{3})/, "$1-$2");
   };
 
-  if (!isAdmin) {
-    return null;
-  }
-
   if (loading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "60vh" }}>
@@ -136,13 +132,15 @@ export default function ColaboradorDetalhePage() {
   if (error || !colaborador) {
     return (
       <Box sx={{ p: 3 }}>
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={() => router.push("/colaboradores")}
-          sx={{ mb: 3, textTransform: "none" }}
-        >
-          Voltar
-        </Button>
+        {isAdmin && (
+          <Button
+            startIcon={<ArrowBackIcon />}
+            onClick={() => router.push("/colaboradores")}
+            sx={{ mb: 3, textTransform: "none" }}
+          >
+            Voltar
+          </Button>
+        )}
         <Alert severity="error">
           {error || "Colaborador não encontrado"}
         </Alert>
@@ -168,17 +166,19 @@ export default function ColaboradorDetalhePage() {
       <Box sx={{ maxWidth: 1200, mx: "auto" }}>
         {/* Header */}
         <Box sx={{ mb: 4 }}>
-          <Button
-            startIcon={<ArrowBackIcon />}
-            onClick={() => router.push("/colaboradores")}
-            sx={{
-              mb: 3,
-              textTransform: "none",
-              color: "text.secondary"
-            }}
-          >
-            Voltar
-          </Button>
+          {isAdmin && (
+            <Button
+              startIcon={<ArrowBackIcon />}
+              onClick={() => router.push("/colaboradores")}
+              sx={{
+                mb: 3,
+                textTransform: "none",
+                color: "text.secondary"
+              }}
+            >
+              Voltar
+            </Button>
+          )}
 
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 3 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>

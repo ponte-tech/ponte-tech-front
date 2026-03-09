@@ -30,6 +30,8 @@ import {
   IconButton,
   Tooltip,
   Grid,
+  Checkbox,
+  Badge,
 } from '@mui/material';
 import {
   CheckCircle as CheckCircleIcon,
@@ -39,11 +41,16 @@ import {
   Warning as WarningIcon,
   People as PeopleIcon,
   CalendarMonth as CalendarIcon,
+  DownloadForOffline as DownloadIcon,
+  Payment as PaymentIcon,
+  Receipt as ReceiptIcon,
 } from '@mui/icons-material';
 import { useAuth } from '@/app/hooks/useAuth';
 import timesheetService from '@/app/services/timesheetService';
+import fiscalService from '@/app/services/fiscalService';
 import { FilterSearch } from '@/app/shared/components';
 import type { ColaboradorTimesheetStatus, StatusMes } from '@/app/types/timesheet';
+import type { NotaFiscal } from '@/app/types/fiscal';
 import DetalhesTimesheetDrawer from './components/DetalhesTimesheetDrawer';
 
 const statusConfig: Record<StatusMes, { label: string; color: 'default' | 'warning' | 'success' | 'error'; icon: React.ReactNode }> = {
@@ -81,6 +88,13 @@ export default function TimesheetAprovacoesPage() {
     return `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
   });
 
+  // Notas fiscais por colaborador
+  const [notasFiscaisPorColaborador, setNotasFiscaisPorColaborador] = useState<Record<string, NotaFiscal[]>>({});
+  const [loadingNotas, setLoadingNotas] = useState(false);
+
+  // Seleção múltipla
+  const [selectedColaboradores, setSelectedColaboradores] = useState<Set<string>>(new Set());
+
   // Filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<StatusMes | ''>('');
@@ -88,6 +102,7 @@ export default function TimesheetAprovacoesPage() {
   // Dialogs
   const [dialogAprovacao, setDialogAprovacao] = useState(false);
   const [dialogReprovacao, setDialogReprovacao] = useState(false);
+  const [dialogPagamentoLote, setDialogPagamentoLote] = useState(false);
   const [selectedColaborador, setSelectedColaborador] = useState<ColaboradorTimesheetStatus | null>(null);
   const [motivoReprovacao, setMotivoReprovacao] = useState('');
 
@@ -135,11 +150,39 @@ export default function TimesheetAprovacoesPage() {
       const data = await timesheetService.listarColaboradoresTimesheet(mesAtual);
 
       setColaboradores(data.colaboradores);
+
+      // Carregar notas fiscais de cada colaborador
+      await loadNotasFiscais(data.colaboradores);
     } catch (err) {
       console.error('Erro ao carregar colaboradores:', err);
       setError('Erro ao carregar lista de colaboradores');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadNotasFiscais = async (colabs: ColaboradorTimesheetStatus[]) => {
+    setLoadingNotas(true);
+    const notasMap: Record<string, NotaFiscal[]> = {};
+
+    try {
+      // Buscar notas fiscais em paralelo para todos os colaboradores
+      const promises = colabs.map(async (colab) => {
+        try {
+          const notas = await fiscalService.listNotasFiscaisByColaborador(colab.colaborador_id, mesAtual);
+          notasMap[colab.colaborador_id] = notas;
+        } catch (err) {
+          console.error(`Erro ao carregar notas de ${colab.nome_completo}:`, err);
+          notasMap[colab.colaborador_id] = [];
+        }
+      });
+
+      await Promise.all(promises);
+      setNotasFiscaisPorColaborador(notasMap);
+    } catch (err) {
+      console.error('Erro ao carregar notas fiscais:', err);
+    } finally {
+      setLoadingNotas(false);
     }
   };
 
@@ -238,6 +281,166 @@ export default function TimesheetAprovacoesPage() {
         severity: 'error',
       });
     }
+  };
+
+  // Handlers de seleção múltipla
+  const handleSelectColaborador = (colaboradorId: string) => {
+    const newSelected = new Set(selectedColaboradores);
+    if (newSelected.has(colaboradorId)) {
+      newSelected.delete(colaboradorId);
+    } else {
+      newSelected.add(colaboradorId);
+    }
+    setSelectedColaboradores(newSelected);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedColaboradores.size === colaboradoresFiltrados.length) {
+      setSelectedColaboradores(new Set());
+    } else {
+      setSelectedColaboradores(new Set(colaboradoresFiltrados.map(c => c.colaborador_id)));
+    }
+  };
+
+  // Ações em lote
+  const handleDownloadNotasLote = async () => {
+    const notasParaDownload: NotaFiscal[] = [];
+
+    selectedColaboradores.forEach((colaboradorId) => {
+      const notas = notasFiscaisPorColaborador[colaboradorId] || [];
+      notas.forEach(nota => {
+        if (nota.arquivo_url) {
+          notasParaDownload.push(nota);
+        }
+      });
+    });
+
+    if (notasParaDownload.length === 0) {
+      setSnackbar({
+        open: true,
+        message: 'Nenhuma nota fiscal disponível para download nos colaboradores selecionados',
+        severity: 'error',
+      });
+      return;
+    }
+
+    // Download each one
+    for (const nota of notasParaDownload) {
+      if (nota.arquivo_url) {
+        window.open(nota.arquivo_url, '_blank');
+        // Small delay to prevent browser blocking multiple downloads
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+
+    setSnackbar({
+      open: true,
+      message: `Iniciando download de ${notasParaDownload.length} nota(s) fiscal(is)`,
+      severity: 'success',
+    });
+  };
+
+  const handlePagarNotasLote = () => {
+    const notasAprovadas: NotaFiscal[] = [];
+
+    selectedColaboradores.forEach((colaboradorId) => {
+      const notas = notasFiscaisPorColaborador[colaboradorId] || [];
+      notas.forEach(nota => {
+        if (nota.status === 'APROVADA') {
+          notasAprovadas.push(nota);
+        }
+      });
+    });
+
+    if (notasAprovadas.length === 0) {
+      setSnackbar({
+        open: true,
+        message: 'Nenhuma nota fiscal aprovada para pagamento nos colaboradores selecionados',
+        severity: 'error',
+      });
+      return;
+    }
+
+    setDialogPagamentoLote(true);
+  };
+
+  const confirmPagamentoLote = async () => {
+    const notasAprovadas: NotaFiscal[] = [];
+
+    selectedColaboradores.forEach((colaboradorId) => {
+      const notas = notasFiscaisPorColaborador[colaboradorId] || [];
+      notas.forEach(nota => {
+        if (nota.status === 'APROVADA') {
+          notasAprovadas.push(nota);
+        }
+      });
+    });
+
+    try {
+      // Marcar todas como pagas em paralelo
+      await Promise.all(
+        notasAprovadas.map(nota => fiscalService.marcarNotaComoPaga(nota.nota_fiscal_id))
+      );
+
+      // Recarregar notas fiscais
+      await loadNotasFiscais(colaboradores);
+
+      setSnackbar({
+        open: true,
+        message: `${notasAprovadas.length} nota(s) fiscal(is) marcada(s) como paga(s) com sucesso!`,
+        severity: 'success',
+      });
+      setDialogPagamentoLote(false);
+      setSelectedColaboradores(new Set());
+    } catch (err) {
+      console.error('Erro ao marcar notas como pagas:', err);
+      setSnackbar({
+        open: true,
+        message: 'Erro ao marcar notas como pagas',
+        severity: 'error',
+      });
+    }
+  };
+
+  const getNotasResumo = (colaboradorId: string) => {
+    const notas = notasFiscaisPorColaborador[colaboradorId] || [];
+    return {
+      total: notas.length,
+      pendente: notas.filter(n => n.status === 'PENDENTE').length,
+      aprovada: notas.filter(n => n.status === 'APROVADA').length,
+      paga: notas.filter(n => n.status === 'PAGA').length,
+      reprovada: notas.filter(n => n.status === 'REPROVADA').length,
+    };
+  };
+
+  // Download de notas de um colaborador específico
+  const handleDownloadNotasColaborador = async (colaboradorId: string) => {
+    const notas = notasFiscaisPorColaborador[colaboradorId] || [];
+    const notasComUrl = notas.filter(n => n.arquivo_url);
+
+    if (notasComUrl.length === 0) {
+      setSnackbar({
+        open: true,
+        message: 'Nenhuma nota fiscal disponível para download',
+        severity: 'error',
+      });
+      return;
+    }
+
+    // Download each one
+    for (const nota of notasComUrl) {
+      if (nota.arquivo_url) {
+        window.open(nota.arquivo_url, '_blank');
+        // Small delay to prevent browser blocking multiple downloads
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+
+    setSnackbar({
+      open: true,
+      message: `Iniciando download de ${notasComUrl.length} nota(s) fiscal(is)`,
+      severity: 'success',
+    });
   };
 
   const formatMes = (mes: string) => {
@@ -424,6 +627,38 @@ export default function TimesheetAprovacoesPage() {
         </CardContent>
       </Card>
 
+      {/* Ações em lote */}
+      {selectedColaboradores.size > 0 && (
+        <Card sx={{ mb: 3, bgcolor: '#f0f7ff', borderColor: '#667eea' }}>
+          <CardContent>
+            <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
+              <Typography variant="body1" fontWeight="600">
+                {selectedColaboradores.size} colaborador(es) selecionado(s)
+              </Typography>
+              <Stack direction="row" spacing={1}>
+                <Button
+                  variant="outlined"
+                  startIcon={<DownloadIcon />}
+                  onClick={handleDownloadNotasLote}
+                  size="small"
+                >
+                  Baixar Notas Fiscais
+                </Button>
+                <Button
+                  variant="contained"
+                  color="success"
+                  startIcon={<PaymentIcon />}
+                  onClick={handlePagarNotasLote}
+                  size="small"
+                >
+                  Marcar como Pagas
+                </Button>
+              </Stack>
+            </Stack>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Tabela */}
       <Card>
         <CardContent>
@@ -440,108 +675,165 @@ export default function TimesheetAprovacoesPage() {
               <Table>
                 <TableHead>
                   <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        indeterminate={selectedColaboradores.size > 0 && selectedColaboradores.size < colaboradoresFiltrados.length}
+                        checked={selectedColaboradores.size === colaboradoresFiltrados.length && colaboradoresFiltrados.length > 0}
+                        onChange={handleSelectAll}
+                      />
+                    </TableCell>
                     <TableCell><strong>Colaborador</strong></TableCell>
                     <TableCell align="center"><strong>Contratos</strong></TableCell>
                     <TableCell align="center"><strong>Horas Lançadas</strong></TableCell>
                     <TableCell align="center"><strong>Horas Contratadas</strong></TableCell>
                     <TableCell align="center"><strong>Progresso</strong></TableCell>
+                    <TableCell align="center"><strong>Notas Fiscais</strong></TableCell>
                     <TableCell align="center"><strong>Status</strong></TableCell>
                     <TableCell align="center"><strong>Ações</strong></TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {colaboradoresFiltrados.map((colab) => (
-                    <TableRow key={colab.colaborador_id} hover>
-                      <TableCell>
-                        <Typography variant="body2" fontWeight="600">
-                          {colab.nome_completo}
-                        </Typography>
-                      </TableCell>
+                  {colaboradoresFiltrados.map((colab) => {
+                    const notasResumo = getNotasResumo(colab.colaborador_id);
+                    const isSelected = selectedColaboradores.has(colab.colaborador_id);
 
-                      <TableCell align="center">
-                        <Chip
-                          label={colab.qtd_contratos_ativos}
-                          size="small"
-                          color={colab.qtd_contratos_ativos > 0 ? 'primary' : 'default'}
-                        />
-                      </TableCell>
-
-                      <TableCell align="center">
-                        <Typography variant="body2" fontWeight="600">
-                          {colab.total_horas_lancadas.toFixed(2)}h
-                        </Typography>
-                      </TableCell>
-
-                      <TableCell align="center">
-                        <Typography variant="body2">
-                          {colab.total_horas_contratadas.toFixed(2)}h
-                        </Typography>
-                      </TableCell>
-
-                      <TableCell align="center">
-                        <Box sx={{ minWidth: 120, px: 1 }}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                            <Typography variant="caption" fontWeight="600">
-                              {colab.percentual_lancado.toFixed(0)}%
-                            </Typography>
-                          </Box>
-                          <LinearProgress
-                            variant="determinate"
-                            value={Math.min(colab.percentual_lancado, 100)}
-                            color={getProgressColor(colab.percentual_lancado)}
-                            sx={{ height: 6, borderRadius: 3 }}
+                    return (
+                      <TableRow key={colab.colaborador_id} hover selected={isSelected}>
+                        <TableCell padding="checkbox">
+                          <Checkbox
+                            checked={isSelected}
+                            onChange={() => handleSelectColaborador(colab.colaborador_id)}
                           />
-                        </Box>
-                      </TableCell>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" fontWeight="600">
+                            {colab.nome_completo}
+                          </Typography>
+                        </TableCell>
 
-                      <TableCell align="center">
-                        <Chip
-                          icon={statusConfig[colab.status_mes].icon}
-                          label={statusConfig[colab.status_mes].label}
-                          color={statusConfig[colab.status_mes].color}
-                          size="small"
-                        />
-                      </TableCell>
+                        <TableCell align="center">
+                          <Chip
+                            label={colab.qtd_contratos_ativos}
+                            size="small"
+                            color={colab.qtd_contratos_ativos > 0 ? 'primary' : 'default'}
+                          />
+                        </TableCell>
 
-                      <TableCell align="center">
-                        <Stack direction="row" spacing={1} justifyContent="center">
-                          <Tooltip title="Ver detalhes">
-                            <IconButton
-                              size="small"
-                              color="primary"
-                              onClick={() => handleVerDetalhes(colab)}
-                            >
-                              <VisibilityIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
+                        <TableCell align="center">
+                          <Typography variant="body2" fontWeight="600">
+                            {colab.total_horas_lancadas.toFixed(2)}h
+                          </Typography>
+                        </TableCell>
 
-                          {colab.status_mes === 'AGUARDANDO_APROVACAO' && (
-                            <>
-                              <Tooltip title="Aprovar">
-                                <IconButton
-                                  size="small"
-                                  color="success"
-                                  onClick={() => handleAprovar(colab)}
-                                >
-                                  <CheckCircleIcon fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
+                        <TableCell align="center">
+                          <Typography variant="body2">
+                            {colab.total_horas_contratadas.toFixed(2)}h
+                          </Typography>
+                        </TableCell>
 
-                              <Tooltip title="Reprovar">
-                                <IconButton
-                                  size="small"
-                                  color="error"
-                                  onClick={() => handleReprovar(colab)}
-                                >
-                                  <CancelIcon fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                            </>
+                        <TableCell align="center">
+                          <Box sx={{ minWidth: 120, px: 1 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                              <Typography variant="caption" fontWeight="600">
+                                {colab.percentual_lancado.toFixed(0)}%
+                              </Typography>
+                            </Box>
+                            <LinearProgress
+                              variant="determinate"
+                              value={Math.min(colab.percentual_lancado, 100)}
+                              color={getProgressColor(colab.percentual_lancado)}
+                              sx={{ height: 6, borderRadius: 3 }}
+                            />
+                          </Box>
+                        </TableCell>
+
+                        <TableCell align="center">
+                          {loadingNotas ? (
+                            <CircularProgress size={20} />
+                          ) : (
+                            <Stack direction="row" spacing={0.5} justifyContent="center" alignItems="center">
+                              <Badge badgeContent={notasResumo.total} color="primary">
+                                <ReceiptIcon fontSize="small" />
+                              </Badge>
+                              <Stack direction="row" spacing={0.5} sx={{ ml: 1 }}>
+                                {notasResumo.pendente > 0 && (
+                                  <Chip label={`${notasResumo.pendente}P`} size="small" color="warning" sx={{ height: 20, fontSize: '0.7rem' }} />
+                                )}
+                                {notasResumo.aprovada > 0 && (
+                                  <Chip label={`${notasResumo.aprovada}A`} size="small" color="success" sx={{ height: 20, fontSize: '0.7rem' }} />
+                                )}
+                                {notasResumo.paga > 0 && (
+                                  <Chip label={`${notasResumo.paga}$`} size="small" color="info" sx={{ height: 20, fontSize: '0.7rem' }} />
+                                )}
+                                {notasResumo.reprovada > 0 && (
+                                  <Chip label={`${notasResumo.reprovada}R`} size="small" color="error" sx={{ height: 20, fontSize: '0.7rem' }} />
+                                )}
+                              </Stack>
+                            </Stack>
                           )}
-                        </Stack>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        </TableCell>
+
+                        <TableCell align="center">
+                          <Chip
+                            icon={statusConfig[colab.status_mes].icon}
+                            label={statusConfig[colab.status_mes].label}
+                            color={statusConfig[colab.status_mes].color}
+                            size="small"
+                          />
+                        </TableCell>
+
+                        <TableCell align="center">
+                          <Stack direction="row" spacing={1} justifyContent="center">
+                            <Tooltip title="Ver detalhes">
+                              <IconButton
+                                size="small"
+                                color="primary"
+                                onClick={() => handleVerDetalhes(colab)}
+                              >
+                                <VisibilityIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+
+                            {notasResumo.total > 0 && (
+                              <Tooltip title="Baixar Notas Fiscais">
+                                <IconButton
+                                  size="small"
+                                  color="info"
+                                  onClick={() => handleDownloadNotasColaborador(colab.colaborador_id)}
+                                >
+                                  <DownloadIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+
+                            {colab.status_mes === 'AGUARDANDO_APROVACAO' && (
+                              <>
+                                <Tooltip title="Aprovar">
+                                  <IconButton
+                                    size="small"
+                                    color="success"
+                                    onClick={() => handleAprovar(colab)}
+                                  >
+                                    <CheckCircleIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+
+                                <Tooltip title="Reprovar">
+                                  <IconButton
+                                    size="small"
+                                    color="error"
+                                    onClick={() => handleReprovar(colab)}
+                                  >
+                                    <CancelIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              </>
+                            )}
+                          </Stack>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -591,6 +883,28 @@ export default function TimesheetAprovacoesPage() {
           <Button onClick={() => setDialogReprovacao(false)}>Cancelar</Button>
           <Button onClick={confirmReprovar} variant="contained" color="error" startIcon={<CancelIcon />}>
             Confirmar Reprovação
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog de Pagamento em Lote */}
+      <Dialog open={dialogPagamentoLote} onClose={() => setDialogPagamentoLote(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Marcar Notas Fiscais como Pagas</DialogTitle>
+        <DialogContent>
+          <Typography gutterBottom>
+            Deseja marcar todas as notas fiscais aprovadas dos colaboradores selecionados como pagas?
+          </Typography>
+          <Alert severity="info" sx={{ mt: 2 }}>
+            Esta ação irá marcar todas as notas fiscais com status <strong>APROVADA</strong> como <strong>PAGA</strong>.
+          </Alert>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+            {selectedColaboradores.size} colaborador(es) selecionado(s)
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDialogPagamentoLote(false)}>Cancelar</Button>
+          <Button onClick={confirmPagamentoLote} variant="contained" color="success" startIcon={<PaymentIcon />}>
+            Confirmar Pagamento
           </Button>
         </DialogActions>
       </Dialog>

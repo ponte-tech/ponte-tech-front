@@ -22,6 +22,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  FormHelperText,
 } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
@@ -57,21 +58,30 @@ export default function EditarColaboradorPage() {
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
 
   const isAdmin = user?.userType === "admin";
+  const isColaborador = user?.userType === "colaborador";
   const colaboradorId = params.id as string;
 
   useEffect(() => {
-    if (user && !isAdmin) {
-      router.push("/dashboard");
+    if (user) {
+      // Colaboradores só podem editar seu próprio perfil
+      if (isColaborador && user.id !== colaboradorId) {
+        router.push(`/colaboradores/${user.id}/editar`);
+      } else if (!isAdmin && !isColaborador) {
+        router.push("/dashboard");
+      }
     }
-  }, [user, isAdmin, router]);
+  }, [user, isAdmin, isColaborador, colaboradorId, router]);
 
   useEffect(() => {
-    if (isAdmin) {
+    if (isAdmin || isColaborador) {
       loadColaborador();
       loadContracts();
-      loadEmpresas();
+      // Apenas admins podem listar todas as empresas
+      if (isAdmin) {
+        loadEmpresas();
+      }
     }
-  }, [colaboradorId, isAdmin]);
+  }, [colaboradorId, isAdmin, isColaborador]);
 
   const loadEmpresas = async () => {
     try {
@@ -86,8 +96,21 @@ export default function EditarColaboradorPage() {
     setLoading(true);
     setError(null);
     try {
-      const data = await colaboradoresService.getById(colaboradorId);
+      const data = await colaboradoresService.getById(colaboradorId, isColaborador);
       setColaborador(data);
+
+      // Para colaboradores, criar objeto empresa temporário para evitar erro no Select
+      if (isColaborador && data.empresa_id) {
+        setEmpresas([{
+          empresa_id: data.empresa_id,
+          razao_social: data.empresa_id, // Temporário - mostrar apenas o ID
+          cnpj: '',
+          endereco: {} as any,
+          contatos: [],
+          status: 'ativo' as any,
+          data_cadastro: '',
+        }]);
+      }
     } catch (err: any) {
       setError(err.message || "Erro ao carregar colaborador");
       console.error("Erro ao carregar colaborador:", err);
@@ -530,7 +553,7 @@ export default function EditarColaboradorPage() {
         status: colaborador.status,
       };
 
-      await colaboradoresService.update(colaboradorId, updateData);
+      await colaboradoresService.update(colaboradorId, updateData, isColaborador);
       setSuccess(true);
 
       setTimeout(() => {
@@ -545,10 +568,6 @@ export default function EditarColaboradorPage() {
     }
   };
 
-  if (!isAdmin) {
-    return null;
-  }
-
   if (loading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "60vh" }}>
@@ -560,13 +579,15 @@ export default function EditarColaboradorPage() {
   if (error && !colaborador) {
     return (
       <Box sx={{ p: 3 }}>
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={() => router.push("/colaboradores")}
-          sx={{ mb: 3, textTransform: "none" }}
-        >
-          Voltar
-        </Button>
+        {isAdmin && (
+          <Button
+            startIcon={<ArrowBackIcon />}
+            onClick={() => router.push("/colaboradores")}
+            sx={{ mb: 3, textTransform: "none" }}
+          >
+            Voltar
+          </Button>
+        )}
         <Alert severity="error">{error}</Alert>
       </Box>
     );
@@ -663,7 +684,7 @@ export default function EditarColaboradorPage() {
                         value={colaborador.empresa_id || ""}
                         label="Empresa"
                         onChange={(e) => handleChange("empresa_id", e.target.value)}
-                        disabled={saving}
+                        disabled={saving || isColaborador}
                       >
                         {empresas.map((empresa) => (
                           <MenuItem key={empresa.empresa_id} value={empresa.empresa_id}>
@@ -671,6 +692,9 @@ export default function EditarColaboradorPage() {
                           </MenuItem>
                         ))}
                       </Select>
+                      {isColaborador && (
+                        <FormHelperText>Empresa não pode ser alterada</FormHelperText>
+                      )}
                     </FormControl>
                   </Grid>
                   <Grid item xs={12} md={6}>
@@ -696,20 +720,23 @@ export default function EditarColaboradorPage() {
                       helperText="Email não pode ser alterado"
                     />
                   </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      select
-                      fullWidth
-                      label="Status"
-                      required
-                      value={colaborador.status}
-                      onChange={(e) => handleChange("status", e.target.value)}
-                      disabled={saving}
-                    >
-                      <MenuItem value="ativo">Ativo</MenuItem>
-                      <MenuItem value="inativo">Inativo</MenuItem>
-                    </TextField>
-                  </Grid>
+                  {/* Campo Status - apenas para admins */}
+                  {isAdmin && (
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        select
+                        fullWidth
+                        label="Status"
+                        required
+                        value={colaborador.status}
+                        onChange={(e) => handleChange("status", e.target.value)}
+                        disabled={saving}
+                      >
+                        <MenuItem value="ativo">Ativo</MenuItem>
+                        <MenuItem value="inativo">Inativo</MenuItem>
+                      </TextField>
+                    </Grid>
+                  )}
                 </Grid>
               </CardContent>
             </Card>
@@ -964,24 +991,28 @@ export default function EditarColaboradorPage() {
                   <Typography variant="h6" fontWeight="600">
                     Contratos
                   </Typography>
-                  <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => setModalOpen(true)}
-                    disabled={saving}
-                    sx={{
-                      bgcolor: "#8270FF",
-                      "&:hover": { bgcolor: "#6c5ce7" },
-                      textTransform: "none",
-                    }}
-                  >
-                    Adicionar Contrato
-                  </Button>
+                  {isAdmin && (
+                    <Button
+                      variant="contained"
+                      startIcon={<AddIcon />}
+                      onClick={() => setModalOpen(true)}
+                      disabled={saving}
+                      sx={{
+                        bgcolor: "#8270FF",
+                        "&:hover": { bgcolor: "#6c5ce7" },
+                        textTransform: "none",
+                      }}
+                    >
+                      Adicionar Contrato
+                    </Button>
+                  )}
                 </Box>
 
                 {contracts.length === 0 ? (
                   <Alert severity="info">
-                    Nenhum contrato adicionado. Clique em "Adicionar Contrato" para começar.
+                    {isAdmin
+                      ? 'Nenhum contrato adicionado. Clique em "Adicionar Contrato" para começar.'
+                      : 'Nenhum contrato cadastrado.'}
                   </Alert>
                 ) : (
                   <TableContainer component={Paper} variant="outlined">
@@ -996,7 +1027,7 @@ export default function EditarColaboradorPage() {
                           <TableCell align="right">Horas/Mês</TableCell>
                           <TableCell align="right">Valor Total</TableCell>
                           <TableCell align="center">Status</TableCell>
-                          <TableCell align="center">Ações</TableCell>
+                          {isAdmin && <TableCell align="center">Ações</TableCell>}
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -1022,26 +1053,28 @@ export default function EditarColaboradorPage() {
                                 <Typography color="text.secondary">Inativo</Typography>
                               )}
                             </TableCell>
-                            <TableCell align="center">
-                              <IconButton
-                                size="small"
-                                color="primary"
-                                onClick={() => handleEditContract(contract)}
-                                disabled={saving}
-                                title="Editar contrato"
-                              >
-                                <EditIcon />
-                              </IconButton>
-                              <IconButton
-                                size="small"
-                                color="error"
-                                onClick={() => handleDeleteContract(contract.contrato_id)}
-                                disabled={saving}
-                                title="Deletar contrato"
-                              >
-                                <DeleteIcon />
-                              </IconButton>
-                            </TableCell>
+                            {isAdmin && (
+                              <TableCell align="center">
+                                <IconButton
+                                  size="small"
+                                  color="primary"
+                                  onClick={() => handleEditContract(contract)}
+                                  disabled={saving}
+                                  title="Editar contrato"
+                                >
+                                  <EditIcon />
+                                </IconButton>
+                                <IconButton
+                                  size="small"
+                                  color="error"
+                                  onClick={() => handleDeleteContract(contract.contrato_id)}
+                                  disabled={saving}
+                                  title="Deletar contrato"
+                                >
+                                  <DeleteIcon />
+                                </IconButton>
+                              </TableCell>
+                            )}
                           </TableRow>
                         ))}
                       </TableBody>
@@ -1082,15 +1115,17 @@ export default function EditarColaboradorPage() {
         </Grid>
       </form>
 
-      {/* Modal de Contrato */}
-      <ContractModal
-        open={modalOpen}
-        onClose={handleCloseModal}
-        onSave={handleAddContract}
-        loading={false}
-        error={null}
-        editingContract={editingContract}
-      />
+      {/* Modal de Contrato - Apenas Admin */}
+      {isAdmin && (
+        <ContractModal
+          open={modalOpen}
+          onClose={handleCloseModal}
+          onSave={handleAddContract}
+          loading={false}
+          error={null}
+          editingContract={editingContract}
+        />
+      )}
     </Box>
   );
 }

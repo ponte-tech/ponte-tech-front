@@ -41,10 +41,13 @@ class ColaboradoresService {
   }
 
   /**
-   * Obtém detalhes de um colaborador específico (admin apenas)
+   * Obtém detalhes de um colaborador específico
+   * - Admins podem acessar qualquer colaborador
+   * - Colaboradores podem acessar apenas seus próprios dados (validado no backend)
    */
-  async getById(id: string): Promise<Colaborador> {
+  async getById(id: string, isColaborador: boolean = false): Promise<Colaborador> {
     try {
+      // Ambos usam o mesmo endpoint, backend valida permissões
       const response: AxiosResponse<ApiResponse<Colaborador>> = await api.get(
         `/api/admin/colaboradores/${id}`
       );
@@ -88,10 +91,13 @@ class ColaboradoresService {
   }
 
   /**
-   * Atualiza um colaborador existente (admin apenas)
+   * Atualiza um colaborador existente
+   * - Admins podem atualizar qualquer colaborador
+   * - Colaboradores podem atualizar apenas seus próprios dados (validado no backend)
    */
-  async update(id: string, data: UpdateColaboradorRequest): Promise<Colaborador> {
+  async update(id: string, data: UpdateColaboradorRequest, isColaborador: boolean = false): Promise<Colaborador> {
     try {
+      // Ambos usam o mesmo endpoint, backend valida permissões
       const response: AxiosResponse<ApiResponse<Colaborador>> = await api.put(
         `/api/admin/colaboradores/${id}`,
         data
