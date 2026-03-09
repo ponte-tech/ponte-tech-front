@@ -112,11 +112,6 @@ export default function ContractModal({ open, onClose, onSave, loading = false, 
       return;
     }
 
-    if (!formData.data_fim) {
-      setValidationError("A data de fim é obrigatória");
-      return;
-    }
-
     if (formData.valor_hora <= 0) {
       setValidationError("O valor por hora deve ser maior que zero");
       return;
@@ -194,11 +189,11 @@ export default function ContractModal({ open, onClose, onSave, loading = false, 
                 fullWidth
                 label="Data de Fim"
                 type="date"
-                required
                 value={formData.data_fim}
                 onChange={(e) => handleChange("data_fim", e.target.value)}
                 disabled={loading}
                 InputLabelProps={{ shrink: true }}
+                helperText="Deixe em branco para contrato indeterminado"
               />
             </Grid>
 

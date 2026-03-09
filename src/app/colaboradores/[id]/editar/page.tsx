@@ -140,6 +140,75 @@ export default function EditarColaboradorPage() {
       .replace(/(-\d{3})\d+?$/, "$1");
   };
 
+  const applyMaskEmail = (value: string) => {
+    return value.toLowerCase().trim();
+  };
+
+  const applyMaskAleatoria = (value: string) => {
+    return value.replace(/[^a-zA-Z0-9-]/g, "");
+  };
+
+  const applyMaskNumero = (value: string) => {
+    return value.replace(/\D/g, "").slice(0, 6);
+  };
+
+  const applyPixMask = (value: string, tipo: TipoChavePix) => {
+    switch (tipo) {
+      case "cpf":
+        return applyMaskCPF(value);
+      case "cnpj":
+        return applyMaskCNPJ(value);
+      case "telefone":
+        return applyMaskPhone(value);
+      case "email":
+        return applyMaskEmail(value);
+      case "aleatoria":
+        return applyMaskAleatoria(value);
+      default:
+        return value;
+    }
+  };
+
+  const fetchAddressByCEP = async (cep: string) => {
+    const cleanedCEP = cep.replace(/\D/g, "");
+    if (cleanedCEP.length !== 8) return;
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cleanedCEP}/json/`);
+      const data = await response.json();
+
+      if (data.erro) {
+        setFieldErrors((prev) => ({ ...prev, "endereco.cep": "CEP não encontrado" }));
+        return;
+      }
+
+      setColaborador((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          endereco: {
+            ...prev.endereco,
+            logradouro: data.logradouro || prev.endereco?.logradouro || "",
+            bairro: data.bairro || prev.endereco?.bairro || "",
+            cidade: data.localidade || prev.endereco?.cidade || "",
+            estado: data.uf || prev.endereco?.estado || "",
+          },
+        };
+      });
+
+      setFieldErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors["endereco.cep"];
+        return newErrors;
+      });
+
+      console.log("✅ Endereço preenchido automaticamente via CEP");
+    } catch (err) {
+      console.error("Erro ao buscar CEP:", err);
+      setFieldErrors((prev) => ({ ...prev, "endereco.cep": "Erro ao buscar CEP" }));
+    }
+  };
+
   // Funções de validação
   const validateCPF = (cpf: string): boolean => {
     const cleaned = cpf.replace(/\D/g, "");
@@ -215,8 +284,36 @@ export default function EditarColaboradorPage() {
       maskedValue = applyMaskPhone(value);
     } else if (field === "endereco.cep") {
       maskedValue = applyMaskCEP(value);
+    } else if (field === "endereco.numero") {
+      maskedValue = applyMaskNumero(value);
     } else if (field === "endereco.estado") {
       maskedValue = value.toUpperCase().slice(0, 2);
+    } else if (field === "dados_financeiros.chave_pix") {
+      const tipoChavePix = colaborador.dados_financeiros?.tipo_chave_pix || "cpf";
+      maskedValue = applyPixMask(value, tipoChavePix);
+    } else if (field === "dados_financeiros.tipo_chave_pix") {
+      const chaveAtual = colaborador.dados_financeiros?.chave_pix || "";
+      const novaChaveMascarada = applyPixMask(chaveAtual, value as TipoChavePix);
+
+      setColaborador((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          dados_financeiros: {
+            ...prev.dados_financeiros,
+            tipo_chave_pix: value,
+            chave_pix: novaChaveMascarada,
+          },
+        };
+      });
+
+      setFieldErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+      setError(null);
+      return;
     }
 
     if (field.includes(".")) {
@@ -270,6 +367,8 @@ export default function EditarColaboradorPage() {
     } else if (field === "endereco.cep" && value) {
       if (!validateCEP(value)) {
         errorMessage = "CEP inválido";
+      } else {
+        fetchAddressByCEP(value);
       }
     } else if (field === "nome_completo" && value) {
       if (value.trim().split(" ").length < 2) {
@@ -772,7 +871,18 @@ export default function EditarColaboradorPage() {
                       value={colaborador.dados_financeiros?.chave_pix || ""}
                       onChange={(e) => handleChange("dados_financeiros.chave_pix", e.target.value)}
                       disabled={saving}
-                      placeholder="Informe a chave PIX"
+                      placeholder={
+                        colaborador.dados_financeiros?.tipo_chave_pix === "cpf" ? "000.000.000-00" :
+                        colaborador.dados_financeiros?.tipo_chave_pix === "cnpj" ? "00.000.000/0000-00" :
+                        colaborador.dados_financeiros?.tipo_chave_pix === "telefone" ? "(00) 00000-0000" :
+                        colaborador.dados_financeiros?.tipo_chave_pix === "email" ? "email@exemplo.com" :
+                        "Chave aleatória"
+                      }
+                      helperText={
+                        colaborador.dados_financeiros?.tipo_chave_pix === "aleatoria"
+                          ? "Cole aqui a chave aleatória gerada pelo banco"
+                          : undefined
+                      }
                     />
                   </Grid>
                   <Grid item xs={12} md={4}>

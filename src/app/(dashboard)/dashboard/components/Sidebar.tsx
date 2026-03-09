@@ -62,7 +62,7 @@ const menuItems: MenuItem[] = [
   {
     text: "Colaboradores",
     icon: <PeopleIcon />,
-    path: "/dashboard/colaboradores",
+    path: "/colaboradores",
     allowedRoles: ["admin"]
   },
   {

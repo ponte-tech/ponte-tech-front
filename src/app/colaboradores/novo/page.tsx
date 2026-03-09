@@ -154,6 +154,82 @@ export default function NovoColaboradorPage() {
       .replace(/(-\d{3})\d+?$/, "$1");
   };
 
+  const applyMaskEmail = (value: string) => {
+    // Email não precisa de máscara, apenas retorna o valor
+    return value.toLowerCase().trim();
+  };
+
+  const applyMaskAleatoria = (value: string) => {
+    // Chave aleatória: apenas letras, números e hífens
+    return value.replace(/[^a-zA-Z0-9-]/g, "");
+  };
+
+  const applyMaskNumero = (value: string) => {
+    // Apenas números, máximo 6 caracteres
+    return value.replace(/\D/g, "").slice(0, 6);
+  };
+
+  // Aplicar máscara baseada no tipo de chave PIX
+  const applyPixMask = (value: string, tipo: TipoChavePix) => {
+    switch (tipo) {
+      case "cpf":
+        return applyMaskCPF(value);
+      case "cnpj":
+        return applyMaskCNPJ(value);
+      case "telefone":
+        return applyMaskPhone(value);
+      case "email":
+        return applyMaskEmail(value);
+      case "aleatoria":
+        return applyMaskAleatoria(value);
+      default:
+        return value;
+    }
+  };
+
+  // Buscar endereço por CEP usando ViaCEP
+  const fetchAddressByCEP = async (cep: string) => {
+    const cleanedCEP = cep.replace(/\D/g, "");
+
+    if (cleanedCEP.length !== 8) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cleanedCEP}/json/`);
+      const data = await response.json();
+
+      if (data.erro) {
+        setFieldErrors((prev) => ({ ...prev, "endereco.cep": "CEP não encontrado" }));
+        return;
+      }
+
+      // Preencher campos automaticamente
+      setFormData((prev) => ({
+        ...prev,
+        endereco: {
+          ...prev.endereco,
+          logradouro: data.logradouro || prev.endereco.logradouro,
+          bairro: data.bairro || prev.endereco.bairro,
+          cidade: data.localidade || prev.endereco.cidade,
+          estado: data.uf || prev.endereco.estado,
+        },
+      }));
+
+      // Limpar erro do CEP se houver
+      setFieldErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors["endereco.cep"];
+        return newErrors;
+      });
+
+      console.log("✅ Endereço preenchido automaticamente via CEP");
+    } catch (err) {
+      console.error("Erro ao buscar CEP:", err);
+      setFieldErrors((prev) => ({ ...prev, "endereco.cep": "Erro ao buscar CEP" }));
+    }
+  };
+
   // Funções de validação
   const validateCPF = (cpf: string): boolean => {
     const cleaned = cpf.replace(/\D/g, "");
@@ -227,8 +303,35 @@ export default function NovoColaboradorPage() {
       maskedValue = applyMaskPhone(value);
     } else if (field === "endereco.cep") {
       maskedValue = applyMaskCEP(value);
+    } else if (field === "endereco.numero") {
+      maskedValue = applyMaskNumero(value);
     } else if (field === "endereco.estado") {
       maskedValue = value.toUpperCase().slice(0, 2);
+    } else if (field === "dados_financeiros.chave_pix") {
+      // Aplicar máscara baseada no tipo de chave PIX selecionado
+      const tipoChavePix = formData.dados_financeiros?.tipo_chave_pix || "cpf";
+      maskedValue = applyPixMask(value, tipoChavePix);
+    } else if (field === "dados_financeiros.tipo_chave_pix") {
+      // Quando mudar o tipo, re-aplicar máscara no valor atual da chave PIX
+      const chaveAtual = formData.dados_financeiros?.chave_pix || "";
+      const novaChaveMascarada = applyPixMask(chaveAtual, value as TipoChavePix);
+
+      setFormData((prev) => ({
+        ...prev,
+        dados_financeiros: {
+          ...prev.dados_financeiros,
+          tipo_chave_pix: value,
+          chave_pix: novaChaveMascarada,
+        },
+      }));
+
+      setFieldErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+      setError(null);
+      return; // Return early para não executar o código abaixo
     }
 
     if (field.includes(".")) {
@@ -280,6 +383,9 @@ export default function NovoColaboradorPage() {
     } else if (field === "endereco.cep" && value) {
       if (!validateCEP(value)) {
         errorMessage = "CEP inválido";
+      } else {
+        // CEP válido, buscar endereço
+        fetchAddressByCEP(value);
       }
     } else if (field === "nome_completo" && value) {
       if (value.trim().split(" ").length < 2) {
@@ -795,7 +901,18 @@ export default function NovoColaboradorPage() {
                       value={formData.dados_financeiros?.chave_pix || ""}
                       onChange={(e) => handleChange("dados_financeiros.chave_pix", e.target.value)}
                       disabled={loading}
-                      placeholder="Informe a chave PIX"
+                      placeholder={
+                        formData.dados_financeiros?.tipo_chave_pix === "cpf" ? "000.000.000-00" :
+                        formData.dados_financeiros?.tipo_chave_pix === "cnpj" ? "00.000.000/0000-00" :
+                        formData.dados_financeiros?.tipo_chave_pix === "telefone" ? "(00) 00000-0000" :
+                        formData.dados_financeiros?.tipo_chave_pix === "email" ? "email@exemplo.com" :
+                        "Chave aleatória"
+                      }
+                      helperText={
+                        formData.dados_financeiros?.tipo_chave_pix === "aleatoria"
+                          ? "Cole aqui a chave aleatória gerada pelo banco"
+                          : undefined
+                      }
                     />
                   </Grid>
                   <Grid item xs={12} md={4}>
