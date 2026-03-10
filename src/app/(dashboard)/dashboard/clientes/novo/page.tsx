@@ -10,12 +10,15 @@ import {
   Grid,
   CircularProgress,
   Alert,
+  MenuItem,
 } from "@mui/material";
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import clienteService from "@/app/services/clienteService";
+import empresaService from "@/app/services/empresaService";
 import type { CreateClienteRequest } from "@/app/types/cliente";
+import type { Empresa } from "@/app/types/empresa";
 import { useAuth } from "@/app/hooks/useAuth";
 import { formatCNPJ, cleanCNPJ } from "@/app/utils/cnpjValidator";
 
@@ -23,8 +26,10 @@ export default function NovoClientePage() {
   const router = useRouter();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [loadingEmpresas, setLoadingEmpresas] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [empresas, setEmpresas] = useState<Empresa[]>([]);
 
   // Verificar se o usuário é admin
   useEffect(() => {
@@ -33,7 +38,26 @@ export default function NovoClientePage() {
     }
   }, [user, router]);
 
+  // Carregar lista de empresas
+  useEffect(() => {
+    const loadEmpresas = async () => {
+      try {
+        setLoadingEmpresas(true);
+        const response = await empresaService.list();
+        setEmpresas(response.empresas);
+      } catch (err) {
+        console.error("Erro ao carregar empresas:", err);
+        setError("Erro ao carregar lista de empresas");
+      } finally {
+        setLoadingEmpresas(false);
+      }
+    };
+
+    loadEmpresas();
+  }, []);
+
   const [formData, setFormData] = useState<CreateClienteRequest>({
+    empresa_id: "",
     razao_social: "",
     nome_fantasia: "",
     cnpj: "",
@@ -57,7 +81,7 @@ export default function NovoClientePage() {
 
     try {
       // Validações básicas
-      if (!formData.razao_social || !formData.nome_fantasia || !formData.cnpj) {
+      if (!formData.empresa_id || !formData.razao_social || !formData.nome_fantasia || !formData.cnpj) {
         throw new Error("Por favor, preencha todos os campos obrigatórios");
       }
 
@@ -128,6 +152,25 @@ export default function NovoClientePage() {
         <CardContent sx={{ p: 4 }}>
           <form onSubmit={handleSubmit}>
             <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  select
+                  label="Empresa"
+                  value={formData.empresa_id || ""}
+                  onChange={(e) => handleChange("empresa_id", e.target.value)}
+                  required
+                  disabled={loading || loadingEmpresas}
+                  helperText={loadingEmpresas ? "Carregando empresas..." : "Selecione a empresa do cliente"}
+                >
+                  {empresas.map((empresa) => (
+                    <MenuItem key={empresa.empresa_id} value={empresa.empresa_id}>
+                      {empresa.razao_social}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+
               <Grid item xs={12}>
                 <TextField
                   fullWidth

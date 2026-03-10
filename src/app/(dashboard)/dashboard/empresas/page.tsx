@@ -104,16 +104,16 @@ export default function EmpresasPage() {
       empresa.cnpj.includes(cleanCNPJ(searchTerm))
   );
 
-  const tableActions: TableAction[] = [
+  const getTableActions = (empresa: Empresa): TableAction[] => [
     {
-      label: "Editar",
-      onClick: (item) => router.push(`/dashboard/empresas/${item.empresa_id}/editar`),
-      color: "#1976d2",
+      type: "edit",
+      onClick: () => router.push(`/dashboard/empresas/${empresa.empresa_id}/editar`),
+      tooltip: "Editar empresa",
     },
     {
-      label: "Excluir",
-      onClick: (item) => handleDeleteClick(item as Empresa),
-      color: "#d32f2f",
+      type: "delete",
+      onClick: () => handleDeleteClick(empresa),
+      tooltip: "Excluir empresa",
     },
   ];
 
@@ -200,7 +200,7 @@ export default function EmpresasPage() {
                       <Typography variant="body2">{formatDate(empresa.data_cadastro)}</Typography>
                     </TableCell>
                     <TableCell align="center">
-                      <TableActionButtons item={empresa} actions={tableActions} />
+                      <TableActionButtons actions={getTableActions(empresa)} />
                     </TableCell>
                   </TableRow>
                 ))

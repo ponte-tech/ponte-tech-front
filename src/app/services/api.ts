@@ -6,7 +6,7 @@ import { getCookie, deleteCookie } from "@/app/lib/cookies";
 // Em produção, usa a URL completa da API
 const API_BASE_URL = process.env.NODE_ENV === 'development'
   ? '' // URL relativa - usa o proxy do Next.js configurado em next.config.ts
-  : (process.env.NEXT_PUBLIC_API_URL || "https://b34hb46zsj.execute-api.us-east-1.amazonaws.com/prod");
+  : (process.env.NEXT_PUBLIC_API_URL || "https://7t4qzcet3nznvrs3tu7bzhqfmi0zqtpy.lambda-url.us-east-1.on.aws");
 
 // Criar instância do Axios
 const api = axios.create({

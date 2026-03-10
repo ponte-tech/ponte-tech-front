@@ -48,7 +48,6 @@ async function proxyRequest(
 
     // Extrair headers importantes
     const authorization = request.headers.get('authorization');
-    console.log('🔑 [PROXY] Authorization:', authorization ? 'Present' : 'Missing');
 
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -64,7 +63,6 @@ async function proxyRequest(
       try {
         const jsonBody = await request.json();
         body = JSON.stringify(jsonBody);
-        console.log('📦 [PROXY] Body:', body.substring(0, 100));
       } catch (err) {
         console.error('❌ [PROXY] Error parsing body:', err);
       }
@@ -77,11 +75,15 @@ async function proxyRequest(
       body,
     });
 
-    console.log(`📡 [PROXY] Response status: ${response.status}`);
-
     // Obter response body
     const data = await response.text();
-    console.log('📥 [PROXY] Response:', data.substring(0, 200));
+
+    // Para status 204 No Content, não pode ter body
+    if (response.status === 204) {
+      return new NextResponse(null, {
+        status: 204,
+      });
+    }
 
     // Retornar response com mesmo status
     return new NextResponse(data, {
@@ -92,12 +94,10 @@ async function proxyRequest(
     });
   } catch (error) {
     console.error('❌ [PROXY] Error:', error);
-    console.error('❌ [PROXY] Stack:', error instanceof Error ? error.stack : 'No stack');
     return NextResponse.json(
       {
         error: 'Erro ao se comunicar com a API',
         details: error instanceof Error ? error.message : String(error),
-        type: error instanceof Error ? error.constructor.name : typeof error
       },
       { status: 500 }
     );

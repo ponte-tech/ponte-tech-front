@@ -50,6 +50,13 @@ async function proxyRequest(
     const authorization = request.headers.get('authorization');
     console.log('🔑 [COLABORADOR-PROXY] Authorization:', authorization ? 'Present' : 'Missing');
 
+    // Debug: Log full authorization value
+    if (authorization) {
+      console.log('🔑 [COLABORADOR-PROXY] Full Authorization value:', authorization);
+      console.log('🔑 [COLABORADOR-PROXY] Authorization length:', authorization.length);
+      console.log('🔑 [COLABORADOR-PROXY] Starts with Bearer:', authorization.startsWith('Bearer '));
+    }
+
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
     };

@@ -21,11 +21,24 @@ export default function DashboardPage() {
   const userPerfil = user?.perfil;
   const userPerfis = user?.perfis;
 
+  // Debug logs
+  console.log('🔍 [DASHBOARD] User data:', {
+    userRole,
+    userPerfil,
+    userPerfis,
+    fullUser: user
+  });
+
   // Check if user is colaborador
   const isColaborador = userPerfil === 'colaborador' || userPerfis?.includes('colaborador');
 
   // Check if user is admin
-  const isAdmin = userRole === 'admin';
+  const isAdmin = userRole === 'admin' || userPerfis?.includes('admin');
+
+  console.log('🔍 [DASHBOARD] Role checks:', {
+    isColaborador,
+    isAdmin
+  });
 
   // Render appropriate dashboard based on user role
   if (isAdmin) {

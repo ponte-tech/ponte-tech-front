@@ -10,23 +10,29 @@ import {
   Grid,
   CircularProgress,
   Alert,
+  MenuItem,
 } from "@mui/material";
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from "@mui/icons-material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import clienteService from "@/app/services/clienteService";
+import empresaService from "@/app/services/empresaService";
 import type { Cliente, UpdateClienteRequest } from "@/app/types/cliente";
+import type { Empresa } from "@/app/types/empresa";
 import { useAuth } from "@/app/hooks/useAuth";
 import { formatCNPJ, cleanCNPJ } from "@/app/utils/cnpjValidator";
 
-export default function EditarClientePage({ params }: { params: { id: string } }) {
+export default function EditarClientePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [loadingEmpresas, setLoadingEmpresas] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [cliente, setCliente] = useState<Cliente | null>(null);
+  const [empresas, setEmpresas] = useState<Empresa[]>([]);
 
   // Verificar se o usuário é admin
   useEffect(() => {
@@ -35,7 +41,26 @@ export default function EditarClientePage({ params }: { params: { id: string } }
     }
   }, [user, router]);
 
+  // Carregar lista de empresas
+  useEffect(() => {
+    const loadEmpresas = async () => {
+      try {
+        setLoadingEmpresas(true);
+        const response = await empresaService.list();
+        setEmpresas(response.empresas);
+      } catch (err) {
+        console.error("Erro ao carregar empresas:", err);
+        setError("Erro ao carregar lista de empresas");
+      } finally {
+        setLoadingEmpresas(false);
+      }
+    };
+
+    loadEmpresas();
+  }, []);
+
   const [formData, setFormData] = useState<UpdateClienteRequest>({
+    empresa_id: "",
     razao_social: "",
     nome_fantasia: "",
     cnpj: "",
@@ -47,7 +72,7 @@ export default function EditarClientePage({ params }: { params: { id: string } }
       try {
         setLoading(true);
         const response = await clienteService.list();
-        const clienteEncontrado = response.clientes.find((c) => c.cliente_id === params.id);
+        const clienteEncontrado = response.clientes.find((c) => c.cliente_id === id);
 
         if (!clienteEncontrado) {
           setError("Cliente não encontrado");
@@ -57,9 +82,10 @@ export default function EditarClientePage({ params }: { params: { id: string } }
 
         setCliente(clienteEncontrado);
         setFormData({
-          razao_social: clienteEncontrado.razao_social,
-          nome_fantasia: clienteEncontrado.nome_fantasia,
-          cnpj: formatCNPJ(clienteEncontrado.cnpj),
+          empresa_id: clienteEncontrado.empresa_id || "",
+          razao_social: clienteEncontrado.razao_social || "",
+          nome_fantasia: clienteEncontrado.nome_fantasia || "",
+          cnpj: formatCNPJ(clienteEncontrado.cnpj || ""),
         });
       } catch (err) {
         const error = err as { response?: { data?: { message?: string } } };
@@ -70,7 +96,7 @@ export default function EditarClientePage({ params }: { params: { id: string } }
     };
 
     loadCliente();
-  }, [params.id, router]);
+  }, [id, router]);
 
   const handleChange = (field: keyof UpdateClienteRequest, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -90,7 +116,7 @@ export default function EditarClientePage({ params }: { params: { id: string } }
 
     try {
       // Validações básicas
-      if (!formData.razao_social || !formData.nome_fantasia || !formData.cnpj) {
+      if (!formData.empresa_id || !formData.razao_social || !formData.nome_fantasia || !formData.cnpj) {
         throw new Error("Por favor, preencha todos os campos obrigatórios");
       }
 
@@ -105,7 +131,7 @@ export default function EditarClientePage({ params }: { params: { id: string } }
         cnpj: cleanCNPJ(formData.cnpj),
       };
 
-      await clienteService.update(params.id, dataToSend);
+      await clienteService.update(id, dataToSend);
       setSuccess(true);
 
       // Redirecionar após 1 segundo
@@ -167,6 +193,25 @@ export default function EditarClientePage({ params }: { params: { id: string } }
         <CardContent sx={{ p: 4 }}>
           <form onSubmit={handleSubmit}>
             <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  select
+                  label="Empresa"
+                  value={formData.empresa_id || ""}
+                  onChange={(e) => handleChange("empresa_id", e.target.value)}
+                  required
+                  disabled={saving || loadingEmpresas}
+                  helperText={loadingEmpresas ? "Carregando empresas..." : "Selecione a empresa do cliente"}
+                >
+                  {empresas.map((empresa) => (
+                    <MenuItem key={empresa.empresa_id} value={empresa.empresa_id}>
+                      {empresa.razao_social}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+
               <Grid item xs={12}>
                 <TextField
                   fullWidth

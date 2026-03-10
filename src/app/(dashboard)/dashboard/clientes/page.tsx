@@ -49,6 +49,18 @@ export default function ClientesPage() {
       const response = await clienteService.list();
       console.log('📋 [CLIENTES] Resposta recebida:', response);
       console.log('📋 [CLIENTES] Clientes:', response.clientes);
+
+      // Log detalhado de cada cliente para verificar campos
+      response.clientes?.forEach((cliente, index) => {
+        console.log(`📋 [CLIENTE-${index}] Dados:`, {
+          cliente_id: cliente.cliente_id,
+          empresa_id: cliente.empresa_id,
+          empresa_razao_social: cliente.empresa_razao_social,
+          razao_social: cliente.razao_social,
+          nome_fantasia: cliente.nome_fantasia
+        });
+      });
+
       setClientes(response.clientes || []);
       console.log('📋 [CLIENTES] Total de clientes carregados:', response.clientes?.length || 0);
     } catch (err) {
@@ -101,19 +113,18 @@ export default function ClientesPage() {
     (cliente) =>
       cliente.razao_social.toLowerCase().includes(searchTerm.toLowerCase()) ||
       cliente.nome_fantasia.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cliente.cnpj.includes(cleanCNPJ(searchTerm))
+      cliente.cnpj.includes(cleanCNPJ(searchTerm)) ||
+      (cliente.empresa_razao_social && cliente.empresa_razao_social.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const tableActions: TableAction[] = [
+  const getTableActions = (cliente: Cliente): TableAction[] => [
     {
-      label: "Editar",
-      onClick: (item) => router.push(`/dashboard/clientes/${item.cliente_id}/editar`),
-      color: "#1976d2",
+      type: "edit",
+      onClick: () => router.push(`/dashboard/clientes/${cliente.cliente_id}/editar`),
     },
     {
-      label: "Excluir",
-      onClick: (item) => handleDeleteClick(item as Cliente),
-      color: "#d32f2f",
+      type: "delete",
+      onClick: () => handleDeleteClick(cliente),
     },
   ];
 
@@ -135,7 +146,7 @@ export default function ClientesPage() {
       <FilterSearch
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        placeholder="Pesquisar por razão social, nome fantasia ou CNPJ..."
+        placeholder="Pesquisar por empresa, razão social, nome fantasia ou CNPJ..."
       />
 
       {/* Table */}
@@ -144,6 +155,7 @@ export default function ClientesPage() {
           <Table>
             <TableHead>
               <TableRow sx={{ bgcolor: "#f8f9fa" }}>
+                <TableCell sx={{ fontWeight: 600 }}>Empresa</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Razão Social</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Nome Fantasia</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>CNPJ</TableCell>
@@ -156,13 +168,13 @@ export default function ClientesPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
+                  <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
                     <CircularProgress />
                   </TableCell>
                 </TableRow>
               ) : filteredClientes.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
+                  <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
                     <Typography variant="body1" color="text.secondary" gutterBottom>
                       Nenhum cliente encontrado
                     </Typography>
@@ -186,6 +198,11 @@ export default function ClientesPage() {
                     }}
                   >
                     <TableCell>
+                      <Typography variant="body2" color="text.secondary">
+                        {cliente.empresa_razao_social || "Sem empresa"}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
                       <Typography variant="body2" fontWeight={500}>
                         {cliente.razao_social}
                       </Typography>
@@ -200,7 +217,7 @@ export default function ClientesPage() {
                       <Typography variant="body2">{formatDate(cliente.data_cadastro)}</Typography>
                     </TableCell>
                     <TableCell align="center">
-                      <TableActionButtons item={cliente} actions={tableActions} />
+                      <TableActionButtons actions={getTableActions(cliente)} />
                     </TableCell>
                   </TableRow>
                 ))

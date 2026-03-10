@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
   Box,
   Drawer,
@@ -13,18 +14,24 @@ import {
   Tooltip,
   useMediaQuery,
   useTheme,
+  Collapse,
 } from "@mui/material";
 import {
   Dashboard as DashboardIcon,
   Person as PersonIcon,
   Settings as SettingsIcon,
   Logout as LogoutIcon,
-  School as SchoolIcon,
   People as PeopleIcon,
   AccessTime as AccessTimeIcon,
   Business as BusinessIcon,
   PersonOutline as PersonOutlineIcon,
   Receipt as ReceiptIcon,
+  AccountBalance as AccountBalanceIcon,
+  RequestQuote as RequestQuoteIcon,
+  Work as WorkIcon,
+  Assessment as AssessmentIcon,
+  ExpandLess,
+  ExpandMore,
 } from "@mui/icons-material";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/app/hooks/useAuth";
@@ -39,12 +46,19 @@ interface SidebarProps {
   onMobileClose: () => void;
 }
 
+interface SubMenuItem {
+  text: string;
+  path: string;
+  isDynamic?: boolean;
+}
+
 interface MenuItem {
   text: string;
   icon: JSX.Element;
-  path: string;
+  path?: string;
   allowedRoles: string[];
   isDynamic?: boolean;
+  subItems?: SubMenuItem[];
 }
 
 const menuItems: MenuItem[] = [
@@ -55,51 +69,45 @@ const menuItems: MenuItem[] = [
     allowedRoles: ["admin", "aluno", "vendedor", "professor", "colaborador", "contador"]
   },
   {
-    text: "Cursos",
-    icon: <SchoolIcon />,
-    path: "/dashboard/cursos",
-    allowedRoles: ["admin", "aluno", "vendedor", "professor"]
+    text: "Gestão",
+    icon: <AssessmentIcon />,
+    allowedRoles: ["admin"],
+    subItems: [
+      { text: "Colaboradores", path: "/colaboradores" },
+      { text: "Clientes", path: "/dashboard/clientes" },
+      { text: "Empresas", path: "/dashboard/empresas" },
+    ]
   },
   {
-    text: "Colaboradores",
-    icon: <PeopleIcon />,
-    path: "/colaboradores",
-    allowedRoles: ["admin"]
-  },
-  {
-    text: "Empresas",
-    icon: <BusinessIcon />,
-    path: "/dashboard/empresas",
-    allowedRoles: ["admin"]
-  },
-  {
-    text: "Clientes",
-    icon: <PersonOutlineIcon />,
-    path: "/dashboard/clientes",
-    allowedRoles: ["admin"]
-  },
-  {
-    text: "Minhas Horas",
+    text: "Timesheet",
     icon: <AccessTimeIcon />,
-    path: "/minhas-horas",
-    allowedRoles: ["colaborador"]
+    allowedRoles: ["admin"],
+    subItems: [
+      { text: "Aprovações Mensais", path: "/dashboard/timesheet-aprovacoes" },
+    ]
   },
   {
-    text: "Notas Fiscais",
-    icon: <ReceiptIcon />,
-    path: "/notas-fiscais",
-    allowedRoles: ["colaborador"]
+    text: "Contabilidade",
+    icon: <AccountBalanceIcon />,
+    allowedRoles: ["admin", "contador"],
+    subItems: [
+      { text: "Lançamento Contábil", path: "/dashboard/lancamento-contabil" },
+      { text: "Impostos", path: "/dashboard/contabilidade/impostos" },
+    ]
   },
   {
-    text: "Aprovações Mensais",
-    icon: <AccessTimeIcon />,
-    path: "/dashboard/timesheet-aprovacoes",
-    allowedRoles: ["admin"]
+    text: "Meu Trabalho",
+    icon: <WorkIcon />,
+    allowedRoles: ["colaborador"],
+    subItems: [
+      { text: "Minhas Horas", path: "/minhas-horas" },
+      { text: "Notas Fiscais", path: "/notas-fiscais" },
+    ]
   },
   {
     text: "Perfil",
     icon: <PersonIcon />,
-    path: "/dashboard/profile", // Será sobrescrito dinamicamente para colaboradores
+    path: "/dashboard/profile",
     allowedRoles: ["admin", "aluno", "vendedor", "professor", "colaborador", "contador"],
     isDynamic: true
   },
@@ -117,6 +125,8 @@ export default function Sidebar({ open, mobileOpen, onMobileClose }: SidebarProp
   const { user, logout } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
   const userRole = user?.userType;
   const userPerfil = user?.perfil;
@@ -140,11 +150,42 @@ export default function Sidebar({ open, mobileOpen, onMobileClose }: SidebarProp
       return item;
     });
 
+  // Auto-expand categories when a subitem is active
+  useEffect(() => {
+    const newExpandedItems: Record<string, boolean> = {};
+
+    filteredMenuItems.forEach(item => {
+      if (item.subItems) {
+        const hasActiveSubItem = item.subItems.some(sub => pathname === sub.path);
+        if (hasActiveSubItem) {
+          newExpandedItems[item.text] = true;
+        }
+      }
+    });
+
+    // Only update if there are changes
+    if (Object.keys(newExpandedItems).length > 0) {
+      setExpandedItems(prev => {
+        const hasChanges = Object.entries(newExpandedItems).some(
+          ([key, value]) => prev[key] !== value
+        );
+        return hasChanges ? { ...prev, ...newExpandedItems } : prev;
+      });
+    }
+  }, [pathname]); // Only depend on pathname
+
   const handleNavigation = (path: string) => {
     router.push(path);
     if (isMobile) {
       onMobileClose();
     }
+  };
+
+  const handleToggleExpand = (itemText: string) => {
+    setExpandedItems(prev => ({
+      ...prev,
+      [itemText]: !prev[itemText]
+    }));
   };
 
   const drawerContent = (isCollapsed: boolean) => (
@@ -202,10 +243,138 @@ export default function Sidebar({ open, mobileOpen, onMobileClose }: SidebarProp
       <Box sx={{ overflow: "auto", flexGrow: 1, px: 2 }}>
         <List sx={{ py: 0 }}>
           {filteredMenuItems.map((item) => {
+            // Se tem subitens, é uma categoria
+            if (item.subItems) {
+              const isExpanded = expandedItems[item.text];
+              const hasActiveSubItem = item.subItems.some(sub => pathname === sub.path);
+
+              const categoryButton = (
+                <ListItemButton
+                  onClick={() => handleToggleExpand(item.text)}
+                  sx={{
+                    borderRadius: 2,
+                    py: 1.5,
+                    px: isCollapsed ? 0 : 2,
+                    justifyContent: isCollapsed ? "center" : "flex-start",
+                    transition: "all 0.2s ease-in-out",
+                    ...(hasActiveSubItem
+                      ? {
+                          bgcolor: alpha("#8270FF", 0.05),
+                        }
+                      : {
+                          "&:hover": {
+                            bgcolor: alpha("#8270FF", 0.05),
+                            transform: isCollapsed ? "scale(1.05)" : "translateX(4px)",
+                          },
+                        }),
+                  }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      minWidth: isCollapsed ? "auto" : 40,
+                      color: hasActiveSubItem ? "#8270FF" : "text.secondary",
+                      transition: "color 0.2s ease-in-out",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {item.icon}
+                  </ListItemIcon>
+                  {!isCollapsed && (
+                    <>
+                      <ListItemText
+                        primary={item.text}
+                        primaryTypographyProps={{
+                          fontSize: "0.9375rem",
+                          fontWeight: hasActiveSubItem ? 600 : 500,
+                          color: hasActiveSubItem ? "#8270FF" : "text.primary",
+                        }}
+                      />
+                      {isExpanded ? <ExpandLess /> : <ExpandMore />}
+                    </>
+                  )}
+                </ListItemButton>
+              );
+
+              return (
+                <Box key={item.text}>
+                  <ListItem disablePadding sx={{ mb: 0.5 }}>
+                    {isCollapsed ? (
+                      <Tooltip title={item.text} placement="right" arrow>
+                        {categoryButton}
+                      </Tooltip>
+                    ) : (
+                      categoryButton
+                    )}
+                  </ListItem>
+
+                  {/* Subitens */}
+                  {!isCollapsed && (
+                    <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                      <List component="div" disablePadding>
+                        {item.subItems.map((subItem) => {
+                          const isActive = pathname === subItem.path;
+                          return (
+                            <ListItem key={subItem.text} disablePadding sx={{ mb: 0.5 }}>
+                              <ListItemButton
+                                onClick={() => handleNavigation(subItem.path)}
+                                sx={{
+                                  borderRadius: 2,
+                                  py: 1,
+                                  pl: 6,
+                                  pr: 2,
+                                  transition: "all 0.2s ease-in-out",
+                                  position: "relative",
+                                  ...(isActive
+                                    ? {
+                                        bgcolor: alpha("#8270FF", 0.1),
+                                        color: "#8270FF",
+                                        "&:hover": {
+                                          bgcolor: alpha("#8270FF", 0.15),
+                                        },
+                                        "&::before": {
+                                          content: '""',
+                                          position: "absolute",
+                                          left: 0,
+                                          top: "50%",
+                                          transform: "translateY(-50%)",
+                                          width: 4,
+                                          height: "60%",
+                                          bgcolor: "#8270FF",
+                                          borderRadius: "0 4px 4px 0",
+                                        },
+                                      }
+                                    : {
+                                        "&:hover": {
+                                          bgcolor: alpha("#8270FF", 0.05),
+                                          transform: "translateX(4px)",
+                                        },
+                                      }),
+                                }}
+                              >
+                                <ListItemText
+                                  primary={subItem.text}
+                                  primaryTypographyProps={{
+                                    fontSize: "0.875rem",
+                                    fontWeight: isActive ? 600 : 500,
+                                    color: isActive ? "#8270FF" : "text.primary",
+                                  }}
+                                />
+                              </ListItemButton>
+                            </ListItem>
+                          );
+                        })}
+                      </List>
+                    </Collapse>
+                  )}
+                </Box>
+              );
+            }
+
+            // Item simples sem subitens
             const isActive = pathname === item.path;
             const button = (
               <ListItemButton
-                onClick={() => handleNavigation(item.path)}
+                onClick={() => item.path && handleNavigation(item.path)}
                 sx={{
                   borderRadius: 2,
                   py: 1.5,
