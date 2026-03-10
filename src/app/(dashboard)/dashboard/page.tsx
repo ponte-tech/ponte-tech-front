@@ -4,9 +4,44 @@ import { useAuth } from "@/app/hooks/useAuth";
 import { Box, Typography, CircularProgress } from "@mui/material";
 import DashboardColaborador from "./components/DashboardColaborador";
 import DashboardAdmin from "./components/DashboardAdmin";
+import { useEffect } from "react";
+import { getCookie } from "@/app/lib/cookies";
+
+// Function to decode JWT token (without verification - client side only for debugging)
+function decodeJWT(token: string) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error('❌ [DASHBOARD] Error decoding JWT:', error);
+    return null;
+  }
+}
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
+
+  useEffect(() => {
+    // Decode and log JWT token on page load
+    const token = getCookie("token");
+    if (token) {
+      const decodedToken = decodeJWT(token);
+      console.log('🎫 [DASHBOARD] JWT Token Decoded:', decodedToken);
+      console.log('📋 [DASHBOARD] JWT Profile Field:', decodedToken?.profile);
+      console.log('📋 [DASHBOARD] JWT User ID:', decodedToken?.user_id);
+      console.log('📋 [DASHBOARD] JWT Email:', decodedToken?.email);
+      console.log('📋 [DASHBOARD] JWT Expiration:', decodedToken?.exp ? new Date(decodedToken.exp * 1000).toLocaleString() : 'N/A');
+    } else {
+      console.error('❌ [DASHBOARD] No JWT token found in cookies');
+    }
+  }, []);
 
   if (loading) {
     return (

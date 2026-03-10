@@ -31,8 +31,8 @@ class ImpostoService {
   /**
    * Busca um imposto por ID
    */
-  async getById(impostoId: string): Promise<Imposto> {
-    const response = await api.get<any>(`${this.baseUrl}/${impostoId}`);
+  async getById(impostoId: string, empresaId: string): Promise<Imposto> {
+    const response = await api.get<any>(`${this.baseUrl}/${impostoId}?empresa_id=${empresaId}`);
 
     if (response.data?.success && response.data?.data) {
       return response.data.data;
@@ -111,12 +111,13 @@ class ImpostoService {
    */
   async initiateAnexoUpload(
     impostoId: string,
+    empresaId: string,
     fileName: string,
     fileSize: number,
     contentType: string
   ): Promise<{ upload_url: string; s3_key: string }> {
     const response = await api.post<any>(
-      `${this.baseUrl}/${impostoId}/anexos/upload/initiate`,
+      `${this.baseUrl}/${impostoId}/anexos/upload/initiate?empresa_id=${empresaId}`,
       {
         nome_arquivo: fileName,
         tamanho_bytes: fileSize,
@@ -149,13 +150,14 @@ class ImpostoService {
    */
   async confirmAnexoUpload(
     impostoId: string,
+    empresaId: string,
     s3Key: string,
     fileName: string,
     fileSize: number,
     contentType: string,
     tipoImposto: string
   ): Promise<void> {
-    await api.post<any>(`${this.baseUrl}/${impostoId}/anexos/confirm`, {
+    await api.post<any>(`${this.baseUrl}/${impostoId}/anexos/confirm?empresa_id=${empresaId}`, {
       s3_key: s3Key,
       nome_arquivo: fileName,
       tamanho_bytes: fileSize,

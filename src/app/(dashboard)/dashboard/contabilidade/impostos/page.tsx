@@ -226,13 +226,32 @@ export default function ImpostosPage() {
       imposto.tipo_imposto.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getTableActions = (imposto: Imposto): TableAction[] => [
-    {
+  const getTableActions = (imposto: Imposto): TableAction[] => {
+    const actions: TableAction[] = [
+      {
+        type: "view",
+        onClick: () => router.push(`/dashboard/contabilidade/impostos/${imposto.imposto_id}?empresa_id=${imposto.empresa_id}`),
+        tooltip: "Ver detalhes",
+      },
+    ];
+
+    // Adicionar download se houver anexos
+    if (imposto.anexos && imposto.anexos.length > 0) {
+      actions.push({
+        type: "download",
+        onClick: () => handleDownloadAnexos(imposto),
+        tooltip: "Baixar anexos",
+      });
+    }
+
+    actions.push({
       type: "delete",
       onClick: () => handleDeleteClick(imposto),
       tooltip: "Excluir imposto",
-    },
-  ];
+    });
+
+    return actions;
+  };
 
   // Gerar lista de meses para o select (últimos 12 meses)
   const generateMonthOptions = () => {
@@ -333,8 +352,9 @@ export default function ImpostosPage() {
                 filteredImpostos.map((imposto) => (
                   <TableRow
                     key={imposto.imposto_id}
+                    onClick={() => router.push(`/dashboard/contabilidade/impostos/${imposto.imposto_id}?empresa_id=${imposto.empresa_id}`)}
                     sx={{
-                      "&:hover": { bgcolor: "#f8f9fa" },
+                      "&:hover": { bgcolor: "#f8f9fa", cursor: "pointer" },
                       transition: "background-color 0.2s",
                     }}
                   >
@@ -360,7 +380,7 @@ export default function ImpostosPage() {
                         {formatCurrency(imposto.valor)}
                       </Typography>
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       {imposto.anexos && imposto.anexos.length > 0 ? (
                         <Chip
                           icon={downloadingImpostoId === imposto.imposto_id ? <CircularProgress size={16} /> : <CloudDownloadIcon />}
@@ -388,7 +408,7 @@ export default function ImpostosPage() {
                         {formatDate(imposto.data_cadastro)}
                       </Typography>
                     </TableCell>
-                    <TableCell align="center">
+                    <TableCell align="center" onClick={(e) => e.stopPropagation()}>
                       <TableActionButtons actions={getTableActions(imposto)} />
                     </TableCell>
                   </TableRow>

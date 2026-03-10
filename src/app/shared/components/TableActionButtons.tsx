@@ -6,10 +6,11 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Share as ShareIcon,
+  CloudDownload as CloudDownloadIcon,
 } from "@mui/icons-material";
 
 export interface TableAction {
-  type: "view" | "edit" | "delete" | "share" | "custom";
+  type: "view" | "edit" | "delete" | "share" | "download" | "custom";
   icon?: React.ReactNode;
   tooltip?: string;
   color?: string;
@@ -26,6 +27,7 @@ const defaultIcons = {
   edit: <EditIcon fontSize="small" />,
   delete: <DeleteIcon fontSize="small" />,
   share: <ShareIcon fontSize="small" />,
+  download: <CloudDownloadIcon fontSize="small" />,
 };
 
 const defaultColors = {
@@ -33,6 +35,7 @@ const defaultColors = {
   edit: "#1976d2",
   delete: "#d32f2f",
   share: "#00c853",
+  download: "#2e7d32",
 };
 
 const defaultTooltips = {
@@ -40,6 +43,7 @@ const defaultTooltips = {
   edit: "Editar",
   delete: "Excluir",
   share: "Compartilhar",
+  download: "Baixar anexos",
 };
 
 export default function TableActionButtons({ actions }: TableActionButtonsProps) {

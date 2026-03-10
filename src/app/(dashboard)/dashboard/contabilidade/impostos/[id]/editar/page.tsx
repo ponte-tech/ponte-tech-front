@@ -29,7 +29,7 @@ import {
   CloudUpload as CloudUploadIcon,
   Download as DownloadIcon,
 } from "@mui/icons-material";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import impostoService from "@/app/services/impostoService";
 import empresaService from "@/app/services/empresaService";
 import type { UpdateImpostoRequest, TipoImposto, Imposto } from "@/app/types/imposto";
@@ -40,7 +40,9 @@ import { PageHeader } from "@/app/shared/components";
 export default function EditarImpostoPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const impostoId = params.id as string;
+  const empresaId = searchParams.get("empresa_id") || "";
 
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
@@ -64,10 +66,16 @@ export default function EditarImpostoPage() {
   }, [impostoId]);
 
   const loadData = async () => {
+    if (!empresaId) {
+      setError("ID da empresa não fornecido");
+      setLoadingData(false);
+      return;
+    }
+
     try {
       setLoadingData(true);
       const [impostoData, empresasData] = await Promise.all([
-        impostoService.getById(impostoId),
+        impostoService.getById(impostoId, empresaId),
         empresaService.list(),
       ]);
 
