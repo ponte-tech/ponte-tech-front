@@ -21,6 +21,7 @@ export type TipoImposto =
   | 'INSS' // Instituto Nacional do Seguro Social
   | 'FGTS' // Fundo de Garantia do Tempo de Serviço
   | 'SIMPLES_NACIONAL' // Simples Nacional
+  | 'HONORARIOS_CONTABEIS' // Honorários Contábeis
   | 'OUTROS'; // Outros impostos
 
 export const TIPOS_IMPOSTO: { value: TipoImposto; label: string }[] = [
@@ -34,6 +35,7 @@ export const TIPOS_IMPOSTO: { value: TipoImposto; label: string }[] = [
   { value: 'INSS', label: 'INSS - Instituto Nacional do Seguro Social' },
   { value: 'FGTS', label: 'FGTS - Fundo de Garantia do Tempo de Serviço' },
   { value: 'SIMPLES_NACIONAL', label: 'Simples Nacional' },
+  { value: 'HONORARIOS_CONTABEIS', label: 'Honorários Contábeis' },
   { value: 'OUTROS', label: 'Outros' },
 ];
 

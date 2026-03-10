@@ -36,6 +36,11 @@ import { TIPOS_IMPOSTO } from "@/app/types/imposto";
 import type { Empresa } from "@/app/types/empresa";
 import { PageHeader } from "@/app/shared/components";
 
+interface FileWithType {
+  file: File;
+  tipoImposto: TipoImposto;
+}
+
 export default function NovoImpostoPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -52,7 +57,7 @@ export default function NovoImpostoPage() {
     anexos: [],
   });
 
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<FileWithType[]>([]);
 
   useEffect(() => {
     loadEmpresas();
@@ -86,7 +91,11 @@ export default function NovoImpostoPage() {
     const files = event.target.files;
     if (files) {
       const fileArray = Array.from(files);
-      setSelectedFiles((prev) => [...prev, ...fileArray]);
+      const filesWithType: FileWithType[] = fileArray.map((file) => ({
+        file,
+        tipoImposto: "OUTROS" as TipoImposto,
+      }));
+      setSelectedFiles((prev) => [...prev, ...filesWithType]);
       setFormData((prev) => ({
         ...prev,
         anexos: [...(prev.anexos || []), ...fileArray],
@@ -100,6 +109,12 @@ export default function NovoImpostoPage() {
       ...prev,
       anexos: prev.anexos?.filter((_, i) => i !== index) || [],
     }));
+  };
+
+  const handleFileTipoChange = (index: number, tipoImposto: TipoImposto) => {
+    setSelectedFiles((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, tipoImposto } : item))
+    );
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -262,22 +277,47 @@ export default function NovoImpostoPage() {
                 {selectedFiles.length > 0 && (
                   <Card variant="outlined" sx={{ mt: 2 }}>
                     <List>
-                      {selectedFiles.map((file, index) => (
-                        <ListItem key={index} divider={index < selectedFiles.length - 1}>
-                          <AttachFileIcon sx={{ mr: 2, color: "text.secondary" }} />
-                          <ListItemText
-                            primary={file.name}
-                            secondary={formatFileSize(file.size)}
-                          />
-                          <ListItemSecondaryAction>
+                      {selectedFiles.map((fileWithType, index) => (
+                        <ListItem
+                          key={index}
+                          divider={index < selectedFiles.length - 1}
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "stretch",
+                            py: 2
+                          }}
+                        >
+                          <Box sx={{ display: "flex", alignItems: "center", width: "100%", mb: 2 }}>
+                            <AttachFileIcon sx={{ mr: 2, color: "text.secondary" }} />
+                            <ListItemText
+                              primary={fileWithType.file.name}
+                              secondary={formatFileSize(fileWithType.file.size)}
+                            />
                             <IconButton
-                              edge="end"
                               onClick={() => handleRemoveFile(index)}
                               color="error"
+                              sx={{ ml: 2 }}
                             >
                               <DeleteIcon />
                             </IconButton>
-                          </ListItemSecondaryAction>
+                          </Box>
+                          <Box sx={{ pl: 6 }}>
+                            <FormControl fullWidth size="small">
+                              <InputLabel>Tipo de Imposto</InputLabel>
+                              <Select
+                                value={fileWithType.tipoImposto}
+                                label="Tipo de Imposto"
+                                onChange={(e) => handleFileTipoChange(index, e.target.value as TipoImposto)}
+                              >
+                                {TIPOS_IMPOSTO.map((tipo) => (
+                                  <MenuItem key={tipo.value} value={tipo.value}>
+                                    {tipo.label}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                            </FormControl>
+                          </Box>
                         </ListItem>
                       ))}
                     </List>

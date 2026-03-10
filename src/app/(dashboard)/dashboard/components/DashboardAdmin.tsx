@@ -38,43 +38,8 @@ export default function DashboardAdmin() {
       setLoading(true);
       setError(null);
 
-      // TEMPORÁRIO: Usar dados mockados devido a problema de configuração no backend
-      // O endpoint /api/admin/* está retornando 403 devido a configuração incorreta no API Gateway
-      console.warn('⚠️ [DASHBOARD ADMIN] Usando dados mockados - Backend com problema de configuração');
-
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Dados mockados para demonstração
-      const mockData: DashboardAdminResponse = {
-        mes_atual: new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
-        colaboradores: {
-          ativos: 12,
-          total: 15
-        },
-        timesheet: {
-          aguardando_aprovacao: 8,
-          aprovados: 145,
-          reprovados: 3,
-          total_horas_aprovadas: 1280
-        },
-        notas_fiscais: {
-          total: 45,
-          pendentes_aprovacao: 5,
-          aprovadas_aguardando_pagamento: 12,
-          pagas: 28
-        },
-        qtd_contratos_ativos: 18,
-        custo_total_mes: 185600.00
-      };
-
-      setDashboard(mockData);
-
-      // Tentar carregar dados reais (comentado até backend ser corrigido)
-      /*
       const data = await dashboardService.getDashboardAdmin();
       setDashboard(data);
-      */
     } catch (err: any) {
       console.error("Erro ao carregar dashboard:", err);
       setError(err.response?.data?.error || "Erro ao carregar dashboard");
@@ -140,11 +105,6 @@ export default function DashboardAdmin() {
 
   return (
     <Box>
-      {/* Alerta temporário sobre dados mockados */}
-      <Alert severity="warning" sx={{ mb: 3 }}>
-        <strong>Modo demonstração:</strong> Exibindo dados mockados. O endpoint do backend admin está temporariamente indisponível devido a configuração incorreta no API Gateway.
-      </Alert>
-
       {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Typography
