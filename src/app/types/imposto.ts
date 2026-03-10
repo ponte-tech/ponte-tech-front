@@ -1,3 +1,12 @@
+export interface Anexo {
+  s3_key: string;
+  nome_arquivo: string;
+  tamanho_bytes: number;
+  content_type: string;
+  tipo_imposto?: TipoImposto;
+  data_upload: string;
+}
+
 export interface Imposto {
   imposto_id: string;
   empresa_id: string;
@@ -5,7 +14,7 @@ export interface Imposto {
   tipo_imposto: TipoImposto;
   mes_referencia: string; // formato: YYYY-MM
   valor: number;
-  anexos?: string[]; // URLs dos arquivos anexados
+  anexos?: Anexo[]; // Arquivos anexados
   data_cadastro: string;
   data_atualizacao: string;
 }

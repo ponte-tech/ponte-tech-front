@@ -20,8 +20,9 @@ import {
   InputLabel,
   Chip,
 } from "@mui/material";
-import { Add as AddIcon, AttachFile as AttachFileIcon } from "@mui/icons-material";
+import { Add as AddIcon, AttachFile as AttachFileIcon, CloudDownload as CloudDownloadIcon } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
+import JSZip from "jszip";
 import impostoService from "@/app/services/impostoService";
 import type { Imposto } from "@/app/types/imposto";
 import { TIPOS_IMPOSTO } from "@/app/types/imposto";
@@ -43,6 +44,9 @@ export default function ImpostosPage() {
   // Snackbar
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+
+  // Download
+  const [downloadingImpostoId, setDownloadingImpostoId] = useState<string | null>(null);
 
   useEffect(() => {
     loadImpostos();
@@ -80,7 +84,7 @@ export default function ImpostosPage() {
 
     try {
       setDeleting(true);
-      await impostoService.delete(impostoToDelete.imposto_id);
+      await impostoService.delete(impostoToDelete.imposto_id, impostoToDelete.empresa_id);
       setImpostos(impostos.filter((i) => i.imposto_id !== impostoToDelete.imposto_id));
       setDeleteDialogOpen(false);
       setImpostoToDelete(null);
@@ -99,6 +103,81 @@ export default function ImpostosPage() {
     setDeleteDialogOpen(false);
     setImpostoToDelete(null);
     setDeleteError(null);
+  };
+
+  const handleDownloadAnexos = async (imposto: Imposto) => {
+    if (!imposto.anexos || imposto.anexos.length === 0) {
+      setSnackbarMessage("Nenhum anexo disponível para download");
+      setSnackbarOpen(true);
+      return;
+    }
+
+    try {
+      setDownloadingImpostoId(imposto.imposto_id);
+
+      // Se houver apenas 1 anexo, fazer download direto
+      if (imposto.anexos.length === 1) {
+        const anexo = imposto.anexos[0];
+        const response = await impostoService.getAnexoDownloadUrl(
+          imposto.imposto_id,
+          imposto.empresa_id,
+          anexo.s3_key
+        );
+        window.open(response.download_url, "_blank");
+        setSnackbarMessage("Download iniciado!");
+        setSnackbarOpen(true);
+      } else {
+        // Múltiplos anexos: criar ZIP
+        setSnackbarMessage(`Preparando download de ${imposto.anexos.length} arquivo(s)...`);
+        setSnackbarOpen(true);
+
+        const zip = new JSZip();
+
+        for (const anexo of imposto.anexos) {
+          try {
+            const response = await impostoService.getAnexoDownloadUrl(
+              imposto.imposto_id,
+              imposto.empresa_id,
+              anexo.s3_key
+            );
+
+            // Buscar o arquivo
+            const fileResponse = await fetch(response.download_url);
+            const blob = await fileResponse.blob();
+
+            // Adicionar ao ZIP com nome que inclui tipo de imposto
+            const tipoLabel = getTipoImpostoLabel(anexo.tipo_imposto || "OUTROS");
+            const fileName = `${tipoLabel}_${anexo.nome_arquivo}`;
+            zip.file(fileName, blob);
+          } catch (err) {
+            console.error("Erro ao baixar anexo:", anexo.nome_arquivo, err);
+            // Continuar com os outros arquivos
+          }
+        }
+
+        // Gerar ZIP e fazer download
+        const zipBlob = await zip.generateAsync({ type: "blob" });
+        const url = window.URL.createObjectURL(zipBlob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `impostos_${imposto.mes_referencia}_${Date.now()}.zip`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        setSnackbarMessage("Download concluído!");
+        setSnackbarOpen(true);
+      }
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setSnackbarMessage(
+        error.response?.data?.message || "Erro ao fazer download dos anexos"
+      );
+      setSnackbarOpen(true);
+    } finally {
+      setDownloadingImpostoId(null);
+    }
   };
 
   const formatDate = (dateString: string): string => {
@@ -135,6 +214,7 @@ export default function ImpostosPage() {
       INSS: "error",
       FGTS: "error",
       SIMPLES_NACIONAL: "success",
+      HONORARIOS_CONTABEIS: "primary",
       OUTROS: "default",
     };
     return colorMap[tipo] || "default";
@@ -147,11 +227,6 @@ export default function ImpostosPage() {
   );
 
   const getTableActions = (imposto: Imposto): TableAction[] => [
-    {
-      type: "edit",
-      onClick: () => router.push(`/dashboard/contabilidade/impostos/${imposto.imposto_id}/editar`),
-      tooltip: "Editar imposto",
-    },
     {
       type: "delete",
       onClick: () => handleDeleteClick(imposto),
@@ -288,10 +363,19 @@ export default function ImpostosPage() {
                     <TableCell>
                       {imposto.anexos && imposto.anexos.length > 0 ? (
                         <Chip
-                          icon={<AttachFileIcon />}
+                          icon={downloadingImpostoId === imposto.imposto_id ? <CircularProgress size={16} /> : <CloudDownloadIcon />}
                           label={`${imposto.anexos.length} arquivo(s)`}
                           size="small"
                           variant="outlined"
+                          onClick={() => handleDownloadAnexos(imposto)}
+                          disabled={downloadingImpostoId === imposto.imposto_id}
+                          sx={{
+                            cursor: "pointer",
+                            "&:hover": {
+                              bgcolor: "primary.50",
+                              borderColor: "primary.main",
+                            },
+                          }}
                         />
                       ) : (
                         <Typography variant="body2" color="text.secondary">

@@ -147,7 +147,57 @@ export default function NovoImpostoPage() {
 
     try {
       setLoading(true);
-      await impostoService.create(formData);
+
+      // 1. Criar o imposto sem anexos
+      const imposto = await impostoService.create({
+        empresa_id: formData.empresa_id,
+        descricao: formData.descricao,
+        tipo_imposto: formData.tipo_imposto,
+        mes_referencia: formData.mes_referencia,
+        valor: formData.valor,
+      });
+
+      // 2. Fazer upload de cada anexo
+      if (selectedFiles.length > 0) {
+        for (const fileWithType of selectedFiles) {
+          try {
+            // Validar arquivo
+            const validation = impostoService.validateFile(fileWithType.file);
+            if (!validation.valid) {
+              console.error("Arquivo inválido:", fileWithType.file.name, validation.error);
+              continue; // Pular arquivo inválido
+            }
+
+            // Iniciar upload e obter presigned URL
+            const uploadData = await impostoService.initiateAnexoUpload(
+              imposto.imposto_id,
+              fileWithType.file.name,
+              fileWithType.file.size,
+              fileWithType.file.type
+            );
+
+            // Upload do arquivo para S3
+            await impostoService.uploadFileToS3(
+              uploadData.upload_url,
+              fileWithType.file
+            );
+
+            // Confirmar upload no backend
+            await impostoService.confirmAnexoUpload(
+              imposto.imposto_id,
+              uploadData.s3_key,
+              fileWithType.file.name,
+              fileWithType.file.size,
+              fileWithType.file.type,
+              fileWithType.tipoImposto
+            );
+          } catch (uploadErr) {
+            console.error("Erro ao fazer upload do arquivo:", fileWithType.file.name, uploadErr);
+            // Continuar com os outros arquivos mesmo se um falhar
+          }
+        }
+      }
+
       router.push("/dashboard/contabilidade/impostos");
     } catch (err: any) {
       console.error("Erro ao cadastrar imposto:", err);
@@ -194,22 +244,6 @@ export default function NovoImpostoPage() {
                   {empresas.map((empresa) => (
                     <MenuItem key={empresa.empresa_id} value={empresa.empresa_id}>
                       {empresa.nome_fantasia} - {empresa.cnpj}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              {/* Tipo de Imposto */}
-              <FormControl fullWidth required>
-                <InputLabel>Tipo de Imposto</InputLabel>
-                <Select
-                  value={formData.tipo_imposto}
-                  label="Tipo de Imposto"
-                  onChange={(e) => handleChange("tipo_imposto", e.target.value as TipoImposto)}
-                >
-                  {TIPOS_IMPOSTO.map((tipo) => (
-                    <MenuItem key={tipo.value} value={tipo.value}>
-                      {tipo.label}
                     </MenuItem>
                   ))}
                 </Select>

@@ -18,7 +18,7 @@ const dashboardService = {
    */
   async getDashboardAdmin(mes?: string): Promise<DashboardAdminResponse> {
     const params = mes ? { mes } : {};
-    const response = await api.get<{success: boolean, data: DashboardAdminResponse}>('/api/admin/dashboard-timesheet', { params });
+    const response = await api.get<{success: boolean, data: DashboardAdminResponse}>('/api/admin/dashboard/timesheet', { params });
     return response.data.data; // Extrair o data interno
   },
 };
