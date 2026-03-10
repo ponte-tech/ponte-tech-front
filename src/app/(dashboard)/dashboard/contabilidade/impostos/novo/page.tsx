@@ -171,6 +171,7 @@ export default function NovoImpostoPage() {
             // Iniciar upload e obter presigned URL
             const uploadData = await impostoService.initiateAnexoUpload(
               imposto.imposto_id,
+              imposto.empresa_id,
               fileWithType.file.name,
               fileWithType.file.size,
               fileWithType.file.type
@@ -185,14 +186,16 @@ export default function NovoImpostoPage() {
             // Confirmar upload no backend
             await impostoService.confirmAnexoUpload(
               imposto.imposto_id,
+              imposto.empresa_id,
               uploadData.s3_key,
               fileWithType.file.name,
               fileWithType.file.size,
               fileWithType.file.type,
               fileWithType.tipoImposto
             );
-          } catch (uploadErr) {
-            console.error("Erro ao fazer upload do arquivo:", fileWithType.file.name, uploadErr);
+          } catch (uploadErr: any) {
+            console.error("Erro ao fazer upload do arquivo:", fileWithType.file.name);
+            console.error("Detalhes do erro:", uploadErr.response?.data || uploadErr.message || uploadErr);
             // Continuar com os outros arquivos mesmo se um falhar
           }
         }
