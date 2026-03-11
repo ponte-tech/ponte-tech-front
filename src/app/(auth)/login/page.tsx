@@ -188,7 +188,7 @@ export default function LoginPage() {
             )}
 
             {/* Formulário */}
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} autoComplete="off">
               <Box sx={{ mb: 2.5 }}>
                 <TextField
                   fullWidth
@@ -197,7 +197,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  autoComplete="email"
+                  autoComplete="off"
                   autoFocus
                   InputProps={{
                     startAdornment: (
@@ -229,7 +229,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  autoComplete="current-password"
+                  autoComplete="off"
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">

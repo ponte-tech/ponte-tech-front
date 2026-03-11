@@ -217,7 +217,7 @@ export default function RegisterPage() {
             )}
 
             {/* Formulário */}
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} autoComplete="off">
               <Box sx={{ mb: 2.5 }}>
                 <TextField
                   fullWidth
@@ -226,7 +226,7 @@ export default function RegisterPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  autoComplete="name"
+                  autoComplete="off"
                   autoFocus
                   InputProps={{
                     startAdornment: (
@@ -258,7 +258,7 @@ export default function RegisterPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  autoComplete="email"
+                  autoComplete="off"
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -289,7 +289,7 @@ export default function RegisterPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  autoComplete="new-password"
+                  autoComplete="off"
                   helperText="Mínimo de 6 caracteres"
                   InputProps={{
                     startAdornment: (
@@ -332,7 +332,7 @@ export default function RegisterPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
-                  autoComplete="new-password"
+                  autoComplete="off"
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
