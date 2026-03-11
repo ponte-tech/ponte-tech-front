@@ -135,6 +135,26 @@ class ColaboradoresService {
       throw error;
     }
   }
+
+  /**
+   * Reativa um colaborador (muda status para "ativo")
+   */
+  async reactivate(id: string): Promise<void> {
+    try {
+      const response: AxiosResponse<ApiResponse<void>> = await api.post(
+        `/api/admin/colaboradores/${id}/reactivate`
+      );
+
+      if (!response.data.success) {
+        throw new Error(response.data.message || "Erro ao reativar colaborador");
+      }
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw error;
+    }
+  }
 }
 
 // Exportar instância única (singleton)

@@ -12,9 +12,15 @@ class ClienteService {
   /**
    * Lista todos os clientes
    */
-  async list(): Promise<ListClientesResponse> {
-    console.log('🔍 [CLIENTE-SERVICE] Fazendo request para:', this.baseUrl);
-    const response = await api.get<any>(this.baseUrl);
+  async list(filters?: { status?: string }): Promise<ListClientesResponse> {
+    const params = new URLSearchParams();
+    if (filters?.status) {
+      params.append('status', filters.status);
+    }
+
+    const url = params.toString() ? `${this.baseUrl}?${params.toString()}` : this.baseUrl;
+    console.log('🔍 [CLIENTE-SERVICE] Fazendo request para:', url);
+    const response = await api.get<any>(url);
     console.log('🔍 [CLIENTE-SERVICE] Response completo:', response);
     console.log('🔍 [CLIENTE-SERVICE] Response.data:', response.data);
     console.log('🔍 [CLIENTE-SERVICE] Type of response.data:', typeof response.data);
@@ -54,6 +60,13 @@ class ClienteService {
    */
   async delete(clienteId: string): Promise<void> {
     await api.delete(`${this.baseUrl}/${clienteId}`);
+  }
+
+  /**
+   * Reativa um cliente (muda status para "ativo")
+   */
+  async reactivate(clienteId: string): Promise<void> {
+    await api.post(`${this.baseUrl}/${clienteId}/reactivate`);
   }
 }
 

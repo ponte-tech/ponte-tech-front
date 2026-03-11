@@ -23,6 +23,8 @@ import {
   Select,
   MenuItem,
   FormHelperText,
+  InputAdornment,
+  LinearProgress,
 } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
@@ -30,11 +32,15 @@ import {
   Add as AddIcon,
   Delete as DeleteIcon,
   Edit as EditIcon,
+  Lock as LockIcon,
+  Visibility,
+  VisibilityOff,
 } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import colaboradoresService from "@/app/services/colaboradoresService";
 import contratosService from "@/app/services/contratosService";
+import authService from "@/app/services/authService";
 import { Colaborador, UpdateColaboradorRequest, CreateContratoRequest, TipoChavePix, Contrato } from "@/app/types/api";
 import { useAuth } from "@/app/hooks/useAuth";
 import ContractModal from "../../components/ContractModal";
@@ -56,6 +62,17 @@ export default function EditarColaboradorPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [contractsKey, setContractsKey] = useState(0);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
+
+  // Password change states
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loadingPassword, setLoadingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
 
   const isAdmin = user?.userType === "admin";
   const isColaborador = user?.userType === "colaborador";
@@ -471,6 +488,78 @@ export default function EditarColaboradorPage() {
     if (!dateString) return "-";
     const date = new Date(dateString);
     return date.toLocaleDateString("pt-BR");
+  };
+
+  // Password strength calculation
+  const calculatePasswordStrength = (password: string): number => {
+    let strength = 0;
+    if (password.length >= 8) strength += 25;
+    if (password.length >= 12) strength += 25;
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 25;
+    if (/\d/.test(password)) strength += 12.5;
+    if (/[^a-zA-Z0-9]/.test(password)) strength += 12.5;
+    return Math.min(strength, 100);
+  };
+
+  const getPasswordStrengthColor = (strength: number): string => {
+    if (strength < 40) return "#f44336";
+    if (strength < 70) return "#ff9800";
+    return "#4caf50";
+  };
+
+  const getPasswordStrengthLabel = (strength: number): string => {
+    if (strength < 40) return "Fraca";
+    if (strength < 70) return "Média";
+    return "Forte";
+  };
+
+  const passwordStrength = calculatePasswordStrength(newPassword);
+
+  // Handle password change
+  const handlePasswordChange = async () => {
+    setPasswordError("");
+    setPasswordSuccess(false);
+
+    // Validations
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordError("Por favor, preencha todos os campos de senha");
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setPasswordError("A nova senha deve ter pelo menos 8 caracteres");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError("A nova senha e a confirmação não coincidem");
+      return;
+    }
+
+    if (currentPassword === newPassword) {
+      setPasswordError("A nova senha deve ser diferente da senha atual");
+      return;
+    }
+
+    setLoadingPassword(true);
+
+    try {
+      await authService.changePassword(currentPassword, newPassword);
+
+      setPasswordSuccess(true);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+
+      // Auto-hide success message after 5 seconds
+      setTimeout(() => {
+        setPasswordSuccess(false);
+      }, 5000);
+    } catch (error: any) {
+      setPasswordError(error.message || "Erro ao alterar senha. Verifique sua senha atual.");
+    } finally {
+      setLoadingPassword(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -929,6 +1018,193 @@ export default function EditarColaboradorPage() {
               </CardContent>
             </Card>
           </Grid>
+
+          {/* Segurança - Alterar Senha */}
+          {isColaborador && user?.id === colaboradorId && (
+            <Grid item xs={12}>
+              <Card>
+                <CardContent sx={{ p: 3 }}>
+                  <Typography variant="h6" fontWeight="600" gutterBottom>
+                    Segurança
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                    Altere sua senha para manter sua conta segura
+                  </Typography>
+
+                  {/* Password Alerts */}
+                  {passwordError && (
+                    <Alert severity="error" sx={{ mb: 3 }} onClose={() => setPasswordError("")}>
+                      {passwordError}
+                    </Alert>
+                  )}
+                  {passwordSuccess && (
+                    <Alert severity="success" sx={{ mb: 3 }} onClose={() => setPasswordSuccess(false)}>
+                      Senha alterada com sucesso!
+                    </Alert>
+                  )}
+
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={4}>
+                      <TextField
+                        fullWidth
+                        label="Senha Atual"
+                        type={showCurrentPassword ? "text" : "password"}
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        disabled={loadingPassword}
+                        autoComplete="off"
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <LockIcon sx={{ color: "#8270FF" }} />
+                            </InputAdornment>
+                          ),
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              <IconButton
+                                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                edge="end"
+                                sx={{ color: "#8270FF" }}
+                              >
+                                {showCurrentPassword ? <VisibilityOff /> : <Visibility />}
+                              </IconButton>
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </Grid>
+
+                    <Grid item xs={12} md={4}>
+                      <TextField
+                        fullWidth
+                        label="Nova Senha"
+                        type={showNewPassword ? "text" : "password"}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        disabled={loadingPassword}
+                        autoComplete="off"
+                        helperText="Mínimo de 8 caracteres"
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <LockIcon sx={{ color: "#8270FF" }} />
+                            </InputAdornment>
+                          ),
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              <IconButton
+                                onClick={() => setShowNewPassword(!showNewPassword)}
+                                edge="end"
+                                sx={{ color: "#8270FF" }}
+                              >
+                                {showNewPassword ? <VisibilityOff /> : <Visibility />}
+                              </IconButton>
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                      {newPassword && (
+                        <Box sx={{ mt: 1 }}>
+                          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 0.5 }}>
+                            <Typography variant="caption" color="text.secondary">
+                              Força da senha:
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              fontWeight="600"
+                              sx={{ color: getPasswordStrengthColor(passwordStrength) }}
+                            >
+                              {getPasswordStrengthLabel(passwordStrength)}
+                            </Typography>
+                          </Box>
+                          <LinearProgress
+                            variant="determinate"
+                            value={passwordStrength}
+                            sx={{
+                              height: 6,
+                              borderRadius: 3,
+                              backgroundColor: "#e0e0e0",
+                              "& .MuiLinearProgress-bar": {
+                                backgroundColor: getPasswordStrengthColor(passwordStrength),
+                                borderRadius: 3,
+                              },
+                            }}
+                          />
+                        </Box>
+                      )}
+                    </Grid>
+
+                    <Grid item xs={12} md={4}>
+                      <TextField
+                        fullWidth
+                        label="Confirmar Nova Senha"
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        disabled={loadingPassword}
+                        autoComplete="off"
+                        error={confirmPassword !== "" && newPassword !== confirmPassword}
+                        helperText={
+                          confirmPassword !== "" && newPassword !== confirmPassword
+                            ? "As senhas não coincidem"
+                            : undefined
+                        }
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <LockIcon sx={{ color: "#8270FF" }} />
+                            </InputAdornment>
+                          ),
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              <IconButton
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                edge="end"
+                                sx={{ color: "#8270FF" }}
+                              >
+                                {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                              </IconButton>
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    </Grid>
+
+                    <Grid item xs={12}>
+                      <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                        <Button
+                          variant="contained"
+                          onClick={handlePasswordChange}
+                          disabled={
+                            loadingPassword ||
+                            !currentPassword ||
+                            !newPassword ||
+                            !confirmPassword ||
+                            newPassword !== confirmPassword
+                          }
+                          sx={{
+                            bgcolor: "#8270FF",
+                            "&:hover": { bgcolor: "#6c5ce7" },
+                            textTransform: "none",
+                            minWidth: 150,
+                          }}
+                        >
+                          {loadingPassword ? (
+                            <>
+                              <CircularProgress size={20} sx={{ mr: 1, color: "white" }} />
+                              Alterando...
+                            </>
+                          ) : (
+                            "Alterar Senha"
+                          )}
+                        </Button>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+          )}
 
           {/* Totais dos Contratos */}
           <Grid item xs={12}>

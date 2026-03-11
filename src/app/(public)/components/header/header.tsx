@@ -1,18 +1,23 @@
 "use client";
 
-import { Box, List, ListItem, useMediaQuery, useTheme } from "@mui/material";
+import { Box, List, ListItem, useMediaQuery, useTheme, CircularProgress } from "@mui/material";
 import ContainedPurpleButton from "../buttons/contened-purple";
 import OutlinedWhiteButton from "../buttons/outlined-white";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import HeaderMobile from "./header-mobile";
 import {scrollToElement} from "@/app/utils/scrollToElement";
 
 export default function Header() {
     const theme = useTheme();
+    const router = useRouter();
+    const pathname = usePathname();
+    const [isPending, startTransition] = useTransition();
     const [activeSection, setActiveSection] = useState("home");
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const isMobile = useMediaQuery("(min-width:1050px)");
     const [isClient, setIsClient] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         setIsClient(true);
@@ -44,6 +49,23 @@ export default function Header() {
         setActiveSection(sectionId);
         scrollToElement(sectionId);
     };
+
+    const handleLoginClick = () => {
+        setIsLoading(true);
+        startTransition(() => {
+            router.push("/login");
+        });
+    };
+
+    // Monitor pathname changes to maintain loading state until navigation completes
+    useEffect(() => {
+        // When pathname changes away from root, navigation is complete
+        // The component will be unmounted, so this cleanup isn't strictly necessary
+        // but it ensures loading persists during the entire transition
+        if (pathname !== "/" && isLoading) {
+            // Keep loading active - component will unmount when navigation completes
+        }
+    }, [pathname, isLoading]);
 
     if (!isClient) return null;
 
@@ -165,7 +187,20 @@ export default function Header() {
                     >
                         Entre em contato
                     </OutlinedWhiteButton>
-                    <ContainedPurpleButton height={40}>Área do colaborador</ContainedPurpleButton>
+                    <ContainedPurpleButton
+                        height={40}
+                        onClick={handleLoginClick}
+                        disabled={isLoading || isPending}
+                        sx={{
+                            minWidth: (isLoading || isPending) ? "40px" : "auto",
+                        }}
+                    >
+                        {(isLoading || isPending) ? (
+                            <CircularProgress size={20} sx={{ color: "#FFFFFF" }} />
+                        ) : (
+                            "Área do colaborador"
+                        )}
+                    </ContainedPurpleButton>
                 </Box>
             </Box>
 
@@ -174,6 +209,8 @@ export default function Header() {
                 isMobileMenuOpen={isMobileMenuOpen}
                 scrollToSection={scrollToSection}
                 setIsMobileMenuOpen={setIsMobileMenuOpen}
+                isLoading={isLoading}
+                onLoginClick={handleLoginClick}
             />
         </Box>
     );

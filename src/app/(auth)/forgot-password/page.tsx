@@ -10,16 +10,25 @@ import {
   Alert,
   InputAdornment,
   Fade,
+  IconButton,
 } from "@mui/material";
 import {
   Email as EmailIcon,
   ArrowBack,
   CheckCircle,
+  Lock as LockIcon,
+  Visibility,
+  VisibilityOff,
 } from "@mui/icons-material";
 import Image from "next/image";
+import authService from "@/app/services/authService";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -28,21 +37,25 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setError("");
     setSuccess(false);
+
+    // Validações
+    if (newPassword.length < 8) {
+      setError("A senha deve ter no mínimo 8 caracteres");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError("As senhas não coincidem");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // TODO: Integrar com seu backend
-      // await fetch("/api/auth/forgot-password", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ email }),
-      // });
-
-      // Simulação temporária
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await authService.forgotPassword(email, newPassword);
       setSuccess(true);
-    } catch (err) {
-      setError("Erro ao enviar email. Tente novamente.");
+    } catch (err: any) {
+      setError(err.message || "Erro ao resetar senha. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
@@ -174,7 +187,7 @@ export default function ForgotPasswordPage() {
                       fontSize: { xs: "0.875rem", sm: "1rem" },
                     }}
                   >
-                    Digite seu email para receber instruções
+                    Informe seu email e escolha uma nova senha
                   </Typography>
                 </Box>
 
@@ -196,8 +209,8 @@ export default function ForgotPasswordPage() {
                 )}
 
                 {/* Formulário */}
-                <form onSubmit={handleSubmit}>
-                  <Box sx={{ mb: 3 }}>
+                <form onSubmit={handleSubmit} autoComplete="off">
+                  <Box sx={{ mb: 2.5 }}>
                     <TextField
                       fullWidth
                       label="Email"
@@ -205,12 +218,97 @@ export default function ForgotPasswordPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      autoComplete="email"
+                      autoComplete="off"
                       autoFocus
                       InputProps={{
                         startAdornment: (
                           <InputAdornment position="start">
                             <EmailIcon sx={{ color: "#8270FF" }} />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: 2,
+                          transition: "all 0.3s ease",
+                          "&:hover": {
+                            boxShadow: "0 4px 12px rgba(130, 112, 255, 0.15)",
+                          },
+                          "&.Mui-focused": {
+                            boxShadow: "0 4px 16px rgba(130, 112, 255, 0.25)",
+                          },
+                        },
+                      }}
+                    />
+                  </Box>
+
+                  <Box sx={{ mb: 2.5 }}>
+                    <TextField
+                      fullWidth
+                      label="Nova Senha"
+                      type={showNewPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                      autoComplete="off"
+                      helperText="Mínimo 8 caracteres"
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <LockIcon sx={{ color: "#8270FF" }} />
+                          </InputAdornment>
+                        ),
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              onClick={() => setShowNewPassword(!showNewPassword)}
+                              edge="end"
+                              sx={{ color: "#8270FF" }}
+                            >
+                              {showNewPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: 2,
+                          transition: "all 0.3s ease",
+                          "&:hover": {
+                            boxShadow: "0 4px 12px rgba(130, 112, 255, 0.15)",
+                          },
+                          "&.Mui-focused": {
+                            boxShadow: "0 4px 16px rgba(130, 112, 255, 0.25)",
+                          },
+                        },
+                      }}
+                    />
+                  </Box>
+
+                  <Box sx={{ mb: 3 }}>
+                    <TextField
+                      fullWidth
+                      label="Confirmar Nova Senha"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      autoComplete="off"
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <LockIcon sx={{ color: "#8270FF" }} />
+                          </InputAdornment>
+                        ),
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              edge="end"
+                              sx={{ color: "#8270FF" }}
+                            >
+                              {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
                           </InputAdornment>
                         ),
                       }}
@@ -258,7 +356,7 @@ export default function ForgotPasswordPage() {
                       },
                     }}
                   >
-                    {isLoading ? "Enviando..." : "Enviar Email"}
+                    {isLoading ? "Resetando senha..." : "Resetar Senha"}
                   </Button>
                 </form>
               </>
@@ -294,7 +392,7 @@ export default function ForgotPasswordPage() {
                       mb: 2,
                     }}
                   >
-                    Email enviado!
+                    Senha alterada com sucesso!
                   </Typography>
                   <Typography
                     variant="body1"
@@ -304,8 +402,7 @@ export default function ForgotPasswordPage() {
                       mb: 4,
                     }}
                   >
-                    Verifique sua caixa de entrada em <strong>{email}</strong> para
-                    instruções de recuperação de senha.
+                    Sua senha foi resetada com sucesso. Agora você pode fazer login com sua nova senha.
                   </Typography>
                   <Button
                     component={Link}

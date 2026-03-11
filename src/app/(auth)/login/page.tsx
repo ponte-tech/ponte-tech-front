@@ -12,6 +12,7 @@ import {
   IconButton,
   InputAdornment,
   Fade,
+  CircularProgress,
 } from "@mui/material";
 import {
   Email as EmailIcon,
@@ -125,13 +126,14 @@ export default function LoginPage() {
               sx={{
                 display: "flex",
                 justifyContent: "center",
-                mb: { xs: 3, sm: 4 },
+                alignItems: "center",
+                mb: { xs: 4, sm: 5 },
               }}
             >
               <Box
                 sx={{
-                  width: { xs: 140, sm: 180 },
-                  height: { xs: 50, sm: 65 },
+                  width: { xs: 160, sm: 190 },
+                  height: { xs: 58, sm: 68 },
                   position: "relative",
                 }}
               >
@@ -147,18 +149,6 @@ export default function LoginPage() {
 
             {/* Título */}
             <Box sx={{ mb: { xs: 3, sm: 4 }, textAlign: "center" }}>
-              <Typography
-                variant="h4"
-                component="h1"
-                sx={{
-                  fontWeight: 700,
-                  fontSize: { xs: "1.75rem", sm: "2rem" },
-                  color: "#202031",
-                  mb: 1,
-                }}
-              >
-                Bem-vindo de volta!
-              </Typography>
               <Typography
                 variant="body1"
                 sx={{
@@ -299,6 +289,7 @@ export default function LoginPage() {
                   background: "linear-gradient(135deg, #8270FF 0%, #6a5dd9 100%)",
                   boxShadow: "0 4px 14px rgba(130, 112, 255, 0.4)",
                   transition: "all 0.3s ease",
+                  minHeight: { xs: "48px", sm: "52px" },
                   "&:hover": {
                     background: "linear-gradient(135deg, #6a5dd9 0%, #5a4dbf 100%)",
                     boxShadow: "0 6px 20px rgba(130, 112, 255, 0.5)",
@@ -312,93 +303,12 @@ export default function LoginPage() {
                   },
                 }}
               >
-                {isLoading ? "Entrando..." : "Entrar"}
+                {isLoading ? (
+                  <CircularProgress size={24} sx={{ color: "#FFFFFF" }} />
+                ) : (
+                  "Entrar"
+                )}
               </Button>
-
-              {/* Divider */}
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  my: { xs: 3, sm: 3.5 },
-                }}
-              >
-                <Box sx={{ flex: 1, height: "1px", bgcolor: "divider" }} />
-                <Typography
-                  sx={{
-                    px: 2,
-                    color: "text.secondary",
-                    fontSize: { xs: "0.8125rem", sm: "0.875rem" },
-                  }}
-                >
-                  ou
-                </Typography>
-                <Box sx={{ flex: 1, height: "1px", bgcolor: "divider" }} />
-              </Box>
-
-              {/* Links para cadastro */}
-              <Box sx={{ textAlign: "center" }}>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: "text.secondary",
-                    fontSize: { xs: "0.875rem", sm: "0.9375rem" },
-                    mb: 1.5,
-                  }}
-                >
-                  Não tem uma conta? Cadastre-se como:
-                </Typography>
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: { xs: "column", sm: "row" },
-                    gap: 1.5,
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <Link
-                    href="/register?type=aluno"
-                    sx={{
-                      color: "#8270FF",
-                      fontWeight: 600,
-                      textDecoration: "none",
-                      fontSize: { xs: "0.875rem", sm: "0.9375rem" },
-                      transition: "all 0.2s ease",
-                      "&:hover": {
-                        textDecoration: "underline",
-                        color: "#6a5dd9",
-                      },
-                    }}
-                  >
-                    🎓 Aluno
-                  </Link>
-                  <Typography
-                    sx={{
-                      color: "text.secondary",
-                      display: { xs: "none", sm: "inline" },
-                    }}
-                  >
-                    •
-                  </Typography>
-                  <Link
-                    href="/register?type=vendedor"
-                    sx={{
-                      color: "#8270FF",
-                      fontWeight: 600,
-                      textDecoration: "none",
-                      fontSize: { xs: "0.875rem", sm: "0.9375rem" },
-                      transition: "all 0.2s ease",
-                      "&:hover": {
-                        textDecoration: "underline",
-                        color: "#6a5dd9",
-                      },
-                    }}
-                  >
-                    💼 Vendedor
-                  </Link>
-                </Box>
-              </Box>
             </form>
           </Box>
         </Fade>

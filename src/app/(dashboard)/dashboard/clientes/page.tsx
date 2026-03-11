@@ -12,8 +12,12 @@ import {
   Typography,
   CircularProgress,
   Card,
+  CardContent,
   Snackbar,
   Button,
+  TextField,
+  MenuItem,
+  Chip,
 } from "@mui/material";
 import { Add as AddIcon } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
@@ -22,11 +26,24 @@ import type { Cliente } from "@/app/types/cliente";
 import { PageHeader, DeleteDialog, FilterSearch, TableActionButtons, TableAction } from "@/app/shared/components";
 import { formatCNPJ, cleanCNPJ } from "@/app/utils/cnpjValidator";
 
+type ClienteStatus = "ativo" | "inativo";
+
+const statusLabels: Record<ClienteStatus, string> = {
+  ativo: "Ativo",
+  inativo: "Inativo",
+};
+
+const statusColors: Record<ClienteStatus, "success" | "error"> = {
+  ativo: "success",
+  inativo: "error",
+};
+
 export default function ClientesPage() {
   const router = useRouter();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState<ClienteStatus | "">("");
 
   // Delete dialog states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -40,13 +57,17 @@ export default function ClientesPage() {
 
   useEffect(() => {
     loadClientes();
-  }, []);
+  }, [filterStatus]);
 
   const loadClientes = async () => {
     try {
       setLoading(true);
       console.log('📋 [CLIENTES] Iniciando carregamento...');
-      const response = await clienteService.list();
+
+      const filters: any = {};
+      if (filterStatus) filters.status = filterStatus;
+
+      const response = await clienteService.list(filters);
       console.log('📋 [CLIENTES] Resposta recebida:', response);
       console.log('📋 [CLIENTES] Clientes:', response.clientes);
 
@@ -77,6 +98,19 @@ export default function ClientesPage() {
     setClienteToDelete(cliente);
     setDeleteDialogOpen(true);
     setDeleteError(null);
+  };
+
+  const handleReactivateClick = async (cliente: Cliente) => {
+    try {
+      await clienteService.reactivate(cliente.cliente_id);
+      setSnackbarMessage("Cliente reativado com sucesso!");
+      setSnackbarOpen(true);
+      loadClientes();
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setSnackbarMessage(error.response?.data?.message || "Erro ao reativar cliente");
+      setSnackbarOpen(true);
+    }
   };
 
   const handleDeleteConfirm = async () => {
@@ -117,16 +151,29 @@ export default function ClientesPage() {
       (cliente.empresa_razao_social && cliente.empresa_razao_social.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const getTableActions = (cliente: Cliente): TableAction[] => [
-    {
-      type: "edit",
-      onClick: () => router.push(`/dashboard/clientes/${cliente.cliente_id}/editar`),
-    },
-    {
-      type: "delete",
-      onClick: () => handleDeleteClick(cliente),
-    },
-  ];
+  const getTableActions = (cliente: Cliente): TableAction[] => {
+    const actions: TableAction[] = [
+      {
+        type: "edit",
+        onClick: () => router.push(`/dashboard/clientes/${cliente.cliente_id}/editar`),
+      },
+    ];
+
+    // Se inativo, mostrar botão de reativar; se ativo, mostrar botão de deletar
+    if (cliente.status === "inativo") {
+      actions.push({
+        type: "reactivate",
+        onClick: () => handleReactivateClick(cliente),
+      });
+    } else {
+      actions.push({
+        type: "delete",
+        onClick: () => handleDeleteClick(cliente),
+      });
+    }
+
+    return actions;
+  };
 
   return (
     <Box>
@@ -143,11 +190,31 @@ export default function ClientesPage() {
       />
 
       {/* Filters */}
-      <FilterSearch
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        placeholder="Pesquisar por empresa, razão social, nome fantasia ou CNPJ..."
-      />
+      <Card sx={{ mb: 3, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+        <CardContent>
+          <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+            <FilterSearch
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder="Pesquisar por empresa, razão social, nome fantasia ou CNPJ..."
+            />
+            <TextField
+              select
+              label="Status"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value as ClienteStatus | "")}
+              sx={{ minWidth: 200 }}
+            >
+              <MenuItem value="">Todos</MenuItem>
+              {Object.entries(statusLabels).map(([value, label]) => (
+                <MenuItem key={value} value={value}>
+                  {label}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Box>
+        </CardContent>
+      </Card>
 
       {/* Table */}
       <Card sx={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
@@ -159,6 +226,7 @@ export default function ClientesPage() {
                 <TableCell sx={{ fontWeight: 600 }}>Razão Social</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Nome Fantasia</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>CNPJ</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Data Cadastro</TableCell>
                 <TableCell sx={{ fontWeight: 600 }} align="center">
                   Ações
@@ -168,13 +236,13 @@ export default function ClientesPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
+                  <TableCell colSpan={7} align="center" sx={{ py: 8 }}>
                     <CircularProgress />
                   </TableCell>
                 </TableRow>
               ) : filteredClientes.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
+                  <TableCell colSpan={7} align="center" sx={{ py: 8 }}>
                     <Typography variant="body1" color="text.secondary" gutterBottom>
                       Nenhum cliente encontrado
                     </Typography>
@@ -212,6 +280,13 @@ export default function ClientesPage() {
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2">{formatCNPJ(cliente.cnpj)}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={statusLabels[(cliente.status as ClienteStatus) || "ativo"]}
+                        color={statusColors[(cliente.status as ClienteStatus) || "ativo"]}
+                        size="small"
+                      />
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2">{formatDate(cliente.data_cadastro)}</Typography>

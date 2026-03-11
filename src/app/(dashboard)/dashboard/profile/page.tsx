@@ -21,6 +21,7 @@ import {
   alpha,
 } from "@mui/material";
 import { useAuth } from "@/app/hooks/useAuth";
+import authService from "@/app/services/authService";
 import { useState, useEffect, useRef } from "react";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import PersonIcon from "@mui/icons-material/Person";
@@ -293,28 +294,7 @@ export default function ProfilePage() {
 
     setLoadingPassword(true);
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
-
-      const response = await fetch("/api/auth/change-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          currentPassword: currentPassword,
-          newPassword: newPassword,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to change password");
-      }
+      await authService.changePassword(currentPassword, newPassword);
 
       setSnackbar({
         open: true,
@@ -603,7 +583,7 @@ export default function ProfilePage() {
                   label="Senha Atual"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  autoComplete="current-password"
+                  autoComplete="off"
                   disabled={loadingPassword}
                   InputProps={{
                     startAdornment: (
@@ -632,7 +612,7 @@ export default function ProfilePage() {
                   label="Nova Senha"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  autoComplete="new-password"
+                  autoComplete="off"
                   disabled={loadingPassword}
                   InputProps={{
                     startAdornment: (
@@ -661,7 +641,7 @@ export default function ProfilePage() {
                   label="Confirmar Nova Senha"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  autoComplete="new-password"
+                  autoComplete="off"
                   disabled={loadingPassword}
                   error={
                     confirmPassword !== "" && newPassword !== confirmPassword

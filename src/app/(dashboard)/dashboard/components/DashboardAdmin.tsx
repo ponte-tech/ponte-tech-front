@@ -11,23 +11,32 @@ import {
   alpha,
   CircularProgress,
   Alert,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import {
   People,
-  AccessTime,
-  Receipt,
   Business,
-  CheckCircle,
-  Schedule,
-  Cancel,
 } from "@mui/icons-material";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 import dashboardService from "@/app/services/dashboardService";
-import type { DashboardAdminResponse } from "@/app/types/dashboard";
+import type { DashboardAdminResponse, FinanceirosPorEmpresaResponse } from "@/app/types/dashboard";
 
 export default function DashboardAdmin() {
   const [dashboard, setDashboard] = useState<DashboardAdminResponse | null>(null);
+  const [financeiros, setFinanceiros] = useState<FinanceirosPorEmpresaResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTab, setSelectedTab] = useState(0);
 
   useEffect(() => {
     loadDashboard();
@@ -38,8 +47,13 @@ export default function DashboardAdmin() {
       setLoading(true);
       setError(null);
 
-      const data = await dashboardService.getDashboardAdmin();
-      setDashboard(data);
+      const [dashboardData, financeirosData] = await Promise.all([
+        dashboardService.getDashboardAdmin(),
+        dashboardService.getFinanceirosPorEmpresa(6), // Últimos 6 meses
+      ]);
+
+      setDashboard(dashboardData);
+      setFinanceiros(financeirosData);
     } catch (err: any) {
       console.error("Erro ao carregar dashboard:", err);
       setError(err.response?.data?.error || "Erro ao carregar dashboard");
@@ -64,7 +78,7 @@ export default function DashboardAdmin() {
     );
   }
 
-  if (!dashboard) {
+  if (!dashboard || !financeiros) {
     return null;
   }
 
@@ -78,22 +92,6 @@ export default function DashboardAdmin() {
       bgColor: alpha("#8270FF", 0.1),
     },
     {
-      title: "Aguardando Aprovação",
-      value: dashboard.timesheet.aguardando_aprovacao.toString(),
-      subtitle: "timesheets pendentes",
-      icon: <Schedule sx={{ fontSize: 32 }} />,
-      color: "#f59e0b",
-      bgColor: alpha("#f59e0b", 0.1),
-    },
-    {
-      title: "Horas Aprovadas",
-      value: `${dashboard.timesheet.total_horas_aprovadas.toFixed(1)}h`,
-      subtitle: "no mês atual",
-      icon: <CheckCircle sx={{ fontSize: 32 }} />,
-      color: "#10b981",
-      bgColor: alpha("#10b981", 0.1),
-    },
-    {
       title: "Contratos Ativos",
       value: dashboard.qtd_contratos_ativos.toString(),
       subtitle: "em andamento",
@@ -102,6 +100,37 @@ export default function DashboardAdmin() {
       bgColor: alpha("#06b6d4", 0.1),
     },
   ];
+
+  // Preparar dados para o gráfico
+  const formatMes = (mes: string) => {
+    const [year, month] = mes.split("-");
+    const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+    return `${monthNames[parseInt(month) - 1]}/${year.substring(2)}`;
+  };
+
+  // Dados para cada empresa e consolidado
+  const getChartData = () => {
+    if (selectedTab === financeiros.empresas.length) {
+      // Consolidado
+      return financeiros.consolidado.meses.map(mes => ({
+        mes: formatMes(mes.mes),
+        Receitas: mes.receitas,
+        "Despesas - Impostos": mes.despesas_impostos,
+        "Despesas - Notas": mes.despesas_notas,
+      }));
+    } else {
+      // Empresa específica
+      const empresa = financeiros.empresas[selectedTab];
+      return empresa.meses.map(mes => ({
+        mes: formatMes(mes.mes),
+        Receitas: mes.receitas,
+        "Despesas - Impostos": mes.despesas_impostos,
+        "Despesas - Notas": mes.despesas_notas,
+      }));
+    }
+  };
+
+  const chartData = getChartData();
 
   return (
     <Box>
@@ -115,7 +144,7 @@ export default function DashboardAdmin() {
             mb: 0.5,
           }}
         >
-          Dashboard Administrativo - {dashboard.mes_atual}
+          Dashboard Administrativo
         </Typography>
         <Typography
           variant="body1"
@@ -131,7 +160,7 @@ export default function DashboardAdmin() {
       {/* Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {stats.map((stat, index) => (
-          <Grid item xs={12} sm={6} lg={3} key={index}>
+          <Grid item xs={12} sm={6} md={6} key={index}>
             <Card
               elevation={0}
               sx={{
@@ -206,155 +235,106 @@ export default function DashboardAdmin() {
         ))}
       </Grid>
 
-      {/* Content Grid */}
-      <Grid container spacing={3}>
-        {/* Timesheets Summary */}
-        <Grid item xs={12} md={6}>
-          <Paper
-            elevation={0}
-            sx={{
-              borderRadius: 3,
-              border: "1px solid",
-              borderColor: "divider",
-              p: 3,
-              height: "100%",
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-              <AccessTime sx={{ mr: 1, color: "#8270FF" }} />
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                Status dos Timesheets
-              </Typography>
-            </Box>
-            <Grid container spacing={2}>
-              <Grid item xs={4}>
-                <Box>
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: "#f59e0b" }}>
-                    {dashboard.timesheet.aguardando_aprovacao}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Aguardando
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={4}>
-                <Box>
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: "#10b981" }}>
-                    {dashboard.timesheet.aprovados}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Aprovados
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={4}>
-                <Box>
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: "#ef4444" }}>
-                    {dashboard.timesheet.reprovados}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Reprovados
-                  </Typography>
-                </Box>
-              </Grid>
-            </Grid>
-          </Paper>
-        </Grid>
+      {/* Gráfico Financeiro por Empresa */}
+      <Paper
+        elevation={0}
+        sx={{
+          borderRadius: 3,
+          border: "1px solid",
+          borderColor: "divider",
+          p: 3,
+        }}
+      >
+        <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
+          Receitas e Despesas por Mês
+        </Typography>
 
-        {/* Notas Fiscais Summary */}
-        <Grid item xs={12} md={6}>
-          <Paper
-            elevation={0}
-            sx={{
-              borderRadius: 3,
-              border: "1px solid",
-              borderColor: "divider",
-              p: 3,
-              height: "100%",
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-              <Receipt sx={{ mr: 1, color: "#8270FF" }} />
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                Notas Fiscais
-              </Typography>
-            </Box>
-            <Grid container spacing={2}>
-              <Grid item xs={4}>
-                <Box>
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: "#f59e0b" }}>
-                    {dashboard.notas_fiscais.pendentes_aprovacao}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Pendentes
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={4}>
-                <Box>
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: "#06b6d4" }}>
-                    {dashboard.notas_fiscais.aprovadas_aguardando_pagamento}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Aprovadas
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={4}>
-                <Box>
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: "#10b981" }}>
-                    {dashboard.notas_fiscais.pagas}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Pagas
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12}>
-                <Box sx={{ mt: 2, pt: 2, borderTop: "1px solid", borderColor: "divider" }}>
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: "#8270FF" }}>
-                    {dashboard.notas_fiscais.total}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Total de Notas
-                  </Typography>
-                </Box>
-              </Grid>
-            </Grid>
-          </Paper>
-        </Grid>
+        {/* Tabs para alternar entre empresas */}
+        <Tabs
+          value={selectedTab}
+          onChange={(_, newValue) => setSelectedTab(newValue)}
+          sx={{ mb: 3, borderBottom: 1, borderColor: "divider" }}
+        >
+          {financeiros.empresas.map((empresa, index) => (
+            <Tab key={empresa.empresa_id} label={empresa.nome_fantasia} />
+          ))}
+          <Tab label="Consolidado" />
+        </Tabs>
 
-        {/* Financeiro */}
-        <Grid item xs={12}>
-          <Paper
-            elevation={0}
-            sx={{
-              borderRadius: 3,
-              border: "1px solid",
-              borderColor: "divider",
-              overflow: "hidden",
-            }}
-          >
-            <Box
-              sx={{
-                p: 3,
-                background: "linear-gradient(135deg, #8270FF 0%, #6a5dd9 100%)",
-                color: "white",
+        {/* Gráfico */}
+        <ResponsiveContainer width="100%" height={400}>
+          <BarChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+            <XAxis
+              dataKey="mes"
+              tick={{ fill: "#666", fontSize: 12 }}
+              tickLine={{ stroke: "#e0e0e0" }}
+            />
+            <YAxis
+              tick={{ fill: "#666", fontSize: 12 }}
+              tickLine={{ stroke: "#e0e0e0" }}
+              tickFormatter={(value) =>
+                `R$ ${(value / 1000).toFixed(0)}k`
+              }
+            />
+            <Tooltip
+              formatter={(value: number) =>
+                `R$ ${value.toLocaleString("pt-BR", {
+                  minimumFractionDigits: 2,
+                })}`
+              }
+              contentStyle={{
+                backgroundColor: "#fff",
+                border: "1px solid #e0e0e0",
+                borderRadius: 8,
               }}
-            >
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                Custo Total do Mês
-              </Typography>
-              <Typography variant="h3" sx={{ fontWeight: 700 }}>
-                R$ {dashboard.custo_total_mes.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-              </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9, mt: 1 }}>
-                Baseado nas horas aprovadas e valores dos contratos
-              </Typography>
-            </Box>
-          </Paper>
-        </Grid>
-      </Grid>
+            />
+            <Legend
+              wrapperStyle={{ paddingTop: "20px" }}
+              iconType="square"
+            />
+            <Bar dataKey="Receitas" fill="#10b981" radius={[8, 8, 0, 0]} />
+            <Bar dataKey="Despesas - Impostos" fill="#ef4444" radius={[8, 8, 0, 0]} />
+            <Bar dataKey="Despesas - Notas" fill="#f59e0b" radius={[8, 8, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+
+        {/* Legenda adicional */}
+        <Box sx={{ mt: 3, pt: 3, borderTop: "1px solid", borderColor: "divider" }}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={4}>
+              <Box>
+                <Typography variant="caption" color="text.secondary" display="block">
+                  Receitas
+                </Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  Lançamentos contábeis (notas fiscais emitidas)
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <Box>
+                <Typography variant="caption" color="text.secondary" display="block">
+                  Despesas - Impostos
+                </Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  Impostos e taxas da empresa
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <Box>
+                <Typography variant="caption" color="text.secondary" display="block">
+                  Despesas - Notas
+                </Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  Notas fiscais dos colaboradores
+                </Typography>
+              </Box>
+            </Grid>
+          </Grid>
+        </Box>
+      </Paper>
     </Box>
   );
 }

@@ -5,6 +5,7 @@ export interface Cliente {
   razao_social: string;
   nome_fantasia: string;
   cnpj: string;
+  status?: string;
   data_cadastro: string;
   data_atualizacao: string;
 }

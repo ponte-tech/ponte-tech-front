@@ -92,6 +92,40 @@ class AuthService {
       return false;
     }
   }
+
+  /**
+   * Altera a senha do usuário autenticado
+   */
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    const response: AxiosResponse<ApiResponse<void>> = await api.post(
+      "/api/auth/change-password",
+      {
+        currentPassword,
+        newPassword,
+      }
+    );
+
+    if (!response.data.success) {
+      throw new Error(response.data.message || "Erro ao alterar senha");
+    }
+  }
+
+  /**
+   * Reseta a senha do usuário (sem autenticação)
+   */
+  async forgotPassword(email: string, newPassword: string): Promise<void> {
+    const response: AxiosResponse<ApiResponse<void>> = await api.post(
+      "/api/auth/forgot-password",
+      {
+        email,
+        newPassword,
+      }
+    );
+
+    if (!response.data.success) {
+      throw new Error(response.data.message || "Erro ao resetar senha");
+    }
+  }
 }
 
 // Exportar instância única (singleton)

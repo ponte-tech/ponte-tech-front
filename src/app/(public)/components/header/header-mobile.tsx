@@ -1,4 +1,4 @@
-import {Box, List, ListItem, Collapse, Divider, useMediaQuery} from "@mui/material";
+import {Box, List, ListItem, Collapse, Divider, useMediaQuery, CircularProgress} from "@mui/material";
 import ContainedPurpleButton from "../buttons/contened-purple";
 import CloseIcon from "@mui/icons-material/Close";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -8,6 +8,8 @@ interface HeaderMobileProps {
   isMobileMenuOpen: boolean;
   activeSection: string;
   scrollToSection: (sectionId: string) => void;
+  isLoading?: boolean;
+  onLoginClick?: () => void;
 }
 
 export default function HeaderMobile({
@@ -15,6 +17,8 @@ export default function HeaderMobile({
   isMobileMenuOpen,
   activeSection,
   scrollToSection,
+  isLoading = false,
+  onLoginClick,
 }: Readonly<HeaderMobileProps>) {
   const isMobile = useMediaQuery("(max-width:1049px)");
 
@@ -42,23 +46,37 @@ export default function HeaderMobile({
         <img width={94} src="/svg/logo.svg" alt="Logo" />
 
         <Box
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           sx={{ borderRadius: 2, display: "flex", alignItems: "center", gap: 3 }}
         >
-          <ContainedPurpleButton height={42}>Login</ContainedPurpleButton>
-          {isMobileMenuOpen ? (
-            <CloseIcon sx={{ color: "#8270FF", fontSize: 46, p: 1 }} />
-          ) : (
-            <MenuIcon
-              sx={{
-                bgcolor: "#8270FF",
-                color: "white",
-                fontSize: 42,
-                p: 1,
-                borderRadius: 2,
-              }}
-            />
-          )}
+          <ContainedPurpleButton
+            height={42}
+            onClick={onLoginClick}
+            disabled={isLoading}
+            sx={{
+              minWidth: isLoading ? "42px" : "auto",
+            }}
+          >
+            {isLoading ? (
+              <CircularProgress size={20} sx={{ color: "#FFFFFF" }} />
+            ) : (
+              "Login"
+            )}
+          </ContainedPurpleButton>
+          <Box onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+            {isMobileMenuOpen ? (
+              <CloseIcon sx={{ color: "#8270FF", fontSize: 46, p: 1 }} />
+            ) : (
+              <MenuIcon
+                sx={{
+                  bgcolor: "#8270FF",
+                  color: "white",
+                  fontSize: 42,
+                  p: 1,
+                  borderRadius: 2,
+                }}
+              />
+            )}
+          </Box>
         </Box>
       </Box>
       {/* Expandable Menu */}

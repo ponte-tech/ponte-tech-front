@@ -77,7 +77,7 @@ export default function ColaboradoresPage() {
       if (filterStatus) filters.status = filterStatus;
 
       const response = await colaboradoresService.list(filters);
-      setColaboradores(response.colaboradores);
+      setColaboradores(response.colaboradores || []);
       setTotalItems(response.pagination.total_items);
     } catch (error) {
       console.error("Erro ao carregar colaboradores:", error);
@@ -96,6 +96,18 @@ export default function ColaboradoresPage() {
   const handleDeleteClick = (colaborador: ColaboradorListItem) => {
     setColaboradorToDelete(colaborador);
     setDeleteError(null);
+  };
+
+  const handleReactivateClick = async (colaborador: ColaboradorListItem) => {
+    try {
+      await colaboradoresService.reactivate(colaborador.id);
+      setSnackbarMessage("Colaborador reativado com sucesso");
+      setSnackbarOpen(true);
+      loadColaboradores();
+    } catch (error: any) {
+      setSnackbarMessage(error.message || "Erro ao reativar colaborador");
+      setSnackbarOpen(true);
+    }
   };
 
   const handleDeleteConfirm = async () => {
@@ -322,10 +334,16 @@ export default function ColaboradoresPage() {
                             type: "edit",
                             onClick: () => router.push(`/colaboradores/${colaborador.id}/editar`),
                           },
-                          {
-                            type: "delete",
-                            onClick: () => handleDeleteClick(colaborador),
-                          },
+                          // Se inativo, mostrar botão de reativar; se ativo, mostrar botão de deletar
+                          colaborador.status === "inativo"
+                            ? {
+                                type: "reactivate" as const,
+                                onClick: () => handleReactivateClick(colaborador),
+                              }
+                            : {
+                                type: "delete" as const,
+                                onClick: () => handleDeleteClick(colaborador),
+                              },
                         ]}
                       />
                     </TableCell>

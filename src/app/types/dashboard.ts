@@ -46,3 +46,26 @@ export interface DashboardAdminResponse {
   qtd_contratos_ativos: number;
   custo_total_mes: number;
 }
+
+// Tipos para dados financeiros por empresa
+export interface MesFinanceiro {
+  mes: string; // Formato: "2026-01"
+  receitas: number; // Lançamentos contábeis (receita)
+  despesas_notas: number; // Notas fiscais dos colaboradores (despesa)
+  despesas_impostos: number; // Impostos (despesa)
+}
+
+export interface EmpresaFinanceiro {
+  empresa_id: string;
+  nome_fantasia: string;
+  meses: MesFinanceiro[];
+}
+
+export interface ConsolidadoFinanceiro {
+  meses: MesFinanceiro[];
+}
+
+export interface FinanceirosPorEmpresaResponse {
+  empresas: EmpresaFinanceiro[];
+  consolidado: ConsolidadoFinanceiro;
+}
