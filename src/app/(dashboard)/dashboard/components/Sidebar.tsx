@@ -18,8 +18,6 @@ import {
 } from "@mui/material";
 import {
   Dashboard as DashboardIcon,
-  Person as PersonIcon,
-  Settings as SettingsIcon,
   Logout as LogoutIcon,
   People as PeopleIcon,
   AccessTime as AccessTimeIcon,
@@ -49,7 +47,6 @@ interface SidebarProps {
 interface SubMenuItem {
   text: string;
   path: string;
-  isDynamic?: boolean;
 }
 
 interface MenuItem {
@@ -57,7 +54,6 @@ interface MenuItem {
   icon: JSX.Element;
   path?: string;
   allowedRoles: string[];
-  isDynamic?: boolean;
   subItems?: SubMenuItem[];
 }
 
@@ -104,19 +100,6 @@ const menuItems: MenuItem[] = [
       { text: "Notas Fiscais", path: "/notas-fiscais" },
     ]
   },
-  {
-    text: "Perfil",
-    icon: <PersonIcon />,
-    path: "/dashboard/profile",
-    allowedRoles: ["admin", "aluno", "vendedor", "professor", "colaborador", "contador"],
-    isDynamic: true
-  },
-  {
-    text: "Configurações",
-    icon: <SettingsIcon />,
-    path: "/dashboard/settings",
-    allowedRoles: ["admin", "aluno", "vendedor", "professor", "colaborador", "contador"]
-  },
 ];
 
 export default function Sidebar({ open, mobileOpen, onMobileClose }: SidebarProps) {
@@ -129,26 +112,11 @@ export default function Sidebar({ open, mobileOpen, onMobileClose }: SidebarProp
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
   const userRole = user?.userType;
-  const userPerfil = user?.perfil;
-  const userPerfis = user?.perfis;
-  const userId = user?.id || user?.user_id;
-
-  // Check if user is colaborador
-  const isColaborador = userPerfil === 'colaborador' || userPerfis?.includes('colaborador');
 
   // Filter menu items based on user role
-  const filteredMenuItems = menuItems
-    .filter(item => userRole && item.allowedRoles.includes(userRole))
-    .map(item => {
-      // Override Perfil path for colaboradores
-      if (item.isDynamic && item.text === 'Perfil' && isColaborador && userId) {
-        return {
-          ...item,
-          path: `/colaboradores/${userId}`
-        };
-      }
-      return item;
-    });
+  const filteredMenuItems = menuItems.filter(
+    item => userRole && item.allowedRoles.includes(userRole)
+  );
 
   // Auto-expand categories when a subitem is active
   useEffect(() => {
