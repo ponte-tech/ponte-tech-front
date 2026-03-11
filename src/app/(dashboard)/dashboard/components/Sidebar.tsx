@@ -30,6 +30,7 @@ import {
   Assessment as AssessmentIcon,
   ExpandLess,
   ExpandMore,
+  WhatsApp as WhatsAppIcon,
 } from "@mui/icons-material";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/app/hooks/useAuth";
@@ -90,6 +91,12 @@ const menuItems: MenuItem[] = [
       { text: "Lançamento Contábil", path: "/dashboard/lancamento-contabil" },
       { text: "Impostos", path: "/dashboard/contabilidade/impostos" },
     ]
+  },
+  {
+    text: "Comunicação",
+    icon: <WhatsAppIcon />,
+    path: "/dashboard/whatsapp",
+    allowedRoles: ["admin", "colaborador"],
   },
   {
     text: "Meu Trabalho",
