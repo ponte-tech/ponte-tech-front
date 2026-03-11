@@ -263,10 +263,12 @@ export default function WhatsAppPage() {
   return (
     <Box
       sx={{
-        height: "calc(100vh - 64px)",
+        height: "calc(100vh - 170px)",
+        maxHeight: "calc(100vh - 170px)",
         display: "flex",
         flexDirection: "column",
         bgcolor: alpha("#8270FF", 0.02),
+        overflow: "hidden",
       }}
     >
       {/* Header with actions */}
@@ -347,6 +349,7 @@ export default function WhatsAppPage() {
         open={broadcastModalOpen}
         onClose={() => setBroadcastModalOpen(false)}
         onSend={handleBroadcast}
+        onSuccess={() => loadConversations(true)} // Atualizar conversas após envio
         colaboradores={colaboradores}
         loadingColaboradores={loadingColaboradores}
       />

@@ -35,6 +35,7 @@ interface BroadcastModalProps {
   open: boolean;
   onClose: () => void;
   onSend: (data: BroadcastMessageRequest) => Promise<BroadcastMessageResponse>;
+  onSuccess?: () => void; // Callback para atualizar conversas após envio
   colaboradores: ColaboradorListItem[];
   loadingColaboradores: boolean;
 }
@@ -43,12 +44,12 @@ export default function BroadcastModal({
   open,
   onClose,
   onSend,
+  onSuccess,
   colaboradores,
   loadingColaboradores,
 }: BroadcastModalProps) {
-  const [sendType, setSendType] = useState<"all" | "specific" | "department">("all");
+  const [sendType, setSendType] = useState<"all" | "specific">("all");
   const [selectedColaboradores, setSelectedColaboradores] = useState<ColaboradorListItem[]>([]);
-  const [department, setDepartment] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<BroadcastMessageResponse | null>(null);
@@ -60,7 +61,6 @@ export default function BroadcastModal({
       setTimeout(() => {
         setSendType("all");
         setSelectedColaboradores([]);
-        setDepartment("");
         setMessage("");
         setSending(false);
         setResult(null);
@@ -68,6 +68,23 @@ export default function BroadcastModal({
       }, 300);
     }
   }, [open]);
+
+  // Auto-fechar modal após envio bem-sucedido
+  useEffect(() => {
+    if (result && result.total_sent > 0) {
+      // Chamar callback de sucesso para atualizar conversas
+      if (onSuccess) {
+        onSuccess();
+      }
+
+      // Fechar modal após 2 segundos
+      const timer = setTimeout(() => {
+        onClose();
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [result, onSuccess, onClose]);
 
   const handleSend = async () => {
     if (!message.trim()) {
@@ -77,11 +94,6 @@ export default function BroadcastModal({
 
     if (sendType === "specific" && selectedColaboradores.length === 0) {
       setError("Por favor, selecione pelo menos um colaborador");
-      return;
-    }
-
-    if (sendType === "department" && !department.trim()) {
-      setError("Por favor, informe o departamento");
       return;
     }
 
@@ -97,8 +109,6 @@ export default function BroadcastModal({
         data.send_to_all = true;
       } else if (sendType === "specific") {
         data.collaborator_ids = selectedColaboradores.map((c) => c.id);
-      } else if (sendType === "department") {
-        data.department = department.trim();
       }
 
       const response = await onSend(data);
@@ -119,7 +129,6 @@ export default function BroadcastModal({
   const isValid = () => {
     if (!message.trim()) return false;
     if (sendType === "specific" && selectedColaboradores.length === 0) return false;
-    if (sendType === "department" && !department.trim()) return false;
     return true;
   };
 
@@ -247,15 +256,6 @@ export default function BroadcastModal({
                     </Typography>
                   }
                 />
-                <FormControlLabel
-                  value="department"
-                  control={<Radio sx={{ color: "#8270FF", "&.Mui-checked": { color: "#8270FF" } }} />}
-                  label={
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      Por departamento
-                    </Typography>
-                  }
-                />
               </RadioGroup>
             </FormControl>
 
@@ -289,17 +289,6 @@ export default function BroadcastModal({
                     />
                   ))
                 }
-              />
-            )}
-
-            {sendType === "department" && (
-              <TextField
-                fullWidth
-                label="Departamento"
-                placeholder="Ex: TI, RH, Financeiro..."
-                value={department}
-                onChange={(e) => setDepartment(e.target.value)}
-                sx={{ mb: 3 }}
               />
             )}
 

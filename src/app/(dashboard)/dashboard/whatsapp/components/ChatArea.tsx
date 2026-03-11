@@ -48,7 +48,7 @@ export default function ChatArea({
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, conversation]);
 
   const handleSend = () => {
     if (newMessage.trim() && !sendingMessage) {
