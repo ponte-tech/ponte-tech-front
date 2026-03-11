@@ -10,6 +10,7 @@ import {
   Chip,
   Stack,
   Typography,
+  alpha,
 } from '@mui/material';
 import {
   CheckCircle as CheckCircleIcon,
@@ -76,35 +77,110 @@ export default function StatusMes({
     });
   };
 
+  const getGradientByStatus = (status: StatusMes) => {
+    switch (status) {
+      case 'APROVADO':
+        return 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+      case 'REPROVADO':
+        return 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+      case 'AGUARDANDO_APROVACAO':
+        return 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+      default:
+        return 'linear-gradient(135deg, #8270FF 0%, #a78bfa 100%)';
+    }
+  };
+
   return (
-    <Card sx={{ mb: 3, borderLeft: 4, borderColor: `${config.color}.main` }}>
-      <CardContent>
+    <Card
+      elevation={0}
+      sx={{
+        mb: 3,
+        borderRadius: 3,
+        background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+        border: '2px solid',
+        borderColor: alpha('#8270FF', 0.15),
+        overflow: 'hidden',
+        position: 'relative',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: '6px',
+          background: getGradientByStatus(statusMes),
+          boxShadow: '2px 0 12px rgba(0, 0, 0, 0.1)',
+        },
+      }}
+    >
+      <CardContent sx={{ pl: 4 }}>
         <Stack spacing={2}>
           {/* Header com Status */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <Chip
                 icon={config.icon}
                 label={config.label}
-                color={config.color}
                 size="medium"
-                sx={{ fontWeight: 600 }}
+                sx={{
+                  background: getGradientByStatus(statusMes),
+                  color: '#FFFFFF',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  px: 1,
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                  '& .MuiChip-icon': {
+                    color: '#FFFFFF',
+                  },
+                }}
               />
-              <Typography variant="body2" color="text.secondary">
-                Total de horas: <strong>{totalHoras.toFixed(2)}h</strong>
-              </Typography>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  px: 2,
+                  py: 0.75,
+                  borderRadius: 2,
+                  background: alpha('#8270FF', 0.08),
+                }}
+              >
+                <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                  Total de horas:
+                </Typography>
+                <Typography variant="h6" fontWeight={700} sx={{
+                  background: 'linear-gradient(135deg, #8270FF 0%, #a78bfa 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}>
+                  {totalHoras.toFixed(2)}h
+                </Typography>
+              </Box>
             </Box>
 
             {statusMes === 'PENDENTE_ENVIO' && totalHoras > 0 && (
               <Button
                 variant="contained"
+                sx={{
+                  background: 'linear-gradient(135deg, #8270FF 0%, #a78bfa 100%)',
+                  boxShadow: '0 4px 12px rgba(130, 112, 255, 0.3)',
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  px: 3,
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #7059e5 0%, #9575e6 100%)',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 6px 20px rgba(130, 112, 255, 0.4)',
+                  },
+                  '&:disabled': {
+                    background: alpha('#8270FF', 0.3),
+                  },
+                }}
                 startIcon={<SendIcon />}
                 onClick={onEnviarParaAprovacao}
                 disabled={loading}
-                sx={{
-                  bgcolor: '#667eea',
-                  '&:hover': { bgcolor: '#5568d3' },
-                }}
               >
                 Enviar para Aprovação
               </Button>

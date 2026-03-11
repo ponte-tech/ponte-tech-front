@@ -36,6 +36,7 @@ import type { UpdateImpostoRequest, TipoImposto, Imposto } from "@/app/types/imp
 import { TIPOS_IMPOSTO } from "@/app/types/imposto";
 import type { Empresa } from "@/app/types/empresa";
 import { PageHeader } from "@/app/shared/components";
+import { applyCurrencyMask, removeCurrencyMask, formatCurrency } from "@/app/utils/currencyMask";
 
 export default function EditarImpostoPage() {
   const router = useRouter();
@@ -60,6 +61,7 @@ export default function EditarImpostoPage() {
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [existingAnexos, setExistingAnexos] = useState<string[]>([]);
+  const [valorDisplay, setValorDisplay] = useState("R$ 0,00");
 
   useEffect(() => {
     loadData();
@@ -90,6 +92,7 @@ export default function EditarImpostoPage() {
         valor: impostoData.valor,
         anexos: [],
       });
+      setValorDisplay(formatCurrency(impostoData.valor));
     } catch (err) {
       console.error("Erro ao carregar dados:", err);
       setError("Erro ao carregar dados do imposto");
@@ -100,6 +103,13 @@ export default function EditarImpostoPage() {
 
   const handleChange = (field: keyof UpdateImpostoRequest, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleValorChange = (value: string) => {
+    const masked = applyCurrencyMask(value);
+    const numeric = removeCurrencyMask(masked);
+    setValorDisplay(masked);
+    setFormData((prev) => ({ ...prev, valor: numeric }));
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -267,16 +277,12 @@ export default function EditarImpostoPage() {
 
               {/* Valor */}
               <TextField
-                label="Valor (R$)"
-                type="number"
-                value={formData.valor}
-                onChange={(e) => handleChange("valor", parseFloat(e.target.value))}
+                label="Valor"
+                value={valorDisplay}
+                onChange={(e) => handleValorChange(e.target.value)}
                 required
                 fullWidth
-                inputProps={{
-                  min: 0,
-                  step: 0.01,
-                }}
+                placeholder="R$ 0,00"
               />
 
               {/* Anexos Existentes */}

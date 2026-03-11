@@ -35,6 +35,7 @@ import type { CreateImpostoRequest, TipoImposto } from "@/app/types/imposto";
 import { TIPOS_IMPOSTO } from "@/app/types/imposto";
 import type { Empresa } from "@/app/types/empresa";
 import { PageHeader } from "@/app/shared/components";
+import { applyCurrencyMask, removeCurrencyMask } from "@/app/utils/currencyMask";
 
 interface FileWithType {
   file: File;
@@ -58,6 +59,7 @@ export default function NovoImpostoPage() {
   });
 
   const [selectedFiles, setSelectedFiles] = useState<FileWithType[]>([]);
+  const [valorDisplay, setValorDisplay] = useState("R$ 0,00");
 
   useEffect(() => {
     loadEmpresas();
@@ -85,6 +87,13 @@ export default function NovoImpostoPage() {
 
   const handleChange = (field: keyof CreateImpostoRequest, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleValorChange = (value: string) => {
+    const masked = applyCurrencyMask(value);
+    const numeric = removeCurrencyMask(masked);
+    setValorDisplay(masked);
+    setFormData((prev) => ({ ...prev, valor: numeric }));
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -277,16 +286,12 @@ export default function NovoImpostoPage() {
 
               {/* Valor */}
               <TextField
-                label="Valor (R$)"
-                type="number"
-                value={formData.valor}
-                onChange={(e) => handleChange("valor", parseFloat(e.target.value))}
+                label="Valor"
+                value={valorDisplay}
+                onChange={(e) => handleValorChange(e.target.value)}
                 required
                 fullWidth
-                inputProps={{
-                  min: 0,
-                  step: 0.01,
-                }}
+                placeholder="R$ 0,00"
               />
 
               {/* Upload de Arquivos */}

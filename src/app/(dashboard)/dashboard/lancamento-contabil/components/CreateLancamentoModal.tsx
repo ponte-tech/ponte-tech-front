@@ -14,6 +14,7 @@ import {
 import clienteService from "@/app/services/clienteService";
 import type { Cliente } from "@/app/types/cliente";
 import type { CreateLancamentoRequest } from "@/app/types/lancamentoContabil";
+import { applyCurrencyMask, removeCurrencyMask } from "@/app/utils/currencyMask";
 
 interface CreateLancamentoModalProps {
   open: boolean;
@@ -32,7 +33,7 @@ export default function CreateLancamentoModal({
   const [loadingClientes, setLoadingClientes] = useState(false);
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
   const [mesReferencia, setMesReferencia] = useState(defaultMesReferencia || "");
-  const [valorNotaFiscal, setValorNotaFiscal] = useState("");
+  const [valorNotaFiscal, setValorNotaFiscal] = useState("R$ 0,00");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -43,7 +44,7 @@ export default function CreateLancamentoModal({
       // Reset form when modal opens
       setSelectedCliente(null);
       setMesReferencia(defaultMesReferencia || "");
-      setValorNotaFiscal("");
+      setValorNotaFiscal("R$ 0,00");
       setError(null);
     }
   }, [open, defaultMesReferencia]);
@@ -74,8 +75,8 @@ export default function CreateLancamentoModal({
       return;
     }
 
-    const valor = parseFloat(valorNotaFiscal.replace(",", "."));
-    if (isNaN(valor) || valor <= 0) {
+    const valor = removeCurrencyMask(valorNotaFiscal);
+    if (valor <= 0) {
       setError("Valor deve ser maior que zero");
       return;
     }
@@ -159,13 +160,9 @@ export default function CreateLancamentoModal({
             <TextField
               label="Valor da Nota Fiscal"
               value={valorNotaFiscal}
-              onChange={(e) => setValorNotaFiscal(e.target.value)}
-              placeholder="0,00"
+              onChange={(e) => setValorNotaFiscal(applyCurrencyMask(e.target.value))}
+              placeholder="R$ 0,00"
               required
-              InputProps={{
-                startAdornment: <Box sx={{ mr: 1 }}>R$</Box>,
-              }}
-              helperText="Use vírgula para separar decimais (ex: 1500,00)"
             />
           </Box>
         </DialogContent>

@@ -20,6 +20,7 @@ import { Add as AddIcon } from "@mui/icons-material";
 import { useState } from "react";
 import contratosService from "@/app/services/contratosService";
 import type { CreateContratoRequest } from "@/app/types/api";
+import { applyCurrencyMask, removeCurrencyMask, formatCurrency } from "@/app/utils/currencyMask";
 
 interface ContractFormProps {
   userId: string;
@@ -31,6 +32,7 @@ export default function ContractForm({ userId, onContractAdded }: ContractFormPr
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [valorHoraDisplay, setValorHoraDisplay] = useState("R$ 0,00");
 
   const [formData, setFormData] = useState<CreateContratoRequest>({
     data_inicio: "",
@@ -44,6 +46,14 @@ export default function ContractForm({ userId, onContractAdded }: ContractFormPr
 
   const handleChange = (field: keyof CreateContratoRequest, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    setError(null);
+  };
+
+  const handleValorHoraChange = (value: string) => {
+    const masked = applyCurrencyMask(value);
+    const numeric = removeCurrencyMask(masked);
+    setValorHoraDisplay(masked);
+    setFormData((prev) => ({ ...prev, valor_hora: numeric }));
     setError(null);
   };
 
@@ -88,6 +98,7 @@ export default function ContractForm({ userId, onContractAdded }: ContractFormPr
         chave_pix: "",
         data_pagamento: "5",
       });
+      setValorHoraDisplay("R$ 0,00");
 
       setTimeout(() => {
         setShowForm(false);
@@ -164,13 +175,12 @@ export default function ContractForm({ userId, onContractAdded }: ContractFormPr
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
-                    label="Valor por Hora (R$)"
-                    type="number"
+                    label="Valor por Hora"
                     required
-                    value={formData.valor_hora}
-                    onChange={(e) => handleChange("valor_hora", parseFloat(e.target.value))}
+                    value={valorHoraDisplay}
+                    onChange={(e) => handleValorHoraChange(e.target.value)}
                     disabled={loading}
-                    inputProps={{ min: 0, step: 0.01 }}
+                    placeholder="R$ 0,00"
                   />
                 </Grid>
 
