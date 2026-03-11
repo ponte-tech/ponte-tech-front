@@ -18,6 +18,7 @@ import {
   InputAdornment,
   LinearProgress,
   Chip,
+  alpha,
 } from "@mui/material";
 import { useAuth } from "@/app/hooks/useAuth";
 import { useState, useEffect, useRef } from "react";
@@ -80,17 +81,16 @@ export default function ProfilePage() {
     }
   }, [user]);
 
-  // Track changes
+  // Track changes (only editable fields)
   useEffect(() => {
     if (user) {
       const changed =
         name !== (user.name || "") ||
-        email !== (user.email || "") ||
         phone !== "" ||
-        role !== (user.role || "");
+        avatarPreview !== null;
       setHasChanges(changed);
     }
-  }, [name, email, phone, role, user]);
+  }, [name, phone, avatarPreview, user]);
 
   // Calculate password strength
   useEffect(() => {
@@ -149,16 +149,6 @@ export default function ProfilePage() {
       isValid = false;
     }
 
-    // Validate email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email.trim()) {
-      newErrors.email = "Email é obrigatório";
-      isValid = false;
-    } else if (!emailRegex.test(email)) {
-      newErrors.email = "Email inválido";
-      isValid = false;
-    }
-
     // Validate phone (optional but must be valid if provided)
     if (phone) {
       const phoneRegex = /^\(\d{2}\)\s?\d{4,5}-?\d{4}$/;
@@ -207,9 +197,7 @@ export default function ProfilePage() {
   const handleCancel = () => {
     if (user) {
       setName(user.name || "");
-      setEmail(user.email || "");
       setPhone("");
-      setRole(user.role || "");
       setAvatarPreview(null);
       setErrors({ name: "", email: "", phone: "" });
       setHasChanges(false);
@@ -305,8 +293,28 @@ export default function ProfilePage() {
 
     setLoadingPassword(true);
     try {
-      // TODO: Implementar alteração de senha no backend
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const response = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          currentPassword: currentPassword,
+          newPassword: newPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to change password");
+      }
 
       setSnackbar({
         open: true,
@@ -318,10 +326,10 @@ export default function ProfilePage() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-    } catch (error) {
+    } catch (error: any) {
       setSnackbar({
         open: true,
-        message: "Erro ao alterar senha. Verifique sua senha atual.",
+        message: error.message || "Erro ao alterar senha. Verifique sua senha atual.",
         severity: "error",
       });
     } finally {
@@ -334,21 +342,44 @@ export default function ProfilePage() {
       <Box>
         <Skeleton variant="text" width={200} height={60} sx={{ mb: 4 }} />
         <Grid container spacing={3}>
-          <Grid item xs={12} md={4}>
-            <Paper elevation={2} sx={{ p: 3, textAlign: "center" }}>
-              <Skeleton variant="circular" width={120} height={120} sx={{ mx: "auto", mb: 2 }} />
-              <Skeleton variant="text" height={40} sx={{ mb: 1 }} />
-              <Skeleton variant="text" height={30} sx={{ mb: 2 }} />
-              <Skeleton variant="rectangular" height={40} />
+          {/* Avatar Section Skeleton */}
+          <Grid item xs={12}>
+            <Paper elevation={2} sx={{ p: 3 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <Skeleton variant="circular" width={120} height={120} />
+                <Box sx={{ flex: 1 }}>
+                  <Skeleton variant="text" width="60%" height={40} sx={{ mb: 1 }} />
+                  <Skeleton variant="text" width="40%" height={30} sx={{ mb: 1 }} />
+                  <Skeleton variant="text" width="50%" height={20} />
+                </Box>
+              </Box>
             </Paper>
           </Grid>
-          <Grid item xs={12} md={8}>
+          {/* Info Cards Skeleton */}
+          <Grid item xs={12} md={6}>
+            <Paper elevation={2} sx={{ p: 3 }}>
+              <Skeleton variant="text" height={40} sx={{ mb: 2 }} />
+              <Skeleton variant="rectangular" height={56} sx={{ mb: 2 }} />
+              <Skeleton variant="rectangular" height={56} sx={{ mb: 2 }} />
+              <Skeleton variant="rectangular" height={40} width={120} sx={{ ml: "auto" }} />
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Paper elevation={2} sx={{ p: 3 }}>
+              <Skeleton variant="text" height={40} sx={{ mb: 2 }} />
+              <Skeleton variant="rectangular" height={56} sx={{ mb: 2 }} />
+              <Skeleton variant="rectangular" height={56} />
+            </Paper>
+          </Grid>
+          {/* Security Section Skeleton */}
+          <Grid item xs={12}>
             <Paper elevation={2} sx={{ p: 3 }}>
               <Skeleton variant="text" height={40} sx={{ mb: 3 }} />
               <Skeleton variant="rectangular" height={56} sx={{ mb: 2 }} />
-              <Skeleton variant="rectangular" height={56} sx={{ mb: 2 }} />
-              <Skeleton variant="rectangular" height={56} sx={{ mb: 2 }} />
-              <Skeleton variant="rectangular" height={56} />
+              <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+                <Skeleton variant="rectangular" height={56} sx={{ flex: 1 }} />
+                <Skeleton variant="rectangular" height={56} sx={{ flex: 1 }} />
+              </Box>
             </Paper>
           </Grid>
         </Grid>
@@ -370,157 +401,118 @@ export default function ProfilePage() {
       </Box>
 
       <Grid container spacing={3}>
-        <Grid item xs={12} md={4}>
-          <Paper elevation={2} sx={{ p: 3, textAlign: "center" }}>
-            <Box sx={{ position: "relative", display: "inline-block" }}>
-              <Avatar
-                src={avatarPreview || undefined}
-                sx={{
-                  width: 120,
-                  height: 120,
-                  mx: "auto",
-                  mb: 2,
-                  bgcolor: "primary.main",
-                  fontSize: 48,
-                  cursor: "pointer",
-                  transition: "all 0.3s",
-                  "&:hover": {
-                    opacity: 0.8,
-                    transform: "scale(1.05)",
-                  },
-                }}
-                onClick={handleAvatarClick}
-              >
-                {!avatarPreview && (user?.name?.charAt(0) || "U")}
-              </Avatar>
-              <Tooltip title="Alterar foto">
-                <IconButton
+        {/* Avatar Section */}
+        <Grid item xs={12}>
+          <Paper elevation={2} sx={{ p: 3 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 4, flexDirection: { xs: "column", sm: "row" } }}>
+              <Box sx={{ position: "relative", flexShrink: 0 }}>
+                <Avatar
+                  src={avatarPreview || undefined}
                   sx={{
-                    position: "absolute",
-                    bottom: 16,
-                    right: -8,
+                    width: 120,
+                    height: 120,
                     bgcolor: "primary.main",
-                    color: "white",
-                    "&:hover": { bgcolor: "primary.dark" },
-                    width: 36,
-                    height: 36,
+                    fontSize: 48,
+                    cursor: "pointer",
+                    transition: "all 0.3s",
+                    "&:hover": {
+                      opacity: 0.8,
+                      transform: "scale(1.05)",
+                    },
                   }}
                   onClick={handleAvatarClick}
                 >
-                  <CameraAltIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
+                  {!avatarPreview && (user?.name?.charAt(0) || "U")}
+                </Avatar>
+                <Tooltip title="Alterar foto">
+                  <IconButton
+                    sx={{
+                      position: "absolute",
+                      bottom: 0,
+                      right: 0,
+                      bgcolor: "primary.main",
+                      color: "white",
+                      "&:hover": { bgcolor: "primary.dark" },
+                      width: 36,
+                      height: 36,
+                    }}
+                    onClick={handleAvatarClick}
+                  >
+                    <CameraAltIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={handleAvatarChange}
+                />
+              </Box>
+              <Box sx={{ flex: 1, textAlign: { xs: "center", sm: "left" } }}>
+                <Typography variant="h5" fontWeight={600} gutterBottom>
+                  {user?.name}
+                </Typography>
+                <Typography color="text.secondary" variant="body1" sx={{ mb: 1 }}>
+                  {user?.email}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Formatos aceitos: JPG, PNG, GIF • Tamanho máximo: 5MB
+                </Typography>
+              </Box>
             </Box>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={handleAvatarChange}
-            />
-            <Typography variant="h6" gutterBottom>
-              {user?.name}
-            </Typography>
-            <Typography color="text.secondary" variant="body2" sx={{ mb: 2 }}>
-              {user?.email}
-            </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 2 }}>
-              Formatos aceitos: JPG, PNG, GIF
-              <br />
-              Tamanho máximo: 5MB
-            </Typography>
           </Paper>
         </Grid>
 
-        <Grid item xs={12} md={8}>
-          <Paper elevation={2} sx={{ p: 3 }}>
+        {/* Personal Information */}
+        <Grid item xs={12} md={6}>
+          <Paper elevation={2} sx={{ p: 3, height: "100%" }}>
             <Typography variant="h6" gutterBottom fontWeight={600}>
               Informações Pessoais
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Mantenha suas informações atualizadas para melhor experiência
+              Atualize suas informações de contato
             </Typography>
             <Divider sx={{ mb: 3 }} />
 
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Nome Completo"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  error={!!errors.name}
-                  helperText={errors.name || "Digite seu nome completo"}
-                  disabled={loading}
-                  required
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <PersonIcon color="action" />
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  error={!!errors.email}
-                  helperText={errors.email || "Seu endereço de email principal"}
-                  disabled={loading}
-                  required
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <EmailIcon color="action" />
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Telefone"
-                  value={phone}
-                  onChange={(e) => handlePhoneChange(e.target.value)}
-                  error={!!errors.phone}
-                  helperText={errors.phone || "Formato: (00) 00000-0000"}
-                  placeholder="(00) 00000-0000"
-                  disabled={loading}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <PhoneIcon color="action" />
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Cargo"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  helperText="Seu cargo ou função na empresa"
-                  disabled={loading}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <WorkIcon color="action" />
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </Grid>
-            </Grid>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <TextField
+                fullWidth
+                label="Nome Completo"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                error={!!errors.name}
+                helperText={errors.name || "Digite seu nome completo"}
+                disabled={loading}
+                required
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PersonIcon color="action" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                fullWidth
+                label="Telefone"
+                value={phone}
+                onChange={(e) => handlePhoneChange(e.target.value)}
+                error={!!errors.phone}
+                helperText={errors.phone || "Formato: (00) 00000-0000"}
+                placeholder="(00) 00000-0000"
+                disabled={loading}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PhoneIcon color="action" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Box>
 
-            <Box sx={{ mt: 4, display: "flex", gap: 2, justifyContent: "flex-end" }}>
+            <Box sx={{ mt: 3, display: "flex", gap: 2, justifyContent: "flex-end" }}>
               <Button
                 variant="outlined"
                 size="large"
@@ -536,8 +528,55 @@ export default function ProfilePage() {
                 disabled={loading || !hasChanges}
                 startIcon={loading ? <CircularProgress size={20} /> : null}
               >
-                {loading ? "Salvando..." : "Salvar Alterações"}
+                {loading ? "Salvando..." : "Salvar"}
               </Button>
+            </Box>
+          </Paper>
+        </Grid>
+
+        {/* Account Information - Read Only */}
+        <Grid item xs={12} md={6}>
+          <Paper elevation={2} sx={{ p: 3, height: "100%", bgcolor: alpha("#f5f5f5", 0.5) }}>
+            <Typography variant="h6" gutterBottom fontWeight={600}>
+              Informações da Conta
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Dados gerenciados pelo sistema
+            </Typography>
+            <Divider sx={{ mb: 3 }} />
+
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <TextField
+                fullWidth
+                label="Email"
+                type="email"
+                value={email}
+                disabled
+                helperText="Email não pode ser alterado"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <EmailIcon color="action" />
+                    </InputAdornment>
+                  ),
+                  readOnly: true,
+                }}
+              />
+              <TextField
+                fullWidth
+                label="Cargo"
+                value={role}
+                disabled
+                helperText="Cargo gerenciado pelo administrador"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <WorkIcon color="action" />
+                    </InputAdornment>
+                  ),
+                  readOnly: true,
+                }}
+              />
             </Box>
           </Paper>
         </Grid>
