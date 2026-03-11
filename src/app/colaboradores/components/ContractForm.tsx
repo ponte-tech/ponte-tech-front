@@ -201,9 +201,9 @@ export default function ContractForm({ userId, onContractAdded }: ContractFormPr
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
-                    label="Valor Total Mensal (R$)"
+                    label="Valor Total Mensal"
                     type="text"
-                    value={`R$ ${(formData.valor_hora * formData.total_hora_mes).toFixed(2)}`}
+                    value={formatCurrency(formData.valor_hora * formData.total_hora_mes)}
                     disabled
                     InputProps={{
                       readOnly: true,

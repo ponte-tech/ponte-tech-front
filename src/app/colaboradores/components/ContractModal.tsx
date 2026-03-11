@@ -19,6 +19,7 @@ import { useState, useEffect } from "react";
 import type { CreateContratoRequest, Contrato } from "@/app/types/api";
 import clienteService from "@/app/services/clienteService";
 import type { Cliente } from "@/app/types/cliente";
+import { applyCurrencyMask, removeCurrencyMask, formatCurrency } from "@/app/utils/currencyMask";
 
 interface ContractModalProps {
   open: boolean;
@@ -43,6 +44,7 @@ export default function ContractModal({ open, onClose, onSave, loading = false, 
   const [validationError, setValidationError] = useState<string | null>(null);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
+  const [valorHoraDisplay, setValorHoraDisplay] = useState("R$ 0,00");
 
   // Load clientes when modal opens
   useEffect(() => {
@@ -60,6 +62,7 @@ export default function ContractModal({ open, onClose, onSave, loading = false, 
           valor_hora: editingContract.valor_hora,
           total_hora_mes: editingContract.total_hora_mes,
         });
+        setValorHoraDisplay(formatCurrency(editingContract.valor_hora));
       } else {
         // Resetar formulário para novo contrato
         setFormData({
@@ -71,6 +74,7 @@ export default function ContractModal({ open, onClose, onSave, loading = false, 
           valor_hora: 0,
           total_hora_mes: 160,
         });
+        setValorHoraDisplay("R$ 0,00");
       }
       setValidationError(null);
     }
@@ -90,6 +94,14 @@ export default function ContractModal({ open, onClose, onSave, loading = false, 
 
   const handleChange = (field: keyof CreateContratoRequest, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    setValidationError(null);
+  };
+
+  const handleValorHoraChange = (value: string) => {
+    const masked = applyCurrencyMask(value);
+    const numeric = removeCurrencyMask(masked);
+    setValorHoraDisplay(masked);
+    setFormData((prev) => ({ ...prev, valor_hora: numeric }));
     setValidationError(null);
   };
 
@@ -200,13 +212,12 @@ export default function ContractModal({ open, onClose, onSave, loading = false, 
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Valor por Hora (R$)"
-                type="number"
+                label="Valor por Hora"
                 required
-                value={formData.valor_hora}
-                onChange={(e) => handleChange("valor_hora", parseFloat(e.target.value))}
+                value={valorHoraDisplay}
+                onChange={(e) => handleValorHoraChange(e.target.value)}
                 disabled={loading}
-                inputProps={{ min: 0, step: 0.01 }}
+                placeholder="R$ 0,00"
               />
             </Grid>
 
@@ -227,9 +238,9 @@ export default function ContractModal({ open, onClose, onSave, loading = false, 
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Valor Total Mensal (R$)"
+                label="Valor Total Mensal"
                 type="text"
-                value={`R$ ${(formData.valor_hora * formData.total_hora_mes).toFixed(2)}`}
+                value={formatCurrency(formData.valor_hora * formData.total_hora_mes)}
                 disabled
                 InputProps={{
                   readOnly: true,
