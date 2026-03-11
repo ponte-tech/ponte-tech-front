@@ -65,28 +65,36 @@ export default function WhatsAppPage() {
   // Mobile view state
   const [showChat, setShowChat] = useState(false);
 
-  // Load conversations
-  const loadConversations = useCallback(async () => {
+  // Load conversations (with loading indicator)
+  const loadConversations = useCallback(async (silent = false) => {
     try {
-      setLoadingConversations(true);
+      if (!silent) {
+        setLoadingConversations(true);
+      }
       const response = await comunicacaoService.listConversations({ limit: 100 });
       setConversations(response.conversations || []);
     } catch (error: any) {
       console.error("Erro ao carregar conversas:", error);
-      setSnackbar({
-        open: true,
-        message: error.message || "Erro ao carregar conversas",
-        severity: "error",
-      });
+      if (!silent) {
+        setSnackbar({
+          open: true,
+          message: error.message || "Erro ao carregar conversas",
+          severity: "error",
+        });
+      }
     } finally {
-      setLoadingConversations(false);
+      if (!silent) {
+        setLoadingConversations(false);
+      }
     }
   }, []);
 
-  // Load messages for selected conversation
-  const loadMessages = useCallback(async (phone: string) => {
+  // Load messages for selected conversation (with loading indicator)
+  const loadMessages = useCallback(async (phone: string, silent = false) => {
     try {
-      setLoadingMessages(true);
+      if (!silent) {
+        setLoadingMessages(true);
+      }
       const response = await comunicacaoService.listMessages(phone, { limit: 100 });
       setMessages(response.messages || []);
 
@@ -101,13 +109,17 @@ export default function WhatsAppPage() {
       );
     } catch (error: any) {
       console.error("Erro ao carregar mensagens:", error);
-      setSnackbar({
-        open: true,
-        message: error.message || "Erro ao carregar mensagens",
-        severity: "error",
-      });
+      if (!silent) {
+        setSnackbar({
+          open: true,
+          message: error.message || "Erro ao carregar mensagens",
+          severity: "error",
+        });
+      }
     } finally {
-      setLoadingMessages(false);
+      if (!silent) {
+        setLoadingMessages(false);
+      }
     }
   }, []);
 
@@ -228,16 +240,19 @@ export default function WhatsAppPage() {
   // Initial load
   useEffect(() => {
     if (isAuthenticated) {
-      loadConversations();
+      loadConversations(); // Com loading na primeira carga
       loadColaboradores();
 
-      // Auto-refresh every 30 seconds
+      // Auto-refresh every 5 seconds (polling for new messages)
       const interval = setInterval(() => {
-        loadConversations();
-        if (selectedPhone) {
-          loadMessages(selectedPhone);
+        // Only poll if tab is visible
+        if (!document.hidden) {
+          loadConversations(true); // SILENT mode - sem loading
+          if (selectedPhone) {
+            loadMessages(selectedPhone, true); // SILENT mode - sem loading
+          }
         }
-      }, 30000);
+      }, 5000); // 5 seconds for more responsive updates
 
       return () => clearInterval(interval);
     }
