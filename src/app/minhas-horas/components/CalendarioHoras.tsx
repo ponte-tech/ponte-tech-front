@@ -33,18 +33,18 @@ export default function CalendarioHoras({
 }: CalendarioHorasProps) {
   const theme = useTheme();
 
-  // Paleta de cores moderna para clientes (gradientes e cores vibrantes)
+  // Paleta de cores harmoniosa com a identidade visual roxa
   const clienteColors = [
-    { bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', border: '#667eea', text: '#FFFFFF', solid: '#667eea' }, // Roxo/Azul
-    { bg: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', border: '#f093fb', text: '#FFFFFF', solid: '#f093fb' }, // Rosa
-    { bg: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', border: '#4facfe', text: '#FFFFFF', solid: '#4facfe' }, // Azul Ciano
-    { bg: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', border: '#43e97b', text: '#FFFFFF', solid: '#43e97b' }, // Verde
-    { bg: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', border: '#fa709a', text: '#FFFFFF', solid: '#fa709a' }, // Pêssego
-    { bg: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)', border: '#30cfd0', text: '#FFFFFF', solid: '#30cfd0' }, // Azul Escuro
-    { bg: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)', border: '#a8edea', text: '#333333', solid: '#a8edea' }, // Pastel
-    { bg: 'linear-gradient(135deg, #ff9a56 0%, #ff6a88 100%)', border: '#ff9a56', text: '#FFFFFF', solid: '#ff9a56' }, // Laranja/Rosa
-    { bg: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)', border: '#ffecd2', text: '#333333', solid: '#ffecd2' }, // Pêssego Claro
-    { bg: 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)', border: '#a1c4fd', text: '#333333', solid: '#a1c4fd' }, // Azul Claro
+    { bg: 'linear-gradient(135deg, #8270FF 0%, #a78bfa 100%)', border: '#8270FF', text: '#FFFFFF', solid: '#8270FF' }, // Roxo Principal
+    { bg: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', border: '#6366f1', text: '#FFFFFF', solid: '#6366f1' }, // Índigo
+    { bg: 'linear-gradient(135deg, #ec4899 0%, #f472b6 100%)', border: '#ec4899', text: '#FFFFFF', solid: '#ec4899' }, // Rosa Vibrante
+    { bg: 'linear-gradient(135deg, #a78bfa 0%, #c4b5fd 100%)', border: '#a78bfa', text: '#FFFFFF', solid: '#a78bfa' }, // Lilás
+    { bg: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)', border: '#06b6d4', text: '#FFFFFF', solid: '#06b6d4' }, // Ciano/Azul
+    { bg: 'linear-gradient(135deg, #d946ef 0%, #f0abfc 100%)', border: '#d946ef', text: '#FFFFFF', solid: '#d946ef' }, // Fúcsia
+    { bg: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)', border: '#7c3aed', text: '#FFFFFF', solid: '#7c3aed' }, // Roxo Escuro
+    { bg: 'linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%)', border: '#8b5cf6', text: '#FFFFFF', solid: '#8b5cf6' }, // Violeta
+    { bg: 'linear-gradient(135deg, #6366f1 0%, #818cf8 100%)', border: '#6366f1', text: '#FFFFFF', solid: '#6366f1' }, // Índigo Claro
+    { bg: 'linear-gradient(135deg, #8b5cf6 0%, #c084fc 100%)', border: '#8b5cf6', text: '#FFFFFF', solid: '#8b5cf6' }, // Roxo Médio
   ];
 
   // Função para gerar cor consistente baseada no nome do cliente
@@ -70,13 +70,13 @@ export default function CalendarioHoras({
           title: `🎉 ${dia.nome_feriado || 'Feriado'}`,
           start: dia.data,
           allDay: true,
-          backgroundColor: '#ff6b6b',
-          borderColor: '#ff6b6b',
+          backgroundColor: '#f43f5e',
+          borderColor: '#f43f5e',
           textColor: '#FFFFFF',
           extendedProps: {
             tipo: 'feriado',
             data: dia.data,
-            gradient: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)',
+            gradient: 'linear-gradient(135deg, #f43f5e 0%, #fb7185 100%)',
           },
         });
       }
@@ -177,12 +177,12 @@ export default function CalendarioHoras({
               fontSize: '0.7rem',
               color: '#FFFFFF',
               fontWeight: 600,
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              background: 'linear-gradient(135deg, #8270FF 0%, #a78bfa 100%)',
               px: 1,
               py: 0.25,
               borderRadius: '12px',
               mt: 0.5,
-              boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)',
+              boxShadow: '0 2px 4px rgba(130, 112, 255, 0.3)',
             }}
           >
             {totalHoras.toFixed(1)}h
@@ -372,15 +372,15 @@ export default function CalendarioHoras({
               label="Feriado"
               size="medium"
               sx={{
-                background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)',
+                background: 'linear-gradient(135deg, #f43f5e 0%, #fb7185 100%)',
                 color: '#FFFFFF',
                 fontWeight: 600,
                 border: 'none',
-                boxShadow: '0 2px 8px rgba(255, 107, 107, 0.3)',
+                boxShadow: '0 2px 8px rgba(244, 63, 94, 0.3)',
                 transition: 'all 0.2s ease',
                 '&:hover': {
                   transform: 'translateY(-2px)',
-                  boxShadow: '0 4px 12px rgba(255, 107, 107, 0.4)',
+                  boxShadow: '0 4px 12px rgba(244, 63, 94, 0.4)',
                 },
                 '& .MuiChip-icon': {
                   fontSize: '1rem',
