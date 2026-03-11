@@ -128,7 +128,7 @@ export default function CreateLancamentoModal({
       <form onSubmit={handleSubmit}>
         <DialogTitle
           sx={{
-            background: 'linear-gradient(135deg, #8270FF 0%, #a78bfa 100%)',
+            background: 'linear-gradient(135deg, #8270FF 0%, #411EFE 100%)',
             color: '#FFFFFF',
             display: 'flex',
             alignItems: 'center',
@@ -238,7 +238,7 @@ export default function CreateLancamentoModal({
                   width: 40,
                   height: 40,
                   borderRadius: 2,
-                  background: 'linear-gradient(135deg, #8270FF 0%, #a78bfa 100%)',
+                  background: 'linear-gradient(135deg, #8270FF 0%, #411EFE 100%)',
                   opacity: 0.1,
                   pointerEvents: 'none',
                   zIndex: 0,
@@ -364,7 +364,7 @@ export default function CreateLancamentoModal({
             variant="contained"
             disabled={submitting || !selectedCliente || !mesReferencia || !valorNotaFiscal}
             sx={{
-              background: 'linear-gradient(135deg, #8270FF 0%, #a78bfa 100%)',
+              background: 'linear-gradient(135deg, #8270FF 0%, #411EFE 100%)',
               boxShadow: '0 4px 12px rgba(130, 112, 255, 0.3)',
               borderRadius: 2,
               textTransform: 'none',
@@ -373,9 +373,9 @@ export default function CreateLancamentoModal({
               py: 1,
               transition: 'all 0.3s ease',
               '&:hover': {
-                background: 'linear-gradient(135deg, #7059e5 0%, #9575e6 100%)',
+                background: 'linear-gradient(135deg, #411EFE 0%, #8270FF 100%)',
                 transform: 'translateY(-2px)',
-                boxShadow: '0 6px 20px rgba(130, 112, 255, 0.4)',
+                boxShadow: '0 6px 20px rgba(65, 30, 254, 0.4)',
               },
               '&:disabled': {
                 background: alpha('#8270FF', 0.3),

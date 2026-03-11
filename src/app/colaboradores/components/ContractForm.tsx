@@ -279,7 +279,7 @@ export default function ContractForm({ userId, onContractAdded }: ContractFormPr
                       disabled={loading}
                       sx={{
                         bgcolor: "#8270FF",
-                        "&:hover": { bgcolor: "#6c5ce7" },
+                        "&:hover": { bgcolor: "#411EFE" },
                         textTransform: "none",
                       }}
                     >

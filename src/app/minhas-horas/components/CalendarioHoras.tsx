@@ -33,18 +33,19 @@ export default function CalendarioHoras({
 }: CalendarioHorasProps) {
   const theme = useTheme();
 
-  // Paleta de cores harmoniosa com a identidade visual roxa
+  // Paleta de cores oficial da identidade visual Ponte Tech
+  // Roxo Inovação: #8270FF | Azul Conexão: #411EFE | Rosa Digital: #E363EB
   const clienteColors = [
-    { bg: 'linear-gradient(135deg, #8270FF 0%, #a78bfa 100%)', border: '#8270FF', text: '#FFFFFF', solid: '#8270FF' }, // Roxo Principal
-    { bg: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', border: '#6366f1', text: '#FFFFFF', solid: '#6366f1' }, // Índigo
-    { bg: 'linear-gradient(135deg, #ec4899 0%, #f472b6 100%)', border: '#ec4899', text: '#FFFFFF', solid: '#ec4899' }, // Rosa Vibrante
-    { bg: 'linear-gradient(135deg, #a78bfa 0%, #c4b5fd 100%)', border: '#a78bfa', text: '#FFFFFF', solid: '#a78bfa' }, // Lilás
-    { bg: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)', border: '#06b6d4', text: '#FFFFFF', solid: '#06b6d4' }, // Ciano/Azul
-    { bg: 'linear-gradient(135deg, #d946ef 0%, #f0abfc 100%)', border: '#d946ef', text: '#FFFFFF', solid: '#d946ef' }, // Fúcsia
-    { bg: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)', border: '#7c3aed', text: '#FFFFFF', solid: '#7c3aed' }, // Roxo Escuro
-    { bg: 'linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%)', border: '#8b5cf6', text: '#FFFFFF', solid: '#8b5cf6' }, // Violeta
-    { bg: 'linear-gradient(135deg, #6366f1 0%, #818cf8 100%)', border: '#6366f1', text: '#FFFFFF', solid: '#6366f1' }, // Índigo Claro
-    { bg: 'linear-gradient(135deg, #8b5cf6 0%, #c084fc 100%)', border: '#8b5cf6', text: '#FFFFFF', solid: '#8b5cf6' }, // Roxo Médio
+    { bg: 'linear-gradient(135deg, #8270FF 0%, #411EFE 100%)', border: '#8270FF', text: '#FFFFFF', solid: '#8270FF' }, // Roxo → Azul
+    { bg: 'linear-gradient(135deg, #411EFE 0%, #8270FF 100%)', border: '#411EFE', text: '#FFFFFF', solid: '#411EFE' }, // Azul → Roxo
+    { bg: 'linear-gradient(135deg, #8270FF 0%, #E363EB 100%)', border: '#8270FF', text: '#FFFFFF', solid: '#8270FF' }, // Roxo → Rosa
+    { bg: 'linear-gradient(135deg, #E363EB 0%, #8270FF 100%)', border: '#E363EB', text: '#FFFFFF', solid: '#E363EB' }, // Rosa → Roxo
+    { bg: 'linear-gradient(135deg, #411EFE 0%, #E363EB 100%)', border: '#411EFE', text: '#FFFFFF', solid: '#411EFE' }, // Azul → Rosa
+    { bg: 'linear-gradient(135deg, #E363EB 0%, #411EFE 100%)', border: '#E363EB', text: '#FFFFFF', solid: '#E363EB' }, // Rosa → Azul
+    { bg: 'linear-gradient(135deg, #8270FF 0%, #8270FF 100%)', border: '#8270FF', text: '#FFFFFF', solid: '#8270FF' }, // Roxo sólido
+    { bg: 'linear-gradient(135deg, #411EFE 0%, #411EFE 100%)', border: '#411EFE', text: '#FFFFFF', solid: '#411EFE' }, // Azul sólido
+    { bg: 'linear-gradient(135deg, #E363EB 0%, #E363EB 100%)', border: '#E363EB', text: '#FFFFFF', solid: '#E363EB' }, // Rosa sólido
+    { bg: 'linear-gradient(135deg, #8270FF 30%, #411EFE 70%, #E363EB 100%)', border: '#8270FF', text: '#FFFFFF', solid: '#8270FF' }, // Tricolor completo
   ];
 
   // Função para gerar cor consistente baseada no nome do cliente
