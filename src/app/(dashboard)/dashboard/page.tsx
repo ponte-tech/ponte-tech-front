@@ -57,10 +57,6 @@ export default function DashboardPage() {
   // Check if user is admin
   const isAdmin = userRole === 'admin' || userPerfis?.includes('admin');
 
-    isColaborador,
-    isAdmin
-  });
-
   // Render appropriate dashboard based on user role
   if (isAdmin) {
     return <DashboardAdmin />;
