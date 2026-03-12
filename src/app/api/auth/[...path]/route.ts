@@ -44,12 +44,10 @@ async function proxyRequest(
     const searchParams = request.nextUrl.searchParams.toString();
     const url = `${API_BASE_URL}/api/auth/${pathname}${searchParams ? `?${searchParams}` : ''}`;
 
-    console.log(`🔄 [AUTH-PROXY] ${method} ${url}`);
 
     // Extrair headers importantes
     const authorization = request.headers.get('authorization');
     if (authorization) {
-      console.log('🔑 [AUTH-PROXY] Authorization header:', `${authorization.substring(0, 30)}...`);
     }
 
     const headers: HeadersInit = {
@@ -66,7 +64,6 @@ async function proxyRequest(
     if (method === 'POST' || method === 'PUT') {
       const requestBody = await request.json();
       body = JSON.stringify(requestBody);
-      console.log('📦 [AUTH-PROXY] Request body:', JSON.stringify(requestBody, null, 2));
     }
 
     // Fazer request para a API
@@ -76,7 +73,6 @@ async function proxyRequest(
       body,
     });
 
-    console.log(`📡 [AUTH-PROXY] Response status: ${response.status}`);
 
     // Obter response body
     const data = await response.text();

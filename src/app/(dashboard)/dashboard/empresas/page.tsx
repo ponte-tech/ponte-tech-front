@@ -45,12 +45,8 @@ export default function EmpresasPage() {
   const loadEmpresas = async () => {
     try {
       setLoading(true);
-      console.log('📋 [EMPRESAS] Iniciando carregamento...');
       const response = await empresaService.list();
-      console.log('📋 [EMPRESAS] Resposta recebida:', response);
-      console.log('📋 [EMPRESAS] Empresas:', response.empresas);
       setEmpresas(response.empresas || []);
-      console.log('📋 [EMPRESAS] Total de empresas carregadas:', response.empresas?.length || 0);
     } catch (err) {
       console.error('❌ [EMPRESAS] Erro ao carregar:', err);
       const error = err as { response?: { data?: { message?: string } } };

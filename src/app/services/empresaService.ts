@@ -13,20 +13,14 @@ class EmpresaService {
    * Lista todas as empresas
    */
   async list(): Promise<ListEmpresasResponse> {
-    console.log('🔍 [EMPRESA-SERVICE] Fazendo request para:', this.baseUrl);
     const response = await api.get<any>(this.baseUrl);
-    console.log('🔍 [EMPRESA-SERVICE] Response completo:', response);
-    console.log('🔍 [EMPRESA-SERVICE] Response.data:', response.data);
-    console.log('🔍 [EMPRESA-SERVICE] Type of response.data:', typeof response.data);
 
     // A API retorna {"success":true,"data":{"empresas":[...]}}
     // Mas o frontend espera {"empresas":[...]}
     if (response.data?.success && response.data?.data) {
-      console.log('🔍 [EMPRESA-SERVICE] Estrutura com success/data detectada');
       return response.data.data;
     }
 
-    console.log('🔍 [EMPRESA-SERVICE] Retornando response.data diretamente');
     return response.data;
   }
 

@@ -33,11 +33,6 @@ export default function DashboardPage() {
     const token = getCookie("token");
     if (token) {
       const decodedToken = decodeJWT(token);
-      console.log('🎫 [DASHBOARD] JWT Token Decoded:', decodedToken);
-      console.log('📋 [DASHBOARD] JWT Profile Field:', decodedToken?.profile);
-      console.log('📋 [DASHBOARD] JWT User ID:', decodedToken?.user_id);
-      console.log('📋 [DASHBOARD] JWT Email:', decodedToken?.email);
-      console.log('📋 [DASHBOARD] JWT Expiration:', decodedToken?.exp ? new Date(decodedToken.exp * 1000).toLocaleString() : 'N/A');
     } else {
       console.error('❌ [DASHBOARD] No JWT token found in cookies');
     }
@@ -57,7 +52,6 @@ export default function DashboardPage() {
   const userPerfis = user?.perfis;
 
   // Debug logs
-  console.log('🔍 [DASHBOARD] User data:', {
     userRole,
     userPerfil,
     userPerfis,
@@ -70,7 +64,6 @@ export default function DashboardPage() {
   // Check if user is admin
   const isAdmin = userRole === 'admin' || userPerfis?.includes('admin');
 
-  console.log('🔍 [DASHBOARD] Role checks:', {
     isColaborador,
     isAdmin
   });

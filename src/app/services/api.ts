@@ -20,14 +20,8 @@ api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = getCookie("token");
 
-    console.log('🔑 [API] Token from cookie:', token ? `${token.substring(0, 20)}...` : 'null');
-    console.log('🌐 [API] Request:', config.method?.toUpperCase(), config.url);
-
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('✅ [API] Authorization header added');
-    } else {
-      console.warn('⚠️ [API] No token found - request will be unauthorized');
     }
 
     return config;

@@ -44,16 +44,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const storedUser = localStorage.getItem("user");
         const token = getCookie("token");
 
-        console.log('🔍 [AUTH] Checking auth on mount...');
-        console.log('👤 [AUTH] Stored user:', storedUser ? 'Found' : 'null');
-        console.log('🎫 [AUTH] Token:', token ? `${token.substring(0, 20)}...` : 'null');
 
         if (storedUser && token) {
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
-          console.log('✅ [AUTH] User restored:', parsedUser.email, '- Type:', parsedUser.userType);
         } else {
-          console.log('⚠️ [AUTH] No auth data found');
         }
       } catch (error) {
         console.error("Erro ao verificar autenticação:", error);
@@ -90,12 +85,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
 
       // Salvar token e usuário
-      console.log('🎫 [AUTH] Saving token:', response.token ? `${response.token.substring(0, 20)}...` : 'null');
-      console.log('👤 [AUTH] Saving user:', localUser);
       setCookie("token", response.token, 7); // Cookie válido por 7 dias
       localStorage.setItem("user", JSON.stringify(localUser));
       setUser(localUser);
-      console.log('✅ [AUTH] Login successful - token and user saved');
 
       // Se usuário tem múltiplos perfis, redirecionar para seleção
       if (response.user.perfis && response.user.perfis.length > 1) {

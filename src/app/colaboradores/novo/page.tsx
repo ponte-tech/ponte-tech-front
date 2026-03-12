@@ -68,7 +68,6 @@ export default function NovoColaboradorPage() {
   // Manter ref atualizado com o state de contracts
   useEffect(() => {
     contractsRef.current = contracts;
-    console.log("🔄 [CONTRACTS REF] Atualizado:", contracts.length, "contratos");
   }, [contracts]);
 
   // Carregar clientes
@@ -223,7 +222,6 @@ export default function NovoColaboradorPage() {
         return newErrors;
       });
 
-      console.log("✅ Endereço preenchido automaticamente via CEP");
     } catch (err) {
       console.error("Erro ao buscar CEP:", err);
       setFieldErrors((prev) => ({ ...prev, "endereco.cep": "Erro ao buscar CEP" }));
@@ -418,11 +416,8 @@ export default function NovoColaboradorPage() {
   const { totalHoras, totalValor } = calculateTotals();
 
   const handleAddContract = (contract: CreateContratoRequest) => {
-    console.log("📝 [NOVO COLABORADOR] Contrato adicionado à lista:", contract);
     setContracts((prev) => {
       const newContracts = [...prev, contract];
-      console.log("📋 [NOVO COLABORADOR] Total de contratos na lista:", newContracts.length);
-      console.log("📋 [NOVO COLABORADOR] Lista completa de contratos:", newContracts);
       return newContracts;
     });
     setModalOpen(false);
@@ -527,44 +522,30 @@ export default function NovoColaboradorPage() {
 
       // Usar o ref para garantir que temos a versão mais recente dos contratos
       const currentContracts = contractsRef.current;
-      console.log("📊 [NOVO COLABORADOR] INÍCIO DO SUBMIT");
-      console.log("📊 [NOVO COLABORADOR] Contratos do STATE:", contracts.length);
-      console.log("📊 [NOVO COLABORADOR] Contratos do REF:", currentContracts.length);
-      console.log("📊 [NOVO COLABORADOR] Lista de contratos:", JSON.stringify(currentContracts, null, 2));
 
       // Criar colaborador
-      console.log("👤 [NOVO COLABORADOR] Criando colaborador...");
       const response = await colaboradoresService.create(formData);
       const userId = response.user_id || response.id;
       setCreatedUserId(userId);
-      console.log("✅ [NOVO COLABORADOR] Colaborador criado:", response);
-      console.log("✅ [NOVO COLABORADOR] User ID extraído:", userId);
 
       // Aguardar 2 segundos para garantir que o colaborador foi persistido no DynamoDB
       if (currentContracts.length > 0 && userId) {
-        console.log("⏳ [NOVO COLABORADOR] Aguardando 2 segundos para garantir consistência do DynamoDB...");
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
 
       // Criar contratos associados usando o ref
-      console.log("📋 [NOVO COLABORADOR] Verificando contratos a serem criados...");
-      console.log("📋 [NOVO COLABORADOR] Quantidade de contratos:", currentContracts.length);
 
       if (currentContracts.length > 0 && userId) {
-        console.log("🚀 [NOVO COLABORADOR] Iniciando criação de contratos...");
         for (let i = 0; i < currentContracts.length; i++) {
           const contract = currentContracts[i];
-          console.log(`📝 [NOVO COLABORADOR] Criando contrato ${i + 1}/${currentContracts.length}:`, contract);
           try {
             const createdContract = await contratosService.create(userId, contract);
-            console.log(`✅ [NOVO COLABORADOR] Contrato ${i + 1} criado com sucesso:`, createdContract);
           } catch (contractError: any) {
             console.error(`❌ [NOVO COLABORADOR] Erro ao criar contrato ${i + 1}:`, contractError);
             console.error("❌ [NOVO COLABORADOR] Detalhes do erro:", contractError.response?.data || contractError.message);
             throw new Error(`Falha ao criar contrato ${i + 1}: ${contractError.response?.data?.message || contractError.message}`);
           }
         }
-        console.log("✅ [NOVO COLABORADOR] Todos os contratos foram criados!");
       } else {
         console.warn("⚠️ [NOVO COLABORADOR] Nenhum contrato será criado. Motivo:", {
           temContratos: currentContracts.length > 0,

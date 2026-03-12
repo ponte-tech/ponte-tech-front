@@ -39,7 +39,6 @@ export function useSSE(onNewMessage?: SSEEventHandler) {
     // Detectar quando a aba fica ativa/inativa
     const handleVisibilityChange = () => {
       isActiveRef.current = !document.hidden;
-      console.log(`👁️ [Polling] Tab is now ${isActiveRef.current ? "active" : "inactive"}`);
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);

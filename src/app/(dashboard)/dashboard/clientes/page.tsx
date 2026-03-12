@@ -62,18 +62,14 @@ export default function ClientesPage() {
   const loadClientes = async () => {
     try {
       setLoading(true);
-      console.log('📋 [CLIENTES] Iniciando carregamento...');
 
       const filters: any = {};
       if (filterStatus) filters.status = filterStatus;
 
       const response = await clienteService.list(filters);
-      console.log('📋 [CLIENTES] Resposta recebida:', response);
-      console.log('📋 [CLIENTES] Clientes:', response.clientes);
 
       // Log detalhado de cada cliente para verificar campos
       response.clientes?.forEach((cliente, index) => {
-        console.log(`📋 [CLIENTE-${index}] Dados:`, {
           cliente_id: cliente.cliente_id,
           empresa_id: cliente.empresa_id,
           empresa_razao_social: cliente.empresa_razao_social,
@@ -83,7 +79,6 @@ export default function ClientesPage() {
       });
 
       setClientes(response.clientes || []);
-      console.log('📋 [CLIENTES] Total de clientes carregados:', response.clientes?.length || 0);
     } catch (err) {
       console.error('❌ [CLIENTES] Erro ao carregar:', err);
       const error = err as { response?: { data?: { message?: string } } };

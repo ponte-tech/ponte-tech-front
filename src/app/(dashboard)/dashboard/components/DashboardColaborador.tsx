@@ -36,9 +36,7 @@ export default function DashboardColaborador() {
     try {
       setLoading(true);
       setError(null);
-      console.log("🔍 [DASHBOARD] Carregando dados do dashboard...");
       const data = await dashboardService.getDashboardColaborador();
-      console.log("✅ [DASHBOARD] Dados recebidos:", data);
 
       // Verificar se os dados estão vazios e mostrar aviso
       if (!data || Object.keys(data).length === 0) {

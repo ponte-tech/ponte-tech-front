@@ -44,7 +44,6 @@ async function proxyRequest(
     const searchParams = request.nextUrl.searchParams.toString();
     const url = `${API_BASE_URL}/api/admin/${pathname}${searchParams ? `?${searchParams}` : ''}`;
 
-    console.log(`🔄 [PROXY] ${method} ${url}`);
 
     // Extrair headers importantes
     const authorization = request.headers.get('authorization');

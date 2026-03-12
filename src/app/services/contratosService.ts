@@ -36,15 +36,12 @@ class ContratosService {
     userId: string,
     data: CreateContratoRequest
   ): Promise<Contrato> {
-    console.log("🔵 [CONTRATOS SERVICE] Criando contrato para user:", userId);
-    console.log("🔵 [CONTRATOS SERVICE] Payload do contrato:", JSON.stringify(data, null, 2));
 
     const response = await api.post<Contrato>(
       `${this.baseUrl}/${userId}/contratos`,
       data
     );
 
-    console.log("🟢 [CONTRATOS SERVICE] Contrato criado com sucesso:", response.data);
     return response.data;
   }
 

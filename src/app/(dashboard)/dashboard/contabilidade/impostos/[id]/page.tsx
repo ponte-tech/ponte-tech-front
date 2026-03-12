@@ -63,8 +63,6 @@ export default function DetalhesImpostoPage() {
     try {
       setLoading(true);
       const impostoData = await impostoService.getById(impostoId, empresaId);
-      console.log("📄 [DETALHES] Imposto carregado:", impostoData);
-      console.log("📎 [DETALHES] Total de anexos:", impostoData.anexos?.length || 0);
 
       setImposto(impostoData);
 
@@ -87,8 +85,6 @@ export default function DetalhesImpostoPage() {
 
     try {
       setDownloadingAnexoKey(anexo.s3_key);
-      console.log("📥 [DOWNLOAD] Iniciando download do anexo:", anexo.nome_arquivo);
-      console.log("📥 [DOWNLOAD] S3 Key:", anexo.s3_key);
 
       const response = await impostoService.getAnexoDownloadUrl(
         imposto.imposto_id,
@@ -96,7 +92,6 @@ export default function DetalhesImpostoPage() {
         anexo.s3_key
       );
 
-      console.log("✅ [DOWNLOAD] URL de download obtida:", response.download_url);
 
       // Abrir em nova aba para download
       window.open(response.download_url, "_blank");

@@ -242,7 +242,6 @@ export default function EditarColaboradorPage() {
         return newErrors;
       });
 
-      console.log("✅ Endereço preenchido automaticamente via CEP");
     } catch (err) {
       console.error("Erro ao buscar CEP:", err);
       setFieldErrors((prev) => ({ ...prev, "endereco.cep": "Erro ao buscar CEP" }));

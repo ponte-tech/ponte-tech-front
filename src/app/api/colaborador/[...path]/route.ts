@@ -44,17 +44,12 @@ async function proxyRequest(
     const searchParams = request.nextUrl.searchParams.toString();
     const url = `${API_BASE_URL}/api/colaborador/${pathname}${searchParams ? `?${searchParams}` : ''}`;
 
-    console.log(`🔄 [COLABORADOR-PROXY] ${method} ${url}`);
 
     // Extrair headers importantes
     const authorization = request.headers.get('authorization');
-    console.log('🔑 [COLABORADOR-PROXY] Authorization:', authorization ? 'Present' : 'Missing');
 
     // Debug: Log full authorization value
     if (authorization) {
-      console.log('🔑 [COLABORADOR-PROXY] Full Authorization value:', authorization);
-      console.log('🔑 [COLABORADOR-PROXY] Authorization length:', authorization.length);
-      console.log('🔑 [COLABORADOR-PROXY] Starts with Bearer:', authorization.startsWith('Bearer '));
     }
 
     const headers: HeadersInit = {
@@ -71,7 +66,6 @@ async function proxyRequest(
       try {
         const jsonBody = await request.json();
         body = JSON.stringify(jsonBody);
-        console.log('📦 [COLABORADOR-PROXY] Body:', body.substring(0, 100));
       } catch (err) {
         console.error('❌ [COLABORADOR-PROXY] Error parsing body:', err);
       }
@@ -84,11 +78,9 @@ async function proxyRequest(
       body,
     });
 
-    console.log(`📡 [COLABORADOR-PROXY] Response status: ${response.status}`);
 
     // Obter response body
     const data = await response.text();
-    console.log('📥 [COLABORADOR-PROXY] Response:', data.substring(0, 200));
 
     // Retornar response com mesmo status
     return new NextResponse(data, {

@@ -17,9 +17,7 @@ class LancamentoContabilService {
    * Lista todos os lançamentos contábeis filtrados por mês/ano
    */
   async list(params: ListLancamentosRequest): Promise<ListLancamentosResponse> {
-    console.log("🔍 [LANCAMENTO-CONTABIL-SERVICE] Listando lançamentos para:", params);
     const response = await api.get<any>(`${this.baseUrl}`, { params });
-    console.log("🔍 [LANCAMENTO-CONTABIL-SERVICE] Response:", response.data);
 
     // Compatibilidade com diferentes formatos de resposta
     if (response.data?.success && response.data?.data) {
@@ -33,9 +31,7 @@ class LancamentoContabilService {
    * Cria um novo lançamento contábil
    */
   async create(data: CreateLancamentoRequest): Promise<LancamentoContabil> {
-    console.log("➕ [LANCAMENTO-CONTABIL-SERVICE] Criando lançamento:", data);
     const response = await api.post<any>(`${this.baseUrl}`, data);
-    console.log("➕ [LANCAMENTO-CONTABIL-SERVICE] Response:", response.data);
 
     if (response.data?.success && response.data?.data) {
       return response.data.data;
@@ -48,9 +44,7 @@ class LancamentoContabilService {
    * Deleta um lançamento contábil
    */
   async delete(lancamentoId: string): Promise<void> {
-    console.log("🗑️ [LANCAMENTO-CONTABIL-SERVICE] Deletando lançamento:", lancamentoId);
     await api.delete(`${this.baseUrl}/${lancamentoId}`);
-    console.log("🗑️ [LANCAMENTO-CONTABIL-SERVICE] Lançamento deletado");
   }
 
   /**
@@ -60,7 +54,6 @@ class LancamentoContabilService {
     lancamentoId: string,
     data: UpdateValorNotaRequest
   ): Promise<LancamentoContabil> {
-    console.log("💰 [LANCAMENTO-CONTABIL-SERVICE] Atualizando valor:", lancamentoId, data);
     const response = await api.put<any>(
       `${this.baseUrl}/${lancamentoId}/valor`,
       data
@@ -80,7 +73,6 @@ class LancamentoContabilService {
   async initiateUpload(
     data: InitiateUploadNotaRequest
   ): Promise<InitiateUploadNotaResponse> {
-    console.log("📤 [LANCAMENTO-CONTABIL-SERVICE] Iniciando upload:", data);
     const response = await api.post<any>(
       `${this.baseUrl}/${data.lancamento_id}/notas-fiscais/upload/initiate`,
       {
@@ -90,7 +82,6 @@ class LancamentoContabilService {
       }
     );
 
-    console.log("📤 [LANCAMENTO-CONTABIL-SERVICE] Response upload:", response.data);
 
     if (response.data?.success && response.data?.data) {
       return response.data.data;
@@ -116,12 +107,10 @@ class LancamentoContabilService {
    * Obtém URL de download de uma nota fiscal
    */
   async getDownloadUrl(lancamentoId: string): Promise<DownloadNotaResponse> {
-    console.log("📥 [LANCAMENTO-CONTABIL-SERVICE] Obtendo URL download:", lancamentoId);
     const response = await api.get<any>(
       `${this.baseUrl}/${lancamentoId}/notas-fiscais/download`
     );
 
-    console.log("📥 [LANCAMENTO-CONTABIL-SERVICE] Response download:", response.data);
 
     if (response.data?.success && response.data?.data) {
       return response.data.data;
