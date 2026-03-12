@@ -9,8 +9,14 @@ import {
   Typography,
   LinearProgress,
   Alert,
+  alpha,
+  IconButton,
+  CircularProgress,
 } from "@mui/material";
-import { CloudUpload as CloudUploadIcon } from "@mui/icons-material";
+import {
+  CloudUpload as CloudUploadIcon,
+  Close as CloseIcon,
+} from "@mui/icons-material";
 import lancamentoContabilService from "@/app/services/lancamentoContabilService";
 import type { LancamentoContabil } from "@/app/types/lancamentoContabil";
 
@@ -100,46 +106,109 @@ export default function UploadNotaModal({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Upload de Nota Fiscal</DialogTitle>
-      <DialogContent>
-        {lancamento && (
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              <strong>Cliente:</strong> {lancamento.cliente_nome_fantasia}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              <strong>Mês Referência:</strong>{" "}
-              {new Date(lancamento.mes_referencia + "-01").toLocaleDateString(
-                "pt-BR",
-                { month: "long", year: "numeric" }
-              )}
-            </Typography>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 3,
+          background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+          boxShadow: '0 8px 32px rgba(130, 112, 255, 0.2)',
+          overflow: 'hidden',
+        },
+      }}
+    >
+      <DialogTitle
+        sx={{
+          background: 'linear-gradient(135deg, #8270FF 0%, #411EFE 100%)',
+          color: '#FFFFFF',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          py: 2.5,
+          px: 3,
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: 2,
+              background: alpha('#FFFFFF', 0.2),
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <CloudUploadIcon sx={{ fontSize: 24 }} />
           </Box>
-        )}
-
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-
-        <Box
+          <Typography variant="h6" fontWeight={700}>
+            Upload de Nota Fiscal
+          </Typography>
+        </Box>
+        <IconButton
+          onClick={handleClose}
+          disabled={uploading}
           sx={{
-            border: "2px dashed",
-            borderColor: selectedFile ? "success.main" : "grey.300",
-            borderRadius: 2,
-            p: 3,
-            textAlign: "center",
-            bgcolor: selectedFile ? "success.50" : "grey.50",
-            cursor: uploading ? "not-allowed" : "pointer",
-            transition: "all 0.3s",
-            "&:hover": {
-              borderColor: uploading ? "grey.300" : "primary.main",
-              bgcolor: uploading ? "grey.50" : "primary.50",
+            color: '#FFFFFF',
+            '&:hover': {
+              background: alpha('#FFFFFF', 0.2),
             },
           }}
         >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent sx={{ p: 3 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5, mt: 1 }}>
+          {lancamento && (
+            <Box
+              sx={{
+                p: 2.5,
+                borderRadius: 2,
+                background: alpha('#8270FF', 0.05),
+                border: `1px solid ${alpha('#8270FF', 0.1)}`,
+              }}
+            >
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                <strong>Cliente:</strong> {lancamento.cliente_nome_fantasia}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                <strong>Mês Referência:</strong>{" "}
+                {new Date(lancamento.mes_referencia + "-01").toLocaleDateString(
+                  "pt-BR",
+                  { month: "long", year: "numeric" }
+                )}
+              </Typography>
+            </Box>
+          )}
+
+          {error && (
+            <Alert severity="error" onClose={() => setError(null)}>
+              {error}
+            </Alert>
+          )}
+
+          <Box
+            sx={{
+              border: "2px dashed",
+              borderColor: selectedFile ? "#10b981" : alpha("#8270FF", 0.3),
+              borderRadius: 2,
+              p: 3,
+              textAlign: "center",
+              bgcolor: selectedFile ? alpha("#10b981", 0.05) : alpha("#8270FF", 0.02),
+              cursor: uploading ? "not-allowed" : "pointer",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                borderColor: uploading ? alpha("#8270FF", 0.3) : "#8270FF",
+                bgcolor: uploading ? alpha("#8270FF", 0.02) : alpha("#8270FF", 0.08),
+                boxShadow: uploading ? "none" : `0 0 0 3px ${alpha('#8270FF', 0.1)}`,
+              },
+            }}
+          >
           <input
             accept="application/pdf"
             style={{ display: "none" }}
@@ -157,40 +226,122 @@ export default function UploadNotaModal({
                 cursor: uploading ? "not-allowed" : "pointer",
               }}
             >
-              <CloudUploadIcon
-                sx={{ fontSize: 48, color: "primary.main", mb: 1 }}
-              />
-              <Typography variant="body1" gutterBottom>
+              <Box
+                sx={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: 3,
+                  background: selectedFile
+                    ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                    : 'linear-gradient(135deg, #8270FF 0%, #411EFE 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  mx: 'auto',
+                  mb: 2,
+                  boxShadow: selectedFile
+                    ? '0 4px 12px rgba(16, 185, 129, 0.3)'
+                    : '0 4px 12px rgba(130, 112, 255, 0.3)',
+                }}
+              >
+                <CloudUploadIcon sx={{ fontSize: 32, color: '#FFFFFF' }} />
+              </Box>
+              <Typography variant="body1" gutterBottom fontWeight={600}>
                 {selectedFile
                   ? selectedFile.name
                   : "Clique para selecionar o arquivo PDF"}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                Tamanho máximo: 10MB
+                Tamanho máximo: 10MB • Formato: PDF
               </Typography>
             </Box>
           </label>
         </Box>
 
-        {uploading && (
-          <Box sx={{ mt: 2 }}>
-            <LinearProgress variant="determinate" value={uploadProgress} />
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
-              Enviando... {uploadProgress}%
-            </Typography>
-          </Box>
-        )}
+          {uploading && (
+            <Box>
+              <LinearProgress
+                variant="determinate"
+                value={uploadProgress}
+                sx={{
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: alpha('#8270FF', 0.1),
+                  '& .MuiLinearProgress-bar': {
+                    borderRadius: 4,
+                    background: 'linear-gradient(135deg, #8270FF 0%, #411EFE 100%)',
+                  },
+                }}
+              />
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Enviando arquivo...
+                </Typography>
+                <Typography variant="caption" fontWeight={600} color="#8270FF">
+                  {uploadProgress}%
+                </Typography>
+              </Box>
+            </Box>
+          )}
+        </Box>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} disabled={uploading}>
+      <DialogActions
+        sx={{
+          px: 3,
+          py: 2.5,
+          borderTop: '1px solid',
+          borderColor: alpha('#e5e7eb', 0.8),
+          gap: 1.5,
+        }}
+      >
+        <Button
+          onClick={handleClose}
+          disabled={uploading}
+          sx={{
+            borderRadius: 2,
+            textTransform: 'none',
+            fontWeight: 600,
+            px: 3,
+            color: '#6b7280',
+            '&:hover': {
+              background: alpha('#6b7280', 0.1),
+            },
+          }}
+        >
           Cancelar
         </Button>
         <Button
           onClick={handleUpload}
           variant="contained"
           disabled={!selectedFile || uploading}
+          sx={{
+            background: 'linear-gradient(135deg, #8270FF 0%, #411EFE 100%)',
+            boxShadow: '0 4px 12px rgba(130, 112, 255, 0.3)',
+            borderRadius: 2,
+            textTransform: 'none',
+            fontWeight: 600,
+            px: 4,
+            py: 1,
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              background: 'linear-gradient(135deg, #411EFE 0%, #8270FF 100%)',
+              transform: 'translateY(-2px)',
+              boxShadow: '0 6px 20px rgba(65, 30, 254, 0.4)',
+            },
+            '&:disabled': {
+              background: alpha('#8270FF', 0.3),
+              color: alpha('#FFFFFF', 0.5),
+            },
+          }}
         >
-          {uploading ? "Enviando..." : "Enviar"}
+          {uploading ? (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <CircularProgress size={20} sx={{ color: '#FFFFFF' }} />
+              <span>Enviando...</span>
+            </Box>
+          ) : (
+            "Enviar"
+          )}
         </Button>
       </DialogActions>
     </Dialog>

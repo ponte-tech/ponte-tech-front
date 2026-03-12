@@ -204,23 +204,17 @@ export default function DetalhesImpostoPage() {
       />
 
       <Grid container spacing={3}>
-        {/* Informações Principais */}
-        <Grid item xs={12} md={8}>
-          {/* Card de Informações Gerais */}
-          <Card sx={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)", mb: 3 }}>
+        {/* Cabeçalho com Informações Principais - Destaque */}
+        <Grid item xs={12}>
+          <Card sx={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)", background: "linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)" }}>
             <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" fontWeight={600} gutterBottom>
-                Informações Gerais
-              </Typography>
-              <Divider sx={{ my: 2 }} />
-
-              <Grid container spacing={2}>
-                {/* Empresa */}
-                <Grid item xs={12}>
+              <Grid container spacing={3} alignItems="center">
+                {/* Empresa e CNPJ */}
+                <Grid item xs={12} md={5}>
                   <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
                     Empresa
                   </Typography>
-                  <Typography variant="body1" fontWeight={500}>
+                  <Typography variant="h6" fontWeight={600}>
                     {empresa?.nome_fantasia || "Não informado"}
                   </Typography>
                   {empresa?.cnpj && (
@@ -230,87 +224,170 @@ export default function DetalhesImpostoPage() {
                   )}
                 </Grid>
 
-                {/* Tipo de Imposto e Mês de Referência */}
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                    Tipo de Imposto
-                  </Typography>
-                  <Chip
-                    label={getTipoImpostoLabel(imposto.tipo_imposto)}
-                    color={getColorForTipo(imposto.tipo_imposto)}
-                    size="small"
-                  />
+                {/* Tipo e Mês Referência */}
+                <Grid item xs={12} md={4}>
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                        Tipo de Imposto
+                      </Typography>
+                      <Chip
+                        label={getTipoImpostoLabel(imposto.tipo_imposto)}
+                        color={getColorForTipo(imposto.tipo_imposto)}
+                        size="medium"
+                      />
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                        Mês de Referência
+                      </Typography>
+                      <Typography variant="body1" fontWeight={500}>
+                        {formatMesReferencia(imposto.mes_referencia)}
+                      </Typography>
+                    </Box>
+                  </Box>
                 </Grid>
 
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                    Mês de Referência
-                  </Typography>
-                  <Typography variant="body1">
-                    {formatMesReferencia(imposto.mes_referencia)}
-                  </Typography>
-                </Grid>
-
-                {/* Valor */}
-                <Grid item xs={12}>
-                  <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                    Valor do Imposto
-                  </Typography>
-                  <Typography variant="h4" fontWeight={600} color="success.main">
-                    {formatCurrency(imposto.valor)}
-                  </Typography>
-                </Grid>
-
-                {/* Descrição */}
-                <Grid item xs={12}>
-                  <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                    Descrição
-                  </Typography>
+                {/* Valor em Destaque */}
+                <Grid item xs={12} md={3}>
                   <Box
                     sx={{
-                      mt: 1,
+                      textAlign: "center",
                       p: 2,
-                      bgcolor: "grey.50",
-                      borderRadius: 1,
-                      border: "1px solid",
-                      borderColor: "grey.200",
+                      bgcolor: "success.50",
+                      borderRadius: 2,
+                      border: "2px solid",
+                      borderColor: "success.200",
                     }}
                   >
-                    <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
-                      {imposto.descricao}
+                    <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                      Valor do Imposto
+                    </Typography>
+                    <Typography variant="h4" fontWeight={700} color="success.main">
+                      {formatCurrency(imposto.valor)}
                     </Typography>
                   </Box>
                 </Grid>
               </Grid>
             </CardContent>
           </Card>
+        </Grid>
 
-          {/* Card de Anexos */}
+        {/* Descrição */}
+        {imposto.descricao && (
+          <Grid item xs={12}>
+            <Card sx={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+              <CardContent sx={{ p: 2.5 }}>
+                <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                  Descrição
+                </Typography>
+                <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", color: "text.secondary" }}>
+                  {imposto.descricao}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        )}
+
+        {/* Metadados e Resumo */}
+        <Grid item xs={12}>
+          <Grid container spacing={2}>
+            {/* Resumo de Anexos */}
+            <Grid item xs={12} sm={6} md={3}>
+              <Card sx={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)", height: "100%" }}>
+                <CardContent sx={{ textAlign: "center", p: 2.5 }}>
+                  <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                    Total de Anexos
+                  </Typography>
+                  <Typography variant="h3" fontWeight={700} color="primary.main">
+                    {imposto.anexos?.length || 0}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Tamanho Total */}
+            {imposto.anexos && imposto.anexos.length > 0 && (
+              <Grid item xs={12} sm={6} md={3}>
+                <Card sx={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)", height: "100%" }}>
+                  <CardContent sx={{ textAlign: "center", p: 2.5 }}>
+                    <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                      Tamanho Total
+                    </Typography>
+                    <Typography variant="h4" fontWeight={600}>
+                      {formatFileSize(
+                        imposto.anexos.reduce((sum, anexo) => sum + anexo.tamanho_bytes, 0)
+                      )}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            )}
+
+            {/* Data de Cadastro */}
+            <Grid item xs={12} sm={6} md={3}>
+              <Card sx={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)", height: "100%" }}>
+                <CardContent sx={{ textAlign: "center", p: 2.5 }}>
+                  <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                    Data de Cadastro
+                  </Typography>
+                  <Typography variant="body1" fontWeight={600}>
+                    {formatDate(imposto.data_cadastro)}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Última Atualização */}
+            <Grid item xs={12} sm={6} md={3}>
+              <Card sx={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)", height: "100%" }}>
+                <CardContent sx={{ textAlign: "center", p: 2.5 }}>
+                  <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                    Última Atualização
+                  </Typography>
+                  <Typography variant="body1" fontWeight={600}>
+                    {formatDate(imposto.data_atualizacao)}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        </Grid>
+
+        {/* Tabela de Anexos - Full Width */}
+        <Grid item xs={12}>
           <Card sx={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
             <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" fontWeight={600} gutterBottom>
-                Anexos ({imposto.anexos?.length || 0})
-              </Typography>
-              <Divider sx={{ my: 2 }} />
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+                <Typography variant="h6" fontWeight={600}>
+                  Anexos
+                </Typography>
+                <Chip
+                  label={`${imposto.anexos?.length || 0} arquivo(s)`}
+                  color="primary"
+                  size="small"
+                />
+              </Box>
+              <Divider sx={{ mb: 2 }} />
 
               {!imposto.anexos || imposto.anexos.length === 0 ? (
-                <Box sx={{ textAlign: "center", py: 6, bgcolor: "grey.50", borderRadius: 1 }}>
+                <Box sx={{ textAlign: "center", py: 4, bgcolor: "grey.50", borderRadius: 2 }}>
                   <AttachFileIcon sx={{ fontSize: 48, color: "text.disabled", mb: 1 }} />
                   <Typography variant="body2" color="text.secondary">
                     Nenhum anexo disponível
                   </Typography>
                 </Box>
               ) : (
-                <TableContainer>
-                  <Table>
+                <Box sx={{ overflowX: "auto" }}>
+                  <Table size="medium" sx={{ minWidth: 650 }}>
                     <TableHead>
                       <TableRow sx={{ bgcolor: "grey.50" }}>
-                        <TableCell sx={{ fontWeight: 600 }}>Arquivo</TableCell>
-                        <TableCell sx={{ fontWeight: 600 }}>Tipo</TableCell>
-                        <TableCell sx={{ fontWeight: 600 }}>Tamanho</TableCell>
-                        <TableCell sx={{ fontWeight: 600 }}>Data</TableCell>
-                        <TableCell sx={{ fontWeight: 600 }} align="center">
-                          Download
+                        <TableCell sx={{ fontWeight: 600, minWidth: 250 }}>Arquivo</TableCell>
+                        <TableCell sx={{ fontWeight: 600, minWidth: 140 }}>Tipo</TableCell>
+                        <TableCell sx={{ fontWeight: 600, minWidth: 100 }}>Tamanho</TableCell>
+                        <TableCell sx={{ fontWeight: 600, minWidth: 150 }}>Data de Upload</TableCell>
+                        <TableCell sx={{ fontWeight: 600, minWidth: 100 }} align="center">
+                          Ações
                         </TableCell>
                       </TableRow>
                     </TableHead>
@@ -319,13 +396,35 @@ export default function DetalhesImpostoPage() {
                         <TableRow
                           key={index}
                           sx={{
-                            "&:hover": { bgcolor: "grey.50" },
+                            "&:hover": { bgcolor: "action.hover" },
                           }}
                         >
                           <TableCell>
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                              <AttachFileIcon sx={{ color: "text.secondary", fontSize: 18 }} />
-                              <Typography variant="body2">
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                              <Box
+                                sx={{
+                                  width: 36,
+                                  height: 36,
+                                  borderRadius: 1,
+                                  bgcolor: "primary.50",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                <AttachFileIcon sx={{ color: "primary.main", fontSize: 20 }} />
+                              </Box>
+                              <Typography
+                                variant="body2"
+                                fontWeight={500}
+                                sx={{
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                  maxWidth: 300,
+                                }}
+                              >
                                 {anexo.nome_arquivo}
                               </Typography>
                             </Box>
@@ -338,12 +437,12 @@ export default function DetalhesImpostoPage() {
                             />
                           </TableCell>
                           <TableCell>
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography variant="body2" color="text.secondary" noWrap>
                               {formatFileSize(anexo.tamanho_bytes)}
                             </Typography>
                           </TableCell>
                           <TableCell>
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography variant="body2" color="text.secondary" noWrap>
                               {formatDateTime(anexo.data_upload)}
                             </Typography>
                           </TableCell>
@@ -374,68 +473,8 @@ export default function DetalhesImpostoPage() {
                       ))}
                     </TableBody>
                   </Table>
-                </TableContainer>
+                </Box>
               )}
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Sidebar - Resumo */}
-        <Grid item xs={12} md={4}>
-          <Card sx={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-            <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" fontWeight={600} gutterBottom>
-                Resumo
-              </Typography>
-              <Divider sx={{ my: 2 }} />
-
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                {/* Total de Anexos */}
-                <Box sx={{ textAlign: "center", p: 2, bgcolor: "primary.50", borderRadius: 1 }}>
-                  <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                    Total de Anexos
-                  </Typography>
-                  <Typography variant="h3" fontWeight={600} color="primary.main">
-                    {imposto.anexos?.length || 0}
-                  </Typography>
-                </Box>
-
-                {/* Tamanho Total */}
-                {imposto.anexos && imposto.anexos.length > 0 && (
-                  <Box sx={{ textAlign: "center", p: 2, bgcolor: "grey.50", borderRadius: 1 }}>
-                    <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                      Tamanho Total
-                    </Typography>
-                    <Typography variant="h5" fontWeight={500}>
-                      {formatFileSize(
-                        imposto.anexos.reduce((sum, anexo) => sum + anexo.tamanho_bytes, 0)
-                      )}
-                    </Typography>
-                  </Box>
-                )}
-
-                <Divider />
-
-                {/* Data de Cadastro */}
-                <Box>
-                  <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                    Data de Cadastro
-                  </Typography>
-                  <Typography variant="body2">
-                    {formatDate(imposto.data_cadastro)}
-                  </Typography>
-                </Box>
-
-                {/* Data de Atualização */}
-                <Box>
-                  <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                    Última Atualização
-                  </Typography>
-                  <Typography variant="body2">
-                    {formatDate(imposto.data_atualizacao)}
-                  </Typography>
-                </Box>
-              </Box>
             </CardContent>
           </Card>
         </Grid>

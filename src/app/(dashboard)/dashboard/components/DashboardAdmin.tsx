@@ -27,6 +27,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  LabelList,
 } from 'recharts';
 import dashboardService from "@/app/services/dashboardService";
 import type { DashboardAdminResponse, FinanceirosPorEmpresaResponse } from "@/app/types/dashboard";
@@ -36,7 +37,7 @@ export default function DashboardAdmin() {
   const [financeiros, setFinanceiros] = useState<FinanceirosPorEmpresaResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTab, setSelectedTab] = useState(0);
+  const [selectedTab, setSelectedTab] = useState(0); // 0 = Consolidado, 1+ = Empresas
 
   useEffect(() => {
     loadDashboard();
@@ -92,6 +93,14 @@ export default function DashboardAdmin() {
       bgColor: alpha("#8270FF", 0.1),
     },
     {
+      title: "Clientes Ativos",
+      value: dashboard.clientes.ativos.toString(),
+      subtitle: `${dashboard.clientes.total} total`,
+      icon: <Business sx={{ fontSize: 32 }} />,
+      color: "#10b981",
+      bgColor: alpha("#10b981", 0.1),
+    },
+    {
       title: "Contratos Ativos",
       value: dashboard.qtd_contratos_ativos.toString(),
       subtitle: "em andamento",
@@ -108,10 +117,19 @@ export default function DashboardAdmin() {
     return `${monthNames[parseInt(month) - 1]}/${year.substring(2)}`;
   };
 
+  // Formatar valor para label nas barras
+  const formatLabel = (value: number) => {
+    if (value === 0) return "";
+    if (value >= 1000) {
+      return `R$ ${(value / 1000).toFixed(1)}k`;
+    }
+    return `R$ ${value.toFixed(0)}`;
+  };
+
   // Dados para cada empresa e consolidado
   const getChartData = () => {
-    if (selectedTab === financeiros.empresas.length) {
-      // Consolidado
+    if (selectedTab === 0) {
+      // Consolidado (tab 0)
       return financeiros.consolidado.meses.map(mes => ({
         mes: formatMes(mes.mes),
         Receitas: mes.receitas,
@@ -119,8 +137,8 @@ export default function DashboardAdmin() {
         "Despesas - Notas": mes.despesas_notas,
       }));
     } else {
-      // Empresa específica
-      const empresa = financeiros.empresas[selectedTab];
+      // Empresa específica (tab 1, 2, 3...)
+      const empresa = financeiros.empresas[selectedTab - 1];
       return empresa.meses.map(mes => ({
         mes: formatMes(mes.mes),
         Receitas: mes.receitas,
@@ -160,7 +178,7 @@ export default function DashboardAdmin() {
       {/* Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {stats.map((stat, index) => (
-          <Grid item xs={12} sm={6} md={6} key={index}>
+          <Grid item xs={12} sm={6} md={4} key={index}>
             <Card
               elevation={0}
               sx={{
@@ -255,10 +273,10 @@ export default function DashboardAdmin() {
           onChange={(_, newValue) => setSelectedTab(newValue)}
           sx={{ mb: 3, borderBottom: 1, borderColor: "divider" }}
         >
+          <Tab label="Consolidado" />
           {financeiros.empresas.map((empresa, index) => (
             <Tab key={empresa.empresa_id} label={empresa.nome_fantasia} />
           ))}
-          <Tab label="Consolidado" />
         </Tabs>
 
         {/* Gráfico */}
@@ -293,9 +311,30 @@ export default function DashboardAdmin() {
               wrapperStyle={{ paddingTop: "20px" }}
               iconType="square"
             />
-            <Bar dataKey="Receitas" fill="#10b981" radius={[8, 8, 0, 0]} />
-            <Bar dataKey="Despesas - Impostos" fill="#ef4444" radius={[8, 8, 0, 0]} />
-            <Bar dataKey="Despesas - Notas" fill="#f59e0b" radius={[8, 8, 0, 0]} />
+            <Bar dataKey="Receitas" fill="#10b981" radius={[8, 8, 0, 0]}>
+              <LabelList
+                dataKey="Receitas"
+                position="top"
+                formatter={formatLabel}
+                style={{ fill: "#10b981", fontSize: 12, fontWeight: 600 }}
+              />
+            </Bar>
+            <Bar dataKey="Despesas - Impostos" fill="#ef4444" radius={[8, 8, 0, 0]}>
+              <LabelList
+                dataKey="Despesas - Impostos"
+                position="top"
+                formatter={formatLabel}
+                style={{ fill: "#ef4444", fontSize: 12, fontWeight: 600 }}
+              />
+            </Bar>
+            <Bar dataKey="Despesas - Notas" fill="#f59e0b" radius={[8, 8, 0, 0]}>
+              <LabelList
+                dataKey="Despesas - Notas"
+                position="top"
+                formatter={formatLabel}
+                style={{ fill: "#f59e0b", fontSize: 12, fontWeight: 600 }}
+              />
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
 
@@ -308,7 +347,7 @@ export default function DashboardAdmin() {
                   Receitas
                 </Typography>
                 <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  Lançamentos contábeis (notas fiscais emitidas)
+                  Soma dos contratos ativos de clientes
                 </Typography>
               </Box>
             </Grid>
@@ -318,7 +357,7 @@ export default function DashboardAdmin() {
                   Despesas - Impostos
                 </Typography>
                 <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  Impostos e taxas da empresa
+                  Total de impostos lançados no mês
                 </Typography>
               </Box>
             </Grid>
@@ -328,7 +367,7 @@ export default function DashboardAdmin() {
                   Despesas - Notas
                 </Typography>
                 <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  Notas fiscais dos colaboradores
+                  Horas trabalhadas × valor hora dos colaboradores
                 </Typography>
               </Box>
             </Grid>

@@ -24,6 +24,11 @@ export interface ColaboradoresResumo {
   ativos: number;
 }
 
+export interface ClientesResumo {
+  total: number;
+  ativos: number;
+}
+
 export interface TimesheetResumo {
   aguardando_aprovacao: number;
   aprovados: number;
@@ -41,6 +46,7 @@ export interface NotasFiscaisResumoAdmin {
 export interface DashboardAdminResponse {
   mes_atual: string;
   colaboradores: ColaboradoresResumo;
+  clientes: ClientesResumo;
   timesheet: TimesheetResumo;
   notas_fiscais: NotasFiscaisResumoAdmin;
   qtd_contratos_ativos: number;

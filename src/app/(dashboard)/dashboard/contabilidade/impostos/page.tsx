@@ -26,7 +26,7 @@ import JSZip from "jszip";
 import impostoService from "@/app/services/impostoService";
 import type { Imposto } from "@/app/types/imposto";
 import { TIPOS_IMPOSTO } from "@/app/types/imposto";
-import { PageHeader, DeleteDialog, FilterSearch, TableActionButtons, TableAction } from "@/app/shared/components";
+import { PageHeader, FilterSearch, TableActionButtons, TableAction } from "@/app/shared/components";
 
 export default function ImpostosPage() {
   const router = useRouter();
@@ -34,12 +34,6 @@ export default function ImpostosPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [mesReferencia, setMesReferencia] = useState(getCurrentMonth());
-
-  // Delete dialog states
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [impostoToDelete, setImpostoToDelete] = useState<Imposto | null>(null);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
 
   // Snackbar
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -71,38 +65,6 @@ export default function ImpostosPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleDeleteClick = (imposto: Imposto) => {
-    setImpostoToDelete(imposto);
-    setDeleteDialogOpen(true);
-    setDeleteError(null);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!impostoToDelete) return;
-
-    try {
-      setDeleting(true);
-      await impostoService.delete(impostoToDelete.imposto_id, impostoToDelete.empresa_id);
-      setImpostos(impostos.filter((i) => i.imposto_id !== impostoToDelete.imposto_id));
-      setDeleteDialogOpen(false);
-      setImpostoToDelete(null);
-      setSnackbarMessage("Imposto excluído com sucesso!");
-      setSnackbarOpen(true);
-      loadImpostos();
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setDeleteError(error.response?.data?.message || "Erro ao excluir imposto");
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  const handleDeleteCancel = () => {
-    setDeleteDialogOpen(false);
-    setImpostoToDelete(null);
-    setDeleteError(null);
   };
 
   const handleDownloadAnexos = async (imposto: Imposto) => {
@@ -243,12 +205,6 @@ export default function ImpostosPage() {
         tooltip: "Baixar anexos",
       });
     }
-
-    actions.push({
-      type: "delete",
-      onClick: () => handleDeleteClick(imposto),
-      tooltip: "Excluir imposto",
-    });
 
     return actions;
   };
@@ -418,17 +374,6 @@ export default function ImpostosPage() {
           </Table>
         </TableContainer>
       </Card>
-
-      {/* Delete Confirmation Dialog */}
-      <DeleteDialog
-        open={deleteDialogOpen}
-        itemName={impostoToDelete?.descricao || ""}
-        itemType="o imposto"
-        error={deleteError}
-        onConfirm={handleDeleteConfirm}
-        onCancel={handleDeleteCancel}
-        loading={deleting}
-      />
 
       {/* Success Snackbar */}
       <Snackbar

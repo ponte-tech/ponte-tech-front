@@ -73,6 +73,7 @@ const menuItems: MenuItem[] = [
       { text: "Colaboradores", path: "/colaboradores" },
       { text: "Clientes", path: "/dashboard/clientes" },
       { text: "Empresas", path: "/dashboard/empresas" },
+      { text: "Contratos", path: "/dashboard/contratos" },
     ]
   },
   {
