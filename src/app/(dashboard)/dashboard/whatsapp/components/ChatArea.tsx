@@ -209,7 +209,7 @@ export default function ChatArea({
               const isOutbound = message.direction === "outbound";
               return (
                 <Box
-                  key={message.message_id}
+                  key={`${message.message_id}-${message.created_at}`}
                   sx={{
                     display: "flex",
                     justifyContent: isOutbound ? "flex-end" : "flex-start",
