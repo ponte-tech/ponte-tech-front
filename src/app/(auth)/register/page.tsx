@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/app/hooks/useAuth";
 import {
@@ -26,7 +26,7 @@ import Image from "next/image";
 
 type UserType = "aluno" | "vendedor";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const searchParams = useSearchParams();
   const typeParam = searchParams.get("type") as UserType | null;
   const [userType] = useState<UserType>(typeParam === "vendedor" ? "vendedor" : "aluno");
@@ -451,5 +451,13 @@ export default function RegisterPage() {
         </Fade>
       </Box>
     </Box>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <RegisterForm />
+    </Suspense>
   );
 }

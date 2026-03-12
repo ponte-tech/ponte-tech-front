@@ -33,7 +33,7 @@ import {
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon,
 } from "@mui/icons-material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import matriculaService from "@/app/services/matriculaService";
 import {
@@ -45,7 +45,7 @@ import {
 
 const steps = ["Dados Pessoais", "Endereço", "Confirmação"];
 
-export default function MatriculaPage() {
+function MatriculaForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const codigoVendedor = searchParams.get("codigo_vendedor") || "";
@@ -748,5 +748,17 @@ export default function MatriculaPage() {
         </Grid>
       </Container>
     </Box>
+  );
+}
+
+export default function MatriculaPage() {
+  return (
+    <Suspense fallback={
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}>
+        <CircularProgress size={60} sx={{ color: "#8270FF" }} />
+      </Box>
+    }>
+      <MatriculaForm />
+    </Suspense>
   );
 }

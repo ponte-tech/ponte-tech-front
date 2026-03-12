@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import {
   Box,
   Card,
@@ -36,7 +36,7 @@ import { TIPOS_IMPOSTO } from "@/app/types/imposto";
 import type { Empresa } from "@/app/types/empresa";
 import { PageHeader } from "@/app/shared/components";
 
-export default function DetalhesImpostoPage() {
+function DetalhesImpostoContent() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -480,5 +480,17 @@ export default function DetalhesImpostoPage() {
         </Grid>
       </Grid>
     </Box>
+  );
+}
+
+export default function DetalhesImpostoPage() {
+  return (
+    <Suspense fallback={
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "400px" }}>
+        <CircularProgress />
+      </Box>
+    }>
+      <DetalhesImpostoContent />
+    </Suspense>
   );
 }

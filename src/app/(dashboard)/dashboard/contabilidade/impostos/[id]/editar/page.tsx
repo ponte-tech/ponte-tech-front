@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import {
   Box,
   Card,
@@ -38,7 +38,7 @@ import type { Empresa } from "@/app/types/empresa";
 import { PageHeader } from "@/app/shared/components";
 import { applyCurrencyMask, removeCurrencyMask, formatCurrency } from "@/app/utils/currencyMask";
 
-export default function EditarImpostoPage() {
+function EditarImpostoContent() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -398,5 +398,17 @@ export default function EditarImpostoPage() {
         </CardContent>
       </Card>
     </Box>
+  );
+}
+
+export default function EditarImpostoPage() {
+  return (
+    <Suspense fallback={
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "400px" }}>
+        <CircularProgress />
+      </Box>
+    }>
+      <EditarImpostoContent />
+    </Suspense>
   );
 }
