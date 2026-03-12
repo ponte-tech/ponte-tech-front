@@ -68,16 +68,6 @@ export default function ClientesPage() {
 
       const response = await clienteService.list(filters);
 
-      // Log detalhado de cada cliente para verificar campos
-      response.clientes?.forEach((cliente, index) => {
-          cliente_id: cliente.cliente_id,
-          empresa_id: cliente.empresa_id,
-          empresa_razao_social: cliente.empresa_razao_social,
-          razao_social: cliente.razao_social,
-          nome_fantasia: cliente.nome_fantasia
-        });
-      });
-
       setClientes(response.clientes || []);
     } catch (err) {
       console.error('❌ [CLIENTES] Erro ao carregar:', err);

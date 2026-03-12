@@ -51,13 +51,6 @@ export default function DashboardPage() {
   const userPerfil = user?.perfil;
   const userPerfis = user?.perfis;
 
-  // Debug logs
-    userRole,
-    userPerfil,
-    userPerfis,
-    fullUser: user
-  });
-
   // Check if user is colaborador
   const isColaborador = userPerfil === 'colaborador' || userPerfis?.includes('colaborador');
 
