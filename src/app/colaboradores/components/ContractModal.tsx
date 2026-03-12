@@ -83,7 +83,7 @@ export default function ContractModal({ open, onClose, onSave, loading = false, 
   const loadOptions = async () => {
     try {
       setLoadingOptions(true);
-      const clientesResponse = await clienteService.list();
+      const clientesResponse = await clienteService.list({ status: 'ativo' });
       setClientes(clientesResponse.clientes || []);
     } catch (err) {
       console.error('Erro ao carregar opções:', err);

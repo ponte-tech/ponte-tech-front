@@ -77,7 +77,7 @@ export default function NovoColaboradorPage() {
 
   const loadOptions = async () => {
     try {
-      const clientesResponse = await clienteService.list();
+      const clientesResponse = await clienteService.list({ status: 'ativo' });
       setClientes(clientesResponse.clientes || []);
 
       const empresasResponse = await empresaService.list();

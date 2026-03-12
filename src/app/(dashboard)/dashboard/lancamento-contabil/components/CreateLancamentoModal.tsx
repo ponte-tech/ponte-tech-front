@@ -59,7 +59,7 @@ export default function CreateLancamentoModal({
   const loadClientes = async () => {
     try {
       setLoadingClientes(true);
-      const response = await clienteService.list();
+      const response = await clienteService.list({ status: 'ativo' });
       setClientes(response.clientes || []);
     } catch (err) {
       setError("Erro ao carregar clientes");
