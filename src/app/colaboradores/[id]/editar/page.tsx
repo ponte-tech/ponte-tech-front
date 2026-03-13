@@ -73,10 +73,16 @@ export default function EditarColaboradorPage() {
   const [loadingPassword, setLoadingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState("");
   const [passwordSuccess, setPasswordSuccess] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   const isAdmin = user?.userType === "admin";
   const isColaborador = user?.userType === "colaborador";
   const colaboradorId = params.id as string;
+
+  // Evita erro de hidratação - só renderiza após montagem no cliente
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -1019,7 +1025,7 @@ export default function EditarColaboradorPage() {
           </Grid>
 
           {/* Segurança - Alterar Senha */}
-          {isColaborador && user?.id === colaboradorId && (
+          {mounted && isColaborador && user?.id === colaboradorId && (
             <Grid item xs={12}>
               <Card>
                 <CardContent sx={{ p: 3 }}>
