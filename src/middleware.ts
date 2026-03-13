@@ -1,6 +1,20 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+// Função auxiliar para decodificar JWT (apenas a parte payload)
+function decodeJWT(token: string): any {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+
+    const payload = parts[1];
+    const decoded = Buffer.from(payload, 'base64').toString('utf-8');
+    return JSON.parse(decoded);
+  } catch (error) {
+    return null;
+  }
+}
+
 export function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
   const { pathname } = request.nextUrl;
@@ -27,9 +41,17 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Se está logado e tenta acessar páginas de auth, redireciona para dashboard
+  // Se está logado e tenta acessar páginas de auth, redireciona baseado no perfil
   if (isAuthRoute && token) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    const decodedToken = decodeJWT(token);
+    const profile = decodedToken?.profile; // Campo "profile" do JWT
+
+    // Redireciona colaborador para /minhas-horas, admin para /dashboard
+    if (profile === "colaborador") {
+      return NextResponse.redirect(new URL("/minhas-horas", request.url));
+    } else {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
   }
 
   return NextResponse.next();
