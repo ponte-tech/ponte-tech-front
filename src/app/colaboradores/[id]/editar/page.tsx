@@ -151,10 +151,17 @@ export default function EditarColaboradorPage() {
 
   const loadContracts = async () => {
     try {
+      console.log('[DEBUG] Carregando contratos:', { colaboradorId, isColaborador });
       const data = await contratosService.getByUserId(colaboradorId, isColaborador);
+      console.log('[DEBUG] Contratos carregados:', data);
       setContracts(data);
     } catch (err: any) {
       console.error("Erro ao carregar contratos:", err);
+      console.error("Detalhes do erro:", {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status
+      });
     }
   };
 
@@ -680,7 +687,7 @@ export default function EditarColaboradorPage() {
   if (error && !colaborador) {
     return (
       <Box sx={{ p: 3 }}>
-        {isAdmin && (
+        {mounted && isAdmin && (
           <Button
             startIcon={<ArrowBackIcon />}
             onClick={() => router.push("/colaboradores")}
@@ -793,7 +800,7 @@ export default function EditarColaboradorPage() {
                           </MenuItem>
                         ))}
                       </Select>
-                      {isColaborador && (
+                      {mounted && isColaborador && (
                         <FormHelperText>Empresa não pode ser alterada</FormHelperText>
                       )}
                     </FormControl>
@@ -1404,7 +1411,7 @@ export default function EditarColaboradorPage() {
       </form>
 
       {/* Modal de Contrato - Apenas Admin */}
-      {isAdmin && (
+      {mounted && isAdmin && (
         <ContractModal
           open={modalOpen}
           onClose={handleCloseModal}
