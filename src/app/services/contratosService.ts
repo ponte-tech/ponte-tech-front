@@ -25,10 +25,17 @@ class ContratosService {
    * Obtém todos os contratos de um usuário (retorna array)
    */
   async getByUserId(userId: string, isColaborador: boolean = false): Promise<Contrato[]> {
+    console.log('[DEBUG contratosService] Chamando list com:', { userId, isColaborador });
     const response = await this.list(userId, isColaborador);
+    console.log('[DEBUG contratosService] Response completo:', response);
+    console.log('[DEBUG contratosService] response.data:', (response as any).data);
     // A API retorna {success: true, data: {contratos: [...]}}
     const data = (response as any).data || response;
-    return data.contratos || [];
+    console.log('[DEBUG contratosService] data após unwrap:', data);
+    console.log('[DEBUG contratosService] data.contratos:', data.contratos);
+    const result = data.contratos || [];
+    console.log('[DEBUG contratosService] Retornando:', result);
+    return result;
   }
 
   /**
