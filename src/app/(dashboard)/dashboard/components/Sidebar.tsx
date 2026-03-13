@@ -63,7 +63,7 @@ const menuItems: MenuItem[] = [
     text: "Dashboard",
     icon: <DashboardIcon />,
     path: "/dashboard",
-    allowedRoles: ["admin", "aluno", "vendedor", "professor", "colaborador", "contador"]
+    allowedRoles: ["admin", "aluno", "vendedor", "professor", "contador"]
   },
   {
     text: "Gestão",
@@ -97,7 +97,7 @@ const menuItems: MenuItem[] = [
     text: "Comunicação",
     icon: <WhatsAppIcon />,
     path: "/dashboard/whatsapp",
-    allowedRoles: ["admin", "colaborador"],
+    allowedRoles: ["admin"],
   },
   {
     text: "Meu Trabalho",
@@ -107,6 +107,12 @@ const menuItems: MenuItem[] = [
       { text: "Minhas Horas", path: "/minhas-horas" },
       { text: "Notas Fiscais", path: "/notas-fiscais" },
     ]
+  },
+  {
+    text: "Meu Perfil",
+    icon: <PersonOutlineIcon />,
+    allowedRoles: ["colaborador"],
+    // O path será construído dinamicamente no componente
   },
 ];
 
@@ -164,7 +170,11 @@ export default function Sidebar({ open, mobileOpen, onMobileClose }: SidebarProp
     }));
   };
 
-  const drawerContent = (isCollapsed: boolean) => (
+  const drawerContent = (isCollapsed: boolean) => {
+    // Determinar página inicial baseada no tipo de usuário
+    const homePath = userRole === "colaborador" ? "/minhas-horas" : "/dashboard";
+
+    return (
     <>
       {/* Logo Section */}
       <Box
@@ -184,7 +194,7 @@ export default function Sidebar({ open, mobileOpen, onMobileClose }: SidebarProp
               position: "relative",
               cursor: "pointer",
             }}
-            onClick={() => router.push("/dashboard")}
+            onClick={() => router.push(homePath)}
           >
             <Image
               src="/logo-menu.svg"
@@ -206,7 +216,7 @@ export default function Sidebar({ open, mobileOpen, onMobileClose }: SidebarProp
               justifyContent: "center",
               cursor: "pointer",
             }}
-            onClick={() => router.push("/dashboard")}
+            onClick={() => router.push(homePath)}
           >
             <DashboardIcon sx={{ color: "#8270FF" }} />
           </Box>
@@ -347,10 +357,14 @@ export default function Sidebar({ open, mobileOpen, onMobileClose }: SidebarProp
             }
 
             // Item simples sem subitens
-            const isActive = pathname === item.path;
+            // Construir path dinamicamente para "Meu Perfil"
+            const itemPath = item.text === "Meu Perfil" && user?.id
+              ? `/colaboradores/${user.id}/editar`
+              : item.path;
+            const isActive = pathname === itemPath;
             const button = (
               <ListItemButton
-                onClick={() => item.path && handleNavigation(item.path)}
+                onClick={() => itemPath && handleNavigation(itemPath)}
                 sx={{
                   borderRadius: 2,
                   py: 1.5,
@@ -490,7 +504,8 @@ export default function Sidebar({ open, mobileOpen, onMobileClose }: SidebarProp
         )}
       </Box>
     </>
-  );
+    );
+  };
 
   // Mobile drawer
   if (isMobile) {

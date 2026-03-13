@@ -42,15 +42,17 @@ class ColaboradoresService {
 
   /**
    * Obtém detalhes de um colaborador específico
-   * - Admins podem acessar qualquer colaborador
-   * - Colaboradores podem acessar apenas seus próprios dados (validado no backend)
+   * - Admins podem acessar qualquer colaborador via /api/admin
+   * - Colaboradores acessam apenas seus próprios dados via /api/colaborador
    */
   async getById(id: string, isColaborador: boolean = false): Promise<Colaborador> {
     try {
-      // Ambos usam o mesmo endpoint, backend valida permissões
-      const response: AxiosResponse<ApiResponse<Colaborador>> = await api.get(
-        `/api/admin/colaboradores/${id}`
-      );
+      // Colaboradores usam endpoint próprio, admins usam endpoint admin
+      const endpoint = isColaborador
+        ? `/api/colaborador/perfil`
+        : `/api/admin/colaboradores/${id}`;
+
+      const response: AxiosResponse<ApiResponse<Colaborador>> = await api.get(endpoint);
 
       if (!response.data.success || !response.data.data) {
         throw new Error(response.data.message || "Erro ao obter colaborador");
@@ -92,14 +94,18 @@ class ColaboradoresService {
 
   /**
    * Atualiza um colaborador existente
-   * - Admins podem atualizar qualquer colaborador
-   * - Colaboradores podem atualizar apenas seus próprios dados (validado no backend)
+   * - Admins podem atualizar qualquer colaborador via /api/admin
+   * - Colaboradores atualizam apenas seus próprios dados via /api/colaborador
    */
   async update(id: string, data: UpdateColaboradorRequest, isColaborador: boolean = false): Promise<Colaborador> {
     try {
-      // Ambos usam o mesmo endpoint, backend valida permissões
+      // Colaboradores usam endpoint próprio, admins usam endpoint admin
+      const endpoint = isColaborador
+        ? `/api/colaborador/perfil`
+        : `/api/admin/colaboradores/${id}`;
+
       const response: AxiosResponse<ApiResponse<Colaborador>> = await api.put(
-        `/api/admin/colaboradores/${id}`,
+        endpoint,
         data
       );
 

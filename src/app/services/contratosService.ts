@@ -7,23 +7,25 @@ import type {
 } from "../types/api";
 
 class ContratosService {
-  private baseUrl = "/api/admin/colaboradores";
-
   /**
    * Lista todos os contratos de um colaborador
+   * - Admins acessam via /api/admin/colaboradores/{userId}/contratos
+   * - Colaboradores acessam via /api/colaborador/contratos (próprios contratos)
    */
-  async list(userId: string): Promise<ListContratosResponse> {
-    const response = await api.get<ListContratosResponse>(
-      `${this.baseUrl}/${userId}/contratos`
-    );
+  async list(userId: string, isColaborador: boolean = false): Promise<ListContratosResponse> {
+    const endpoint = isColaborador
+      ? `/api/colaborador/contratos`
+      : `/api/admin/colaboradores/${userId}/contratos`;
+
+    const response = await api.get<ListContratosResponse>(endpoint);
     return response.data;
   }
 
   /**
    * Obtém todos os contratos de um usuário (retorna array)
    */
-  async getByUserId(userId: string): Promise<Contrato[]> {
-    const response = await this.list(userId);
+  async getByUserId(userId: string, isColaborador: boolean = false): Promise<Contrato[]> {
+    const response = await this.list(userId, isColaborador);
     // A API retorna {success: true, data: {contratos: [...]}}
     const data = (response as any).data || response;
     return data.contratos || [];

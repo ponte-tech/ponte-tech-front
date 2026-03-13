@@ -138,7 +138,7 @@ export default function EditarColaboradorPage() {
 
   const loadContracts = async () => {
     try {
-      const data = await contratosService.getByUserId(colaboradorId);
+      const data = await contratosService.getByUserId(colaboradorId, isColaborador);
       setContracts(data);
     } catch (err: any) {
       console.error("Erro ao carregar contratos:", err);
