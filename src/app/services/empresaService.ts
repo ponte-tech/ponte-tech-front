@@ -25,6 +25,20 @@ class EmpresaService {
   }
 
   /**
+   * Busca uma empresa por ID
+   */
+  async getById(empresaId: string): Promise<Empresa> {
+    const response = await api.get<any>(`${this.baseUrl}/${empresaId}`);
+
+    // A API retorna {"success":true,"data":{empresa object}}
+    if (response.data?.success && response.data?.data) {
+      return response.data.data;
+    }
+
+    return response.data;
+  }
+
+  /**
    * Cria uma nova empresa
    */
   async create(data: CreateEmpresaRequest): Promise<Empresa> {

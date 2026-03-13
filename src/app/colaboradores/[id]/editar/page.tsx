@@ -122,17 +122,24 @@ export default function EditarColaboradorPage() {
       const data = await colaboradoresService.getById(colaboradorId, isColaborador);
       setColaborador(data);
 
-      // Para colaboradores, criar objeto empresa temporário para evitar erro no Select
+      // Para colaboradores, buscar dados da empresa para mostrar a razão social
       if (isColaborador && data.empresa_id) {
-        setEmpresas([{
-          empresa_id: data.empresa_id,
-          razao_social: data.empresa_id, // Temporário - mostrar apenas o ID
-          cnpj: '',
-          endereco: {} as any,
-          contatos: [],
-          status: 'ativo' as any,
-          data_cadastro: '',
-        }]);
+        try {
+          const empresa = await empresaService.getById(data.empresa_id);
+          setEmpresas([empresa]);
+        } catch (err) {
+          console.error('Erro ao carregar empresa do colaborador:', err);
+          // Fallback: mostrar apenas o ID
+          setEmpresas([{
+            empresa_id: data.empresa_id,
+            razao_social: data.empresa_id,
+            cnpj: '',
+            endereco: {} as any,
+            contatos: [],
+            status: 'ativo' as any,
+            data_cadastro: '',
+          }]);
+        }
       }
     } catch (err: any) {
       setError(err.message || "Erro ao carregar colaborador");
