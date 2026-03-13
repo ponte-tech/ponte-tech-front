@@ -1,5 +1,6 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { getCookie, deleteCookie } from "@/app/lib/cookies";
+import { jwtDecode } from "jwt-decode";
 
 // Base URL da API
 // Se NEXT_PUBLIC_API_URL estiver definida, usa ela
@@ -15,13 +16,45 @@ const api = axios.create({
   },
 });
 
+// Função para verificar se o token está expirado
+function isTokenExpired(token: string): boolean {
+  try {
+    const decoded: any = jwtDecode(token);
+    if (!decoded.exp) return false;
+
+    // Verificar se o token expira em menos de 1 minuto
+    // exp é em segundos, Date.now() é em milissegundos
+    const expirationTime = decoded.exp * 1000;
+    const currentTime = Date.now();
+
+    return currentTime >= expirationTime;
+  } catch (error) {
+    return true; // Se não conseguir decodificar, considerar expirado
+  }
+}
+
 // Interceptor de requisição - adiciona token JWT
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = getCookie("token");
 
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (token) {
+      // Verificar se o token está expirado antes de adicionar ao header
+      if (isTokenExpired(token)) {
+        deleteCookie("token");
+        localStorage.removeItem("user");
+
+        // Redirecionar para login
+        if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
+          window.location.href = "/login";
+        }
+
+        return Promise.reject(new Error("Token expirado"));
+      }
+
+      if (config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
 
     return config;

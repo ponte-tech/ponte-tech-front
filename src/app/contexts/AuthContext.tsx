@@ -85,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
 
       // Salvar token e usuário
-      setCookie("token", response.token, 7); // Cookie válido por 7 dias
+      setCookie("token", response.token, 0.25); // Cookie válido por 6 horas (0.25 dias)
       localStorage.setItem("user", JSON.stringify(localUser));
       setUser(localUser);
 
@@ -119,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await authService.selectProfile(perfil);
 
       // Atualizar token e perfil ativo do usuário
-      setCookie("token", response.token, 7);
+      setCookie("token", response.token, 0.25); // Cookie válido por 6 horas (0.25 dias)
 
       if (user) {
         const updatedUser = {
@@ -168,7 +168,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const mockToken = "mock-jwt-token";
 
       localStorage.setItem("user", JSON.stringify(mockUser));
-      setCookie("token", mockToken, 7);
+      setCookie("token", mockToken, 0.25); // Cookie válido por 6 horas (0.25 dias)
       setUser(mockUser);
 
       router.push("/dashboard");
