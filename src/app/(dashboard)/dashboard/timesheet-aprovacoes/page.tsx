@@ -150,43 +150,22 @@ export default function TimesheetAprovacoesPage() {
       setError(null);
 
       // Call API to list colaboradores with timesheet status
-      // This will also auto-create missing fechamento records for the selected month
+      // This endpoint now returns notas fiscais along with timesheet data
       const data = await timesheetService.listarColaboradoresTimesheet(mesAtual);
 
       setColaboradores(data.colaboradores);
 
-      // Carregar notas fiscais de cada colaborador
-      await loadNotasFiscais(data.colaboradores);
+      // Processar notas fiscais que já vêm no response
+      const notasMap: Record<string, NotaFiscal[]> = {};
+      data.colaboradores.forEach((colab) => {
+        notasMap[colab.colaborador_id] = colab.notas_fiscais || [];
+      });
+      setNotasFiscaisPorColaborador(notasMap);
     } catch (err) {
       console.error('Erro ao carregar colaboradores:', err);
       setError('Erro ao carregar lista de colaboradores');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadNotasFiscais = async (colabs: ColaboradorTimesheetStatus[]) => {
-    setLoadingNotas(true);
-    const notasMap: Record<string, NotaFiscal[]> = {};
-
-    try {
-      // Buscar notas fiscais em paralelo para todos os colaboradores
-      const promises = colabs.map(async (colab) => {
-        try {
-          const notas = await fiscalService.listNotasFiscaisByColaborador(colab.colaborador_id, mesAtual);
-          notasMap[colab.colaborador_id] = notas;
-        } catch (err) {
-          console.error(`Erro ao carregar notas de ${colab.nome_completo}:`, err);
-          notasMap[colab.colaborador_id] = [];
-        }
-      });
-
-      await Promise.all(promises);
-      setNotasFiscaisPorColaborador(notasMap);
-    } catch (err) {
-      console.error('Erro ao carregar notas fiscais:', err);
-    } finally {
-      setLoadingNotas(false);
     }
   };
 

@@ -84,6 +84,17 @@ export interface CreateLancamentoRequest {
   lancamentos: LancamentoItem[];
 }
 
+export interface NotaFiscalResumo {
+  nota_fiscal_id: string;
+  numero_nota: string;
+  nome_cliente: string;
+  valor: number;
+  status: string; // PENDENTE, APROVADA, REPROVADA, PAGA
+  arquivo_url?: string;
+  arquivo_nome?: string;
+  data_emissao: string;
+}
+
 export interface ColaboradorTimesheetStatus {
   colaborador_id: string;
   nome_completo: string;
@@ -97,6 +108,7 @@ export interface ColaboradorTimesheetStatus {
   aprovado_por?: string;
   motivo_reprovacao?: string;
   qtd_contratos_ativos: number;
+  notas_fiscais: NotaFiscalResumo[];
 }
 
 export interface ListaTimesheetAprovacaoResponse {
