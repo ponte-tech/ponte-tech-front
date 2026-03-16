@@ -4,6 +4,7 @@ import { useAuth } from "@/app/hooks/useAuth";
 import { Box, Typography, CircularProgress } from "@mui/material";
 import DashboardColaborador from "./components/DashboardColaborador";
 import DashboardAdmin from "./components/DashboardAdmin";
+import { AccessDenied } from "@/app/shared/components";
 import { useEffect } from "react";
 import { getCookie } from "@/app/lib/cookies";
 
@@ -52,18 +53,19 @@ export default function DashboardPage() {
   const userPerfis = user?.perfis;
 
   // Check if user is colaborador
-  const isColaborador = userPerfil === 'colaborador' || userPerfis?.includes('colaborador');
+  const isColaborador = userPerfil === 'colaborador' || userPerfis?.includes('colaborador') || userRole === 'colaborador';
 
   // Check if user is admin
   const isAdmin = userRole === 'admin' || userPerfis?.includes('admin');
 
+  // Colaboradores não têm acesso ao dashboard
+  if (isColaborador) {
+    return <AccessDenied />;
+  }
+
   // Render appropriate dashboard based on user role
   if (isAdmin) {
     return <DashboardAdmin />;
-  }
-
-  if (isColaborador) {
-    return <DashboardColaborador />;
   }
 
   // Fallback for other user types

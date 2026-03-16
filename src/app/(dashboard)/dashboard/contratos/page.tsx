@@ -25,7 +25,8 @@ import contratoService from "@/app/services/contratoService";
 import clienteService from "@/app/services/clienteService";
 import type { Contrato, StatusContrato } from "@/app/types/contrato";
 import type { Cliente } from "@/app/types/cliente";
-import { PageHeader, DeleteDialog, FilterSearch, TableActionButtons, TableAction } from "@/app/shared/components";
+import { PageHeader, DeleteDialog, FilterSearch, TableActionButtons, TableAction, AccessDenied } from "@/app/shared/components";
+import { useAuth } from "@/app/hooks/useAuth";
 
 const statusLabels: Record<StatusContrato, string> = {
   ATIVO: "Ativo",
@@ -41,11 +42,14 @@ const statusColors: Record<StatusContrato, "success" | "error" | "default"> = {
 
 export default function ContratosPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [contratos, setContratos] = useState<Contrato[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<StatusContrato | "">("");
+
+  const isColaborador = user?.userType === "colaborador";
 
   // Delete dialog states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -226,6 +230,11 @@ export default function ContratosPage() {
 
     return actions;
   };
+
+  // Bloquear acesso para colaboradores
+  if (isColaborador) {
+    return <AccessDenied />;
+  }
 
   return (
     <Box>

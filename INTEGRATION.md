@@ -296,11 +296,7 @@ export const config = {
 
 ### 1. Login com Admin
 
-```typescript
-// Credenciais de teste
-email: "admin@pontetech.com"
-senha: "PonteTech2026!"
-```
+
 
 ### 2. Verificar no DevTools
 

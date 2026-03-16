@@ -23,8 +23,9 @@ import { Add as AddIcon } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import clienteService from "@/app/services/clienteService";
 import type { Cliente } from "@/app/types/cliente";
-import { PageHeader, DeleteDialog, FilterSearch, TableActionButtons, TableAction } from "@/app/shared/components";
+import { PageHeader, DeleteDialog, FilterSearch, TableActionButtons, TableAction, AccessDenied } from "@/app/shared/components";
 import { formatCNPJ, cleanCNPJ } from "@/app/utils/cnpjValidator";
+import { useAuth } from "@/app/hooks/useAuth";
 
 type ClienteStatus = "ativo" | "inativo";
 
@@ -40,10 +41,13 @@ const statusColors: Record<ClienteStatus, "success" | "error"> = {
 
 export default function ClientesPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<ClienteStatus | "">("");
+
+  const isColaborador = user?.userType === "colaborador";
 
   // Delete dialog states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -159,6 +163,11 @@ export default function ClientesPage() {
 
     return actions;
   };
+
+  // Show access denied for colaborador users
+  if (isColaborador) {
+    return <AccessDenied />;
+  }
 
   return (
     <Box>

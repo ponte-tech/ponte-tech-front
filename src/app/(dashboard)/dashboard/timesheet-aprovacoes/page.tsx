@@ -49,7 +49,7 @@ import JSZip from 'jszip';
 import { useAuth } from '@/app/hooks/useAuth';
 import timesheetService from '@/app/services/timesheetService';
 import fiscalService from '@/app/services/fiscalService';
-import { FilterSearch } from '@/app/shared/components';
+import { FilterSearch, AccessDenied } from '@/app/shared/components';
 import type { ColaboradorTimesheetStatus, StatusMes } from '@/app/types/timesheet';
 import type { NotaFiscal } from '@/app/types/fiscal';
 import DetalhesTimesheetDrawer from './components/DetalhesTimesheetDrawer';
@@ -80,6 +80,8 @@ const statusConfig: Record<StatusMes, { label: string; color: 'default' | 'warni
 export default function TimesheetAprovacoesPage() {
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
+
+  const isColaborador = user?.userType === "colaborador";
 
   // Estados principais
   const [loading, setLoading] = useState(true);
@@ -616,6 +618,11 @@ export default function TimesheetAprovacoesPage() {
     }
     return options;
   };
+
+  // Bloquear acesso para colaboradores
+  if (isColaborador) {
+    return <AccessDenied />;
+  }
 
   if (loading) {
     return (

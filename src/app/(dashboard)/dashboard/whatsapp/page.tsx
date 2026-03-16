@@ -20,6 +20,7 @@ import {
   ArrowBack as ArrowBackIcon,
 } from "@mui/icons-material";
 import { useAuth } from "@/app/hooks/useAuth";
+import { useRouter } from "next/navigation";
 import comunicacaoService from "@/app/services/comunicacaoService";
 import colaboradoresService from "@/app/services/colaboradoresService";
 import {
@@ -35,6 +36,7 @@ import BroadcastModal from "./components/BroadcastModal";
 
 export default function WhatsAppPage() {
   const { user, isAuthenticated } = useAuth();
+  const router = useRouter();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -237,9 +239,16 @@ export default function WhatsAppPage() {
     setMessages([]);
   };
 
+  // Check if user is admin
+  useEffect(() => {
+    if (isAuthenticated && user && user.userType !== "admin") {
+      router.push("/dashboard");
+    }
+  }, [isAuthenticated, user, router]);
+
   // Initial load
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && user?.userType === "admin") {
       loadConversations(); // Com loading na primeira carga
       loadColaboradores();
 
@@ -256,9 +265,14 @@ export default function WhatsAppPage() {
 
       return () => clearInterval(interval);
     }
-  }, [isAuthenticated, loadConversations, loadColaboradores, selectedPhone, loadMessages]);
+  }, [isAuthenticated, user, loadConversations, loadColaboradores, selectedPhone, loadMessages]);
 
   const selectedConversation = conversations.find((c) => c.phone === selectedPhone) || null;
+
+  // Don't render if not admin
+  if (!isAuthenticated || !user || user.userType !== "admin") {
+    return null;
+  }
 
   return (
     <Box

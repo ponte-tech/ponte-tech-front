@@ -19,14 +19,18 @@ import { Add as AddIcon } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import empresaService from "@/app/services/empresaService";
 import type { Empresa } from "@/app/types/empresa";
-import { PageHeader, DeleteDialog, FilterSearch, TableActionButtons, TableAction } from "@/app/shared/components";
+import { PageHeader, DeleteDialog, FilterSearch, TableActionButtons, TableAction, AccessDenied } from "@/app/shared/components";
 import { formatCNPJ, cleanCNPJ } from "@/app/utils/cnpjValidator";
+import { useAuth } from "@/app/hooks/useAuth";
 
 export default function EmpresasPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+
+  const isColaborador = user?.userType === "colaborador";
 
   // Delete dialog states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -112,6 +116,11 @@ export default function EmpresasPage() {
       tooltip: "Excluir empresa",
     },
   ];
+
+  // Show access denied for colaborador users
+  if (isColaborador) {
+    return <AccessDenied />;
+  }
 
   return (
     <Box>

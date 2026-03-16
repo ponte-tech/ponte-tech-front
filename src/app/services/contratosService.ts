@@ -7,6 +7,8 @@ import type {
 } from "../types/api";
 
 class ContratosService {
+  private baseUrl = "/api/admin/colaboradores";
+
   /**
    * Lista todos os contratos de um colaborador
    * - Admins acessam via /api/admin/colaboradores/{userId}/contratos

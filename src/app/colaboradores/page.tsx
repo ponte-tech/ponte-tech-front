@@ -25,7 +25,7 @@ import { useRouter } from "next/navigation";
 import colaboradoresService from "@/app/services/colaboradoresService";
 import { ColaboradorListItem, ColaboradorStatus } from "@/app/types/api";
 import { useAuth } from "@/app/hooks/useAuth";
-import { PageHeader, DeleteDialog, FilterSearch, TableActionButtons, TableAction } from "@/app/shared/components";
+import { PageHeader, DeleteDialog, FilterSearch, TableActionButtons, TableAction, AccessDenied } from "@/app/shared/components";
 import { useTablePagination } from "@/app/shared/hooks";
 
 const statusLabels: Record<ColaboradorStatus, string> = {
@@ -60,15 +60,6 @@ export default function ColaboradoresPage() {
 
   const isAdmin = user?.userType === "admin";
   const isColaborador = user?.userType === "colaborador";
-
-  // Redirect colaborador to their own profile
-  useEffect(() => {
-    if (user && isColaborador && user.id) {
-      router.push(`/colaboradores/${user.id}`);
-    } else if (user && !isAdmin && !isColaborador) {
-      router.push("/dashboard");
-    }
-  }, [user, isAdmin, isColaborador, router]);
 
   const loadColaboradores = async () => {
     setLoading(true);
@@ -179,6 +170,18 @@ export default function ColaboradoresPage() {
     new Set(colaboradores.flatMap(c => c.clientes || []))
   ).sort();
 
+  // Show access denied for colaborador users
+  if (isColaborador) {
+    return (
+      <AccessDenied
+        redirectTo="/minhas-horas"
+        redirectLabel="Ir para Lançamento de Horas"
+        message="Você não tem permissão para acessar a lista de colaboradores."
+      />
+    );
+  }
+
+  // Don't render for non-admin users
   if (!isAdmin) {
     return null;
   }
@@ -243,9 +246,9 @@ export default function ColaboradoresPage() {
             <TableHead>
               <TableRow sx={{ bgcolor: "#f8f9fa" }}>
                 <TableCell sx={{ fontWeight: 600 }}>Nome</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Cliente(s)</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>CNPJ</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Email</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Cliente</TableCell>
                 <TableCell sx={{ fontWeight: 600 }} align="right">Valor Total</TableCell>
                 <TableCell sx={{ fontWeight: 600 }} align="center">Status</TableCell>
                 <TableCell sx={{ fontWeight: 600 }} align="center">Ações</TableCell>
@@ -289,18 +292,12 @@ export default function ColaboradoresPage() {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2">{formatCNPJ(colaborador.cnpj)}</Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">{colaborador.email}</Typography>
-                    </TableCell>
-                    <TableCell>
                       {colaborador.clientes && colaborador.clientes.length > 0 ? (
                         colaborador.clientes.map((cliente, index) => (
                           <Typography
                             key={index}
                             variant="body2"
-                            sx={{ display: "block", lineHeight: 1.5 }}
+                            sx={{ display: "block", lineHeight: 1.8 }}
                           >
                             {cliente}
                           </Typography>
@@ -310,6 +307,12 @@ export default function ColaboradoresPage() {
                           -
                         </Typography>
                       )}
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{formatCNPJ(colaborador.cnpj)}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{colaborador.email}</Typography>
                     </TableCell>
                     <TableCell align="right">
                       <Typography variant="body2" fontWeight={500}>

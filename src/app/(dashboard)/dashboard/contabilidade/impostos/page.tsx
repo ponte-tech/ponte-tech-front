@@ -26,14 +26,18 @@ import JSZip from "jszip";
 import impostoService from "@/app/services/impostoService";
 import type { Imposto } from "@/app/types/imposto";
 import { TIPOS_IMPOSTO } from "@/app/types/imposto";
-import { PageHeader, FilterSearch, TableActionButtons, TableAction } from "@/app/shared/components";
+import { PageHeader, FilterSearch, TableActionButtons, TableAction, AccessDenied } from "@/app/shared/components";
+import { useAuth } from "@/app/hooks/useAuth";
 
 export default function ImpostosPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [impostos, setImpostos] = useState<Imposto[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [mesReferencia, setMesReferencia] = useState(getCurrentMonth());
+
+  const isColaborador = user?.userType === "colaborador";
 
   // Snackbar
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -223,6 +227,11 @@ export default function ImpostosPage() {
     }
     return options;
   };
+
+  // Bloquear acesso para colaboradores
+  if (isColaborador) {
+    return <AccessDenied />;
+  }
 
   return (
     <Box>
