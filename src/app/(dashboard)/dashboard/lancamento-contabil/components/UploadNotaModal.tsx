@@ -10,12 +10,10 @@ import {
   LinearProgress,
   Alert,
   alpha,
-  IconButton,
   CircularProgress,
 } from "@mui/material";
 import {
   CloudUpload as CloudUploadIcon,
-  Close as CloseIcon,
 } from "@mui/icons-material";
 import lancamentoContabilService from "@/app/services/lancamentoContabilService";
 import type { LancamentoContabil } from "@/app/types/lancamentoContabil";
@@ -114,56 +112,26 @@ export default function UploadNotaModal({
       PaperProps={{
         sx: {
           borderRadius: 3,
-          background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
-          boxShadow: '0 8px 32px rgba(130, 112, 255, 0.2)',
-          overflow: 'hidden',
         },
       }}
     >
       <DialogTitle
         sx={{
-          background: 'linear-gradient(135deg, #8270FF 0%, #411EFE 100%)',
-          color: '#FFFFFF',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          py: 2.5,
-          px: 3,
+          bgcolor: alpha("#8270FF", 0.05),
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          borderBottom: 1,
+          borderColor: "divider",
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Box
-            sx={{
-              width: 40,
-              height: 40,
-              borderRadius: 2,
-              background: alpha('#FFFFFF', 0.2),
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <CloudUploadIcon sx={{ fontSize: 24 }} />
-          </Box>
-          <Typography variant="h6" fontWeight={700}>
-            Upload de Nota Fiscal
-          </Typography>
+        <CloudUploadIcon sx={{ color: "#8270FF" }} />
+        <Box component="span" sx={{ fontWeight: 600, fontSize: "1.25rem", color: "#8270FF" }}>
+          Upload de Nota Fiscal
         </Box>
-        <IconButton
-          onClick={handleClose}
-          disabled={uploading}
-          sx={{
-            color: '#FFFFFF',
-            '&:hover': {
-              background: alpha('#FFFFFF', 0.2),
-            },
-          }}
-        >
-          <CloseIcon />
-        </IconButton>
       </DialogTitle>
-      <DialogContent sx={{ p: 3 }}>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5, mt: 1 }}>
+      <DialogContent sx={{ mt: 2 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
           {lancamento && (
             <Box
               sx={{
@@ -285,63 +253,23 @@ export default function UploadNotaModal({
           )}
         </Box>
       </DialogContent>
-      <DialogActions
-        sx={{
-          px: 3,
-          py: 2.5,
-          borderTop: '1px solid',
-          borderColor: alpha('#e5e7eb', 0.8),
-          gap: 1.5,
-        }}
-      >
-        <Button
-          onClick={handleClose}
-          disabled={uploading}
-          sx={{
-            borderRadius: 2,
-            textTransform: 'none',
-            fontWeight: 600,
-            px: 3,
-            color: '#6b7280',
-            '&:hover': {
-              background: alpha('#6b7280', 0.1),
-            },
-          }}
-        >
+      <DialogActions sx={{ p: 2, borderTop: 1, borderColor: "divider" }}>
+        <Button onClick={handleClose} disabled={uploading}>
           Cancelar
         </Button>
         <Button
           onClick={handleUpload}
           variant="contained"
           disabled={!selectedFile || uploading}
+          startIcon={uploading ? <CircularProgress size={20} /> : null}
           sx={{
-            background: 'linear-gradient(135deg, #8270FF 0%, #411EFE 100%)',
-            boxShadow: '0 4px 12px rgba(130, 112, 255, 0.3)',
-            borderRadius: 2,
-            textTransform: 'none',
-            fontWeight: 600,
-            px: 4,
-            py: 1,
-            transition: 'all 0.3s ease',
-            '&:hover': {
-              background: 'linear-gradient(135deg, #411EFE 0%, #8270FF 100%)',
-              transform: 'translateY(-2px)',
-              boxShadow: '0 6px 20px rgba(65, 30, 254, 0.4)',
-            },
-            '&:disabled': {
-              background: alpha('#8270FF', 0.3),
-              color: alpha('#FFFFFF', 0.5),
+            bgcolor: "#8270FF",
+            "&:hover": {
+              bgcolor: alpha("#8270FF", 0.8),
             },
           }}
         >
-          {uploading ? (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <CircularProgress size={20} sx={{ color: '#FFFFFF' }} />
-              <span>Enviando...</span>
-            </Box>
-          ) : (
-            "Enviar"
-          )}
+          {uploading ? "Enviando..." : "Enviar"}
         </Button>
       </DialogActions>
     </Dialog>
