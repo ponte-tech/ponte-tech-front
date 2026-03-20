@@ -18,7 +18,6 @@ import {
 } from "@mui/material";
 import {
   Email as EmailIcon,
-  ArrowBack,
   CheckCircleOutline,
   Lock as LockIcon,
   Visibility,
@@ -284,38 +283,6 @@ export default function ForgotPasswordPage() {
           pointerEvents: "none",
         }}
       />
-
-      {/* Back button */}
-      <Box
-        sx={{
-          position: "absolute",
-          top: { xs: 20, sm: 32 },
-          left: { xs: 20, sm: 32 },
-          zIndex: 10,
-        }}
-      >
-        <Button
-          component={Link}
-          href="/login"
-          startIcon={<ArrowBack />}
-          sx={{
-            color: "#6b7280",
-            textTransform: "none",
-            fontWeight: 600,
-            fontSize: "0.9375rem",
-            px: 2,
-            py: 1,
-            borderRadius: 2,
-            transition: "all 0.2s ease",
-            "&:hover": {
-              backgroundColor: alpha("#8270FF", 0.08),
-              color: "#8270FF",
-            },
-          }}
-        >
-          Voltar
-        </Button>
-      </Box>
 
       {/* Main content */}
       <Container

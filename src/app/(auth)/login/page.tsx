@@ -23,7 +23,6 @@ import {
   Lock as LockIcon,
   Visibility,
   VisibilityOff,
-  ArrowBack,
   LoginOutlined,
 } from "@mui/icons-material";
 import Image from "next/image";
@@ -53,7 +52,6 @@ export default function LoginPage() {
     bgGradient3: alpha('#E363EB', 0.05),
     circle1: alpha('#8270FF', 0.1),
     circle2: alpha('#E363EB', 0.06),
-    backButtonHover: alpha("#8270FF", 0.08),
     border: alpha('#e5e7eb', 0.8),
     shadow1: alpha('#8270FF', 0.08),
     shadow2: alpha('#000000', 0.04),
@@ -111,38 +109,6 @@ export default function LoginPage() {
           pointerEvents: "none",
         }}
       />
-
-      {/* Back button */}
-      <Box
-        sx={{
-          position: "absolute",
-          top: { xs: 20, sm: 32 },
-          left: { xs: 20, sm: 32 },
-          zIndex: 10,
-        }}
-      >
-        <Button
-          component={Link}
-          href="/"
-          startIcon={<ArrowBack />}
-          sx={{
-            color: "#6b7280",
-            textTransform: "none",
-            fontWeight: 600,
-            fontSize: "0.9375rem",
-            px: 2,
-            py: 1,
-            borderRadius: 2,
-            transition: "all 0.2s ease",
-            "&:hover": {
-              backgroundColor: colors.backButtonHover,
-              color: "#8270FF",
-            },
-          }}
-        >
-          Voltar
-        </Button>
-      </Box>
 
       {/* Main content */}
       <Container

@@ -60,13 +60,13 @@ export default function Home() {
       />
 
       {/* Main content */}
-      <Container maxWidth="md" sx={{ position: "relative", zIndex: 1 }}>
+      <Container maxWidth="sm" sx={{ position: "relative", zIndex: 1 }}>
         <Fade in timeout={800}>
           <Box
             sx={{
               textAlign: "center",
-              py: { xs: 6, md: 8 },
-              px: { xs: 3, md: 6 },
+              py: { xs: 4, md: 5 },
+              px: { xs: 3, md: 4 },
               backgroundColor: alpha("#FFFFFF", 0.9),
               backdropFilter: "blur(20px)",
               borderRadius: 6,
@@ -83,13 +83,13 @@ export default function Home() {
               sx={{
                 display: "flex",
                 justifyContent: "center",
-                mb: 5,
+                mb: 3,
               }}
             >
               <Box
                 sx={{
-                  width: { xs: 180, sm: 220, md: 260 },
-                  height: { xs: 65, sm: 80, md: 95 },
+                  width: { xs: 160, sm: 180, md: 200 },
+                  height: { xs: 58, sm: 65, md: 72 },
                   position: "relative",
                 }}
               >
@@ -109,12 +109,12 @@ export default function Home() {
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
-                width: { xs: 80, md: 100 },
-                height: { xs: 80, md: 100 },
+                width: { xs: 70, md: 80 },
+                height: { xs: 70, md: 80 },
                 borderRadius: "50%",
                 background: `linear-gradient(135deg, ${alpha('#8270FF', 0.1)} 0%, ${alpha('#E363EB', 0.1)} 100%)`,
                 border: `2px solid ${alpha('#8270FF', 0.2)}`,
-                mb: 4,
+                mb: 3,
                 animation: "rotate 3s linear infinite",
                 "@keyframes rotate": {
                   "0%": { transform: "rotate(0deg)" },
@@ -124,7 +124,7 @@ export default function Home() {
             >
               <Construction
                 sx={{
-                  fontSize: { xs: 40, md: 50 },
+                  fontSize: { xs: 35, md: 40 },
                   color: "#8270FF",
                 }}
               />
@@ -139,8 +139,8 @@ export default function Home() {
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
-                mb: 2,
-                fontSize: { xs: "2rem", sm: "2.5rem", md: "3rem" },
+                mb: 1.5,
+                fontSize: { xs: "1.75rem", sm: "2rem", md: "2.25rem" },
                 letterSpacing: "-0.02em",
               }}
             >
@@ -153,8 +153,8 @@ export default function Home() {
               sx={{
                 color: "#6b7280",
                 fontWeight: 500,
-                mb: 4,
-                fontSize: { xs: "1rem", sm: "1.125rem", md: "1.25rem" },
+                mb: 3,
+                fontSize: { xs: "0.9375rem", sm: "1rem", md: "1.0625rem" },
                 lineHeight: 1.6,
               }}
             >
@@ -166,16 +166,16 @@ export default function Home() {
               sx={{
                 display: "flex",
                 flexDirection: { xs: "column", sm: "row" },
-                gap: 3,
-                mt: 5,
-                mb: 4,
+                gap: 2.5,
+                mt: 3.5,
+                mb: 3,
               }}
             >
               {/* Time estimate card */}
               <Box
                 sx={{
                   flex: 1,
-                  p: 3,
+                  p: 2.5,
                   borderRadius: 3,
                   backgroundColor: alpha("#f9fafb", 0.8),
                   border: `1px solid ${alpha('#e5e7eb', 0.8)}`,
@@ -189,7 +189,7 @@ export default function Home() {
               >
                 <Schedule
                   sx={{
-                    fontSize: 36,
+                    fontSize: 32,
                     color: "#8270FF",
                     mb: 1.5,
                   }}
@@ -223,7 +223,7 @@ export default function Home() {
               <Box
                 sx={{
                   flex: 1,
-                  p: 3,
+                  p: 2.5,
                   borderRadius: 3,
                   backgroundColor: alpha("#f9fafb", 0.8),
                   border: `1px solid ${alpha('#e5e7eb', 0.8)}`,
@@ -237,7 +237,7 @@ export default function Home() {
               >
                 <Email
                   sx={{
-                    fontSize: 36,
+                    fontSize: 32,
                     color: "#E363EB",
                     mb: 1.5,
                   }}
@@ -276,11 +276,11 @@ export default function Home() {
                 alignItems: "center",
                 justifyContent: "center",
                 gap: 2,
-                mt: 5,
+                mt: 3.5,
               }}
             >
               <CircularProgress
-                size={24}
+                size={20}
                 thickness={4}
                 sx={{
                   color: "#8270FF",
