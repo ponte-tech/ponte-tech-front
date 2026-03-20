@@ -1056,7 +1056,7 @@ export default function TimesheetAprovacoesPage() {
                 Valor lançado:
               </Typography>
               <Typography variant="h6" fontWeight="600">
-                R$ {selectedColaborador?.total_valor_lancado.toFixed(2)}
+                R$ {(selectedColaborador?.total_valor_lancado || 0).toFixed(2)}
               </Typography>
             </Box>
           </Stack>
@@ -1101,7 +1101,7 @@ export default function TimesheetAprovacoesPage() {
               )}
               {valorAprovado !== selectedColaborador?.total_valor_lancado && (
                 <Typography variant="body2" sx={{ mt: 0.5 }}>
-                  • Valor: R$ {valorAprovado.toFixed(2)} (lançado: R$ {selectedColaborador?.total_valor_lancado.toFixed(2)})
+                  • Valor: R$ {valorAprovado.toFixed(2)} (lançado: R$ {(selectedColaborador?.total_valor_lancado || 0).toFixed(2)})
                 </Typography>
               )}
             </Alert>
