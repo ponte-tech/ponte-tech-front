@@ -86,6 +86,7 @@ export default function TimesheetAprovacoesPage() {
 
   // Estados principais
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [colaboradores, setColaboradores] = useState<ColaboradorTimesheetStatus[]>([]);
   const [mesAtual, setMesAtual] = useState(() => {
     const hoje = new Date();
@@ -147,9 +148,13 @@ export default function TimesheetAprovacoesPage() {
     }
   }, [user, mesAtual]);
 
-  const loadColaboradores = async () => {
+  const loadColaboradores = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) {
+        setLoading(true);
+      } else {
+        setRefreshing(true);
+      }
       setError(null);
 
       // Call API to list colaboradores with timesheet status
@@ -168,7 +173,11 @@ export default function TimesheetAprovacoesPage() {
       console.error('Erro ao carregar colaboradores:', err);
       setError('Erro ao carregar lista de colaboradores');
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      } else {
+        setRefreshing(false);
+      }
     }
   };
 
@@ -286,15 +295,17 @@ export default function TimesheetAprovacoesPage() {
         );
       }
 
-      // Atualizar lista
-      await loadColaboradores();
+      // Fechar o dialog primeiro para melhor UX
+      setDialogAprovacao(false);
+
+      // Atualizar lista silenciosamente (sem esconder a tabela)
+      await loadColaboradores(true);
 
       setSnackbar({
         open: true,
         message: `Timesheet de ${selectedColaborador.nome_completo} aprovado com valor de ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorAprovado)}!${notasPendentes.length > 0 ? ` ${notasPendentes.length} nota(s) fiscal(is) aprovada(s) automaticamente.` : ''}`,
         severity: 'success',
       });
-      setDialogAprovacao(false);
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };
       setSnackbar({
@@ -322,15 +333,17 @@ export default function TimesheetAprovacoesPage() {
         motivoReprovacao
       );
 
-      // Atualizar lista
-      await loadColaboradores();
+      // Fechar o dialog primeiro para melhor UX
+      setDialogReprovacao(false);
+
+      // Atualizar lista silenciosamente (sem esconder a tabela)
+      await loadColaboradores(true);
 
       setSnackbar({
         open: true,
         message: `Timesheet de ${selectedColaborador.nome_completo} reprovado com sucesso!`,
         severity: 'success',
       });
-      setDialogReprovacao(false);
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };
       setSnackbar({
@@ -847,6 +860,10 @@ export default function TimesheetAprovacoesPage() {
             Colaboradores ({colaboradoresFiltrados.length})
           </Typography>
 
+          {refreshing && (
+            <LinearProgress sx={{ mb: 2, borderRadius: 1 }} />
+          )}
+
           {colaboradoresFiltrados.length === 0 ? (
             <Alert severity="info">
               Nenhum colaborador encontrado com os filtros aplicados.
@@ -870,6 +887,7 @@ export default function TimesheetAprovacoesPage() {
                     <TableCell align="center"><strong>Progresso</strong></TableCell>
                     <TableCell align="center"><strong>Status Notas Fiscais</strong></TableCell>
                     <TableCell align="center"><strong>Status Timesheet</strong></TableCell>
+                    <TableCell align="center"><strong>Valor Aprovado</strong></TableCell>
                     <TableCell align="center"><strong>Notas Fiscais</strong></TableCell>
                     <TableCell align="center"><strong>Ações</strong></TableCell>
                   </TableRow>
@@ -966,6 +984,26 @@ export default function TimesheetAprovacoesPage() {
                             color={statusConfig[colab.status_mes].color}
                             size="small"
                           />
+                        </TableCell>
+
+                        {/* Coluna de Valor Aprovado */}
+                        <TableCell align="center">
+                          {colab.status_mes === 'APROVADO' ? (
+                            <Typography
+                              variant="body2"
+                              fontWeight="700"
+                              sx={{
+                                color: '#2e7d32',
+                                fontSize: '0.95rem',
+                              }}
+                            >
+                              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(colab.total_valor_lancado || 0)}
+                            </Typography>
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">
+                              -
+                            </Typography>
+                          )}
                         </TableCell>
 
                         {/* Coluna de Notas Fiscais */}

@@ -26,6 +26,7 @@ import type {
 import CalendarioHoras from './components/CalendarioHoras';
 import FormularioLancamento from './components/FormularioLancamento';
 import StatusMes from './components/StatusMes';
+import DialogLancamentosDia from './components/DialogLancamentosDia';
 
 export default function MinhasHorasPage() {
   const router = useRouter();
@@ -42,7 +43,9 @@ export default function MinhasHorasPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
+  const [dialogLancamentosOpen, setDialogLancamentosOpen] = useState(false);
   const [dataInicialForm, setDataInicialForm] = useState<string | undefined>();
+  const [dataSelecionada, setDataSelecionada] = useState<string | null>(null);
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
     message: '',
@@ -112,8 +115,54 @@ export default function MinhasHorasPage() {
   };
 
   const handleDiaClick = (data: string) => {
-    setDataInicialForm(data);
+    // Verificar se o dia tem lançamentos
+    const dia = mesData?.dias.find(d => d.data === data);
+
+    if (dia && dia.lancamentos && dia.lancamentos.length > 0) {
+      // Se tem lançamentos, abrir dialog de lançamentos
+      setDataSelecionada(data);
+      setDialogLancamentosOpen(true);
+    } else {
+      // Se não tem lançamentos, abrir formulário de novo lançamento
+      setDataInicialForm(data);
+      setFormOpen(true);
+    }
+  };
+
+  const handleAddNewFromDialog = () => {
+    setDialogLancamentosOpen(false);
+    setDataInicialForm(dataSelecionada || undefined);
     setFormOpen(true);
+  };
+
+  const handleDeleteLancamento = async (apontamentoId: string) => {
+    try {
+      await timesheetService.deleteLancamento(apontamentoId);
+
+      // Recarregar dados
+      const [mesResp, resumoResp] = await Promise.all([
+        timesheetService.getMesCalendario(mesAtual),
+        timesheetService.getResumoMes(mesAtual),
+      ]);
+
+      setMesData(mesResp);
+      setResumoData(resumoResp);
+
+      setSnackbar({
+        open: true,
+        message: 'Lançamento excluído com sucesso!',
+        severity: 'success',
+      });
+
+      // Verificar se ainda há lançamentos no dia
+      const dia = mesResp.dias.find(d => d.data === dataSelecionada);
+      if (!dia || !dia.lancamentos || dia.lancamentos.length === 0) {
+        setDialogLancamentosOpen(false);
+      }
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      throw new Error(error.response?.data?.message || 'Erro ao excluir lançamento');
+    }
   };
 
   const handleCreateLancamento = async (request: CreateLancamentoRequest) => {
@@ -236,7 +285,7 @@ export default function MinhasHorasPage() {
           aprovadoPor={resumoData.aprovado_por}
           motivoReprovacao={resumoData.motivo_reprovacao}
           totalHoras={resumoData.total_horas_lancadas}
-          horasAprovadas={resumoData.total_horas_aprovadas}
+          valorAprovado={resumoData.total_valor_lancado}
           onEnviarParaAprovacao={handleEnviarParaAprovacao}
           loading={loading}
         />
@@ -253,6 +302,20 @@ export default function MinhasHorasPage() {
           />
         )}
       </Box>
+
+      {/* Dialog de Lançamentos do Dia */}
+      {dataSelecionada && mesData && (
+        <DialogLancamentosDia
+          open={dialogLancamentosOpen}
+          onClose={() => setDialogLancamentosOpen(false)}
+          data={dataSelecionada}
+          lancamentos={
+            mesData.dias.find(d => d.data === dataSelecionada)?.lancamentos || []
+          }
+          onDelete={handleDeleteLancamento}
+          onAddNew={handleAddNewFromDialog}
+        />
+      )}
 
       {/* Formulário */}
       <FormularioLancamento

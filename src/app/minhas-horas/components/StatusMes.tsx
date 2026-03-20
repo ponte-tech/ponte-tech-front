@@ -28,7 +28,7 @@ interface StatusMesProps {
   aprovadoPor?: string;
   motivoReprovacao?: string;
   totalHoras: number;
-  horasAprovadas?: number;
+  valorAprovado?: number;
   onEnviarParaAprovacao?: () => void;
   loading?: boolean;
 }
@@ -63,7 +63,7 @@ export default function StatusMes({
   aprovadoPor,
   motivoReprovacao,
   totalHoras,
-  horasAprovadas,
+  valorAprovado,
   onEnviarParaAprovacao,
   loading = false,
 }: StatusMesProps) {
@@ -160,7 +160,7 @@ export default function StatusMes({
                   </Typography>
                 </Box>
 
-                {statusMes === 'APROVADO' && horasAprovadas !== undefined && (
+                {statusMes === 'APROVADO' && valorAprovado !== undefined && (
                   <Box
                     sx={{
                       display: 'flex',
@@ -173,14 +173,14 @@ export default function StatusMes({
                     }}
                   >
                     <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                      Horas aprovadas:
+                      Total valor aprovado:
                     </Typography>
                     <Typography variant="h6" fontWeight={700} sx={{
                       background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
                     }}>
-                      {horasAprovadas.toFixed(2)}h
+                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorAprovado)}
                     </Typography>
                   </Box>
                 )}

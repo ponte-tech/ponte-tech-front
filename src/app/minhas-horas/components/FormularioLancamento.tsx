@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -53,6 +53,15 @@ export default function FormularioLancamento({
   const [observacao, setObservacao] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Atualizar dataUnica quando dataInicial ou open mudar
+  useEffect(() => {
+    if (open && dataInicial) {
+      setDataUnica(new Date(dataInicial + 'T12:00:00'));
+    } else if (open && !dataInicial) {
+      setDataUnica(new Date());
+    }
+  }, [open, dataInicial]);
 
   const handleSubmit = async () => {
     setError(null);
