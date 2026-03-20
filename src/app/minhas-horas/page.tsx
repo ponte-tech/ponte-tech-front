@@ -10,15 +10,10 @@ import {
   Stack,
   Alert,
   CircularProgress,
-  Tabs,
-  Tab,
-  Paper,
   Snackbar,
 } from '@mui/material';
 import {
   Add as AddIcon,
-  CalendarMonth as CalendarIcon,
-  Assessment as AssessmentIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../hooks/useAuth';
 import timesheetService from '../services/timesheetService';
@@ -29,14 +24,12 @@ import type {
   CreateLancamentoRequest,
 } from '../types/timesheet';
 import CalendarioHoras from './components/CalendarioHoras';
-import ResumoHoras from './components/ResumoHoras';
 import FormularioLancamento from './components/FormularioLancamento';
 import StatusMes from './components/StatusMes';
 
 export default function MinhasHorasPage() {
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
-  const [tabAtual, setTabAtual] = useState(0);
   const [mesAtual, setMesAtual] = useState(() => {
     const hoje = new Date();
     return `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
@@ -248,27 +241,15 @@ export default function MinhasHorasPage() {
         />
       )}
 
-      {/* Tabs */}
-      <Paper sx={{ mb: 3 }}>
-        <Tabs value={tabAtual} onChange={(_, v) => setTabAtual(v)}>
-          <Tab icon={<CalendarIcon />} label="Calendário" />
-          <Tab icon={<AssessmentIcon />} label="Resumo" />
-        </Tabs>
-      </Paper>
-
       {/* Conteúdo */}
       <Box>
-        {tabAtual === 0 && mesData && (
+        {mesData && (
           <CalendarioHoras
             dias={mesData.dias}
             mesAtual={mesAtual}
             onMesChange={handleMesChange}
             onDiaClick={handleDiaClick}
           />
-        )}
-
-        {tabAtual === 1 && resumoData && (
-          <ResumoHoras resumo={resumoData} />
         )}
       </Box>
 

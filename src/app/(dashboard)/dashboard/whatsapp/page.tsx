@@ -322,7 +322,7 @@ export default function WhatsAppPage() {
             px: 3,
           }}
         >
-          {isMobile ? "Broadcast" : "Enviar em Massa"}
+          {isMobile ? "WhatsApp" : "Envie mensagem pelo WhatsApp"}
         </Button>
       </Box>
 

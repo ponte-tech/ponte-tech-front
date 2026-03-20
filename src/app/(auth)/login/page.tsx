@@ -46,6 +46,30 @@ export default function LoginPage() {
     }
   };
 
+  // Cores calculadas uma vez para evitar erros de hidratação
+  const colors = {
+    bgGradient1: alpha('#8270FF', 0.05),
+    bgGradient2: alpha('#FFFFFF', 1),
+    bgGradient3: alpha('#E363EB', 0.05),
+    circle1: alpha('#8270FF', 0.1),
+    circle2: alpha('#E363EB', 0.06),
+    backButtonHover: alpha("#8270FF", 0.08),
+    border: alpha('#e5e7eb', 0.8),
+    shadow1: alpha('#8270FF', 0.08),
+    shadow2: alpha('#000000', 0.04),
+    hoverShadow1: alpha('#8270FF', 0.12),
+    hoverShadow2: alpha('#000000', 0.06),
+    errorBorder: alpha('#ef4444', 0.2),
+    errorBg: alpha('#fef2f2', 0.8),
+    inputBg: alpha("#f9fafb", 0.8),
+    inputBorder: alpha("#d1d5db", 0.8),
+    focusShadow: alpha("#8270FF", 0.1),
+    buttonShadow: alpha("#8270FF", 0.3),
+    buttonHoverShadow: alpha("#411EFE", 0.4),
+    buttonDisabled: alpha("#8270FF", 0.4),
+    dividerColor: alpha("#d1d5db", 0.6),
+  };
+
   return (
     <Box
       sx={{
@@ -55,9 +79,9 @@ export default function LoginPage() {
         overflow: "hidden",
         background: `
           linear-gradient(135deg,
-            ${alpha('#8270FF', 0.05)} 0%,
-            ${alpha('#FFFFFF', 1)} 50%,
-            ${alpha('#E363EB', 0.05)} 100%
+            ${colors.bgGradient1} 0%,
+            ${colors.bgGradient2} 50%,
+            ${colors.bgGradient3} 100%
           )
         `,
       }}
@@ -71,7 +95,7 @@ export default function LoginPage() {
           width: { xs: 300, md: 500 },
           height: { xs: 300, md: 500 },
           borderRadius: "50%",
-          background: `radial-gradient(circle, ${alpha('#8270FF', 0.1)} 0%, transparent 70%)`,
+          background: `radial-gradient(circle, ${colors.circle1} 0%, transparent 70%)`,
           pointerEvents: "none",
         }}
       />
@@ -83,7 +107,7 @@ export default function LoginPage() {
           width: { xs: 400, md: 600 },
           height: { xs: 400, md: 600 },
           borderRadius: "50%",
-          background: `radial-gradient(circle, ${alpha('#E363EB', 0.06)} 0%, transparent 70%)`,
+          background: `radial-gradient(circle, ${colors.circle2} 0%, transparent 70%)`,
           pointerEvents: "none",
         }}
       />
@@ -111,7 +135,7 @@ export default function LoginPage() {
             borderRadius: 2,
             transition: "all 0.2s ease",
             "&:hover": {
-              backgroundColor: alpha("#8270FF", 0.08),
+              backgroundColor: colors.backButtonHover,
               color: "#8270FF",
             },
           }}
@@ -141,16 +165,16 @@ export default function LoginPage() {
               p: { xs: 4, sm: 6 },
               borderRadius: 4,
               backgroundColor: "#FFFFFF",
-              border: `1px solid ${alpha('#e5e7eb', 0.8)}`,
+              border: `1px solid ${colors.border}`,
               boxShadow: `
-                0 10px 40px ${alpha('#8270FF', 0.08)},
-                0 2px 8px ${alpha('#000000', 0.04)}
+                0 10px 40px ${colors.shadow1},
+                0 2px 8px ${colors.shadow2}
               `,
               transition: "all 0.3s ease",
               "&:hover": {
                 boxShadow: `
-                  0 20px 60px ${alpha('#8270FF', 0.12)},
-                  0 4px 12px ${alpha('#000000', 0.06)}
+                  0 20px 60px ${colors.hoverShadow1},
+                  0 4px 12px ${colors.hoverShadow2}
                 `,
               },
             }}
@@ -213,8 +237,8 @@ export default function LoginPage() {
                   sx={{
                     mb: 3,
                     borderRadius: 2,
-                    border: `1px solid ${alpha('#ef4444', 0.2)}`,
-                    backgroundColor: alpha('#fef2f2', 0.8),
+                    border: `1px solid ${colors.errorBorder}`,
+                    backgroundColor: colors.errorBg,
                   }}
                 >
                   {error}
@@ -260,10 +284,10 @@ export default function LoginPage() {
                   sx={{
                     "& .MuiOutlinedInput-root": {
                       borderRadius: 2,
-                      backgroundColor: alpha("#f9fafb", 0.8),
+                      backgroundColor: colors.inputBg,
                       transition: "all 0.2s ease",
                       "& fieldset": {
-                        borderColor: alpha("#d1d5db", 0.8),
+                        borderColor: colors.inputBorder,
                       },
                       "&:hover": {
                         backgroundColor: "#FFFFFF",
@@ -273,7 +297,7 @@ export default function LoginPage() {
                       },
                       "&.Mui-focused": {
                         backgroundColor: "#FFFFFF",
-                        boxShadow: `0 0 0 3px ${alpha("#8270FF", 0.1)}`,
+                        boxShadow: `0 0 0 3px ${colors.focusShadow}`,
                         "& fieldset": {
                           borderColor: "#8270FF",
                           borderWidth: 2,
@@ -336,10 +360,10 @@ export default function LoginPage() {
                   sx={{
                     "& .MuiOutlinedInput-root": {
                       borderRadius: 2,
-                      backgroundColor: alpha("#f9fafb", 0.8),
+                      backgroundColor: colors.inputBg,
                       transition: "all 0.2s ease",
                       "& fieldset": {
-                        borderColor: alpha("#d1d5db", 0.8),
+                        borderColor: colors.inputBorder,
                       },
                       "&:hover": {
                         backgroundColor: "#FFFFFF",
@@ -349,7 +373,7 @@ export default function LoginPage() {
                       },
                       "&.Mui-focused": {
                         backgroundColor: "#FFFFFF",
-                        boxShadow: `0 0 0 3px ${alpha("#8270FF", 0.1)}`,
+                        boxShadow: `0 0 0 3px ${colors.focusShadow}`,
                         "& fieldset": {
                           borderColor: "#8270FF",
                           borderWidth: 2,
@@ -394,18 +418,18 @@ export default function LoginPage() {
                   fontSize: "1rem",
                   fontWeight: 600,
                   background: "linear-gradient(135deg, #8270FF 0%, #411EFE 100%)",
-                  boxShadow: `0 4px 12px ${alpha("#8270FF", 0.3)}`,
+                  boxShadow: `0 4px 12px ${colors.buttonShadow}`,
                   transition: "all 0.3s ease",
                   "&:hover": {
                     background: "linear-gradient(135deg, #411EFE 0%, #8270FF 100%)",
-                    boxShadow: `0 8px 20px ${alpha("#411EFE", 0.4)}`,
+                    boxShadow: `0 8px 20px ${colors.buttonHoverShadow}`,
                     transform: "translateY(-2px)",
                   },
                   "&:active": {
                     transform: "translateY(0)",
                   },
                   "&:disabled": {
-                    background: alpha("#8270FF", 0.4),
+                    background: colors.buttonDisabled,
                     color: "#FFFFFF",
                   },
                 }}
@@ -423,7 +447,7 @@ export default function LoginPage() {
               sx={{
                 my: 4,
                 "&::before, &::after": {
-                  borderColor: alpha("#d1d5db", 0.6),
+                  borderColor: colors.dividerColor,
                 },
               }}
             >
