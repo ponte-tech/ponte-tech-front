@@ -11,6 +11,8 @@ import {
   Alert,
   CircularProgress,
   Snackbar,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -27,14 +29,12 @@ import CalendarioHoras from './components/CalendarioHoras';
 import FormularioLancamento from './components/FormularioLancamento';
 import StatusMes from './components/StatusMes';
 import DialogLancamentosDia from './components/DialogLancamentosDia';
+import ResumoHoras from './components/ResumoHoras';
 
 export default function MinhasHorasPage() {
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
-  const [mesAtual, setMesAtual] = useState(() => {
-    const hoje = new Date();
-    return `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
-  });
+  const [mesAtual, setMesAtual] = useState<string>('');
 
   const [contratos, setContratos] = useState<Contrato[]>([]);
   const [mesData, setMesData] = useState<MesResponse | null>(null);
@@ -51,6 +51,13 @@ export default function MinhasHorasPage() {
     message: '',
     severity: 'success',
   });
+  const [abaAtiva, setAbaAtiva] = useState(0);
+
+  // Inicializar mês atual apenas no cliente (evita erro de hydration)
+  useEffect(() => {
+    const hoje = new Date();
+    setMesAtual(`${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`);
+  }, []);
 
   // Verificar se é colaborador
   useEffect(() => {
@@ -291,17 +298,35 @@ export default function MinhasHorasPage() {
         />
       )}
 
-      {/* Conteúdo */}
-      <Box>
-        {mesData && (
+      {/* Abas de Navegação */}
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs
+          value={abaAtiva}
+          onChange={(_, newValue) => setAbaAtiva(newValue)}
+          aria-label="abas de navegação"
+        >
+          <Tab label="Calendário" />
+          <Tab label="Resumo" />
+        </Tabs>
+      </Box>
+
+      {/* Conteúdo das Abas */}
+      {abaAtiva === 0 && mesData && (
+        <Box>
           <CalendarioHoras
             dias={mesData.dias}
             mesAtual={mesAtual}
             onMesChange={handleMesChange}
             onDiaClick={handleDiaClick}
           />
-        )}
-      </Box>
+        </Box>
+      )}
+
+      {abaAtiva === 1 && resumoData && (
+        <Box>
+          <ResumoHoras resumo={resumoData} />
+        </Box>
+      )}
 
       {/* Dialog de Lançamentos do Dia */}
       {dataSelecionada && mesData && (
