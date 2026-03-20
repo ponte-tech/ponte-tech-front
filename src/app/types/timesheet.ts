@@ -96,6 +96,14 @@ export interface NotaFiscalResumo {
   data_emissao: string;
 }
 
+export interface ContratoTimesheetResumo {
+  contrato_id: string;
+  nome_cliente: string;
+  horas_lancadas: number;
+  valor_hora: number;
+  valor_total: number;
+}
+
 export interface ColaboradorTimesheetStatus {
   colaborador_id: string;
   nome_completo: string;
@@ -111,6 +119,7 @@ export interface ColaboradorTimesheetStatus {
   aprovado_por?: string;
   motivo_reprovacao?: string;
   qtd_contratos_ativos: number;
+  contratos: ContratoTimesheetResumo[];
   notas_fiscais: NotaFiscalResumo[];
 }
 

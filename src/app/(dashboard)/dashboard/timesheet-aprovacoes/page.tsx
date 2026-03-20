@@ -110,7 +110,6 @@ export default function TimesheetAprovacoesPage() {
   const [dialogPagamentoLote, setDialogPagamentoLote] = useState(false);
   const [selectedColaborador, setSelectedColaborador] = useState<ColaboradorTimesheetStatus | null>(null);
   const [motivoReprovacao, setMotivoReprovacao] = useState('');
-  const [horasAprovadas, setHorasAprovadas] = useState<number>(0);
   const [valorAprovado, setValorAprovado] = useState<number>(0);
   const [valorAprovadoDisplay, setValorAprovadoDisplay] = useState<string>('R$ 0,00');
 
@@ -234,7 +233,6 @@ export default function TimesheetAprovacoesPage() {
 
   const handleAprovar = (colaborador: ColaboradorTimesheetStatus) => {
     setSelectedColaborador(colaborador);
-    setHorasAprovadas(colaborador.total_horas_lancadas);
     const valor = colaborador.total_valor_lancado || 0;
     setValorAprovado(valor);
     setValorAprovadoDisplay(
@@ -259,15 +257,6 @@ export default function TimesheetAprovacoesPage() {
   const confirmAprovar = async () => {
     if (!selectedColaborador) return;
 
-    if (horasAprovadas <= 0) {
-      setSnackbar({
-        open: true,
-        message: 'O total de horas aprovadas deve ser maior que zero',
-        severity: 'error',
-      });
-      return;
-    }
-
     if (valorAprovado <= 0) {
       setSnackbar({
         open: true,
@@ -278,11 +267,10 @@ export default function TimesheetAprovacoesPage() {
     }
 
     try {
-      // Aprovar timesheet com horas e valor editados
+      // Aprovar timesheet com valor editado
       await timesheetService.aprovarMes(
         selectedColaborador.colaborador_id,
         selectedColaborador.mes,
-        horasAprovadas,
         valorAprovado
       );
 
@@ -303,7 +291,7 @@ export default function TimesheetAprovacoesPage() {
 
       setSnackbar({
         open: true,
-        message: `Timesheet de ${selectedColaborador.nome_completo} aprovado com ${horasAprovadas.toFixed(2)}h (${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorAprovado)})!${notasPendentes.length > 0 ? ` ${notasPendentes.length} nota(s) fiscal(is) aprovada(s) automaticamente.` : ''}`,
+        message: `Timesheet de ${selectedColaborador.nome_completo} aprovado com valor de ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorAprovado)}!${notasPendentes.length > 0 ? ` ${notasPendentes.length} nota(s) fiscal(is) aprovada(s) automaticamente.` : ''}`,
         severity: 'success',
       });
       setDialogAprovacao(false);
@@ -1052,88 +1040,133 @@ export default function TimesheetAprovacoesPage() {
           </Typography>
 
           <Alert severity="info" sx={{ mt: 2, mb: 3 }}>
-            Você pode ajustar o total de horas e valor aprovados antes de confirmar.
+            Você pode ajustar o valor total aprovado antes de confirmar.
           </Alert>
 
-          <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid item xs={4}>
-              <Box sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 2, textAlign: 'center' }}>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Horas lançadas
+          {selectedColaborador && selectedColaborador.contratos && selectedColaborador.contratos.length > 1 ? (
+            // Múltiplos contratos - mostrar detalhes por contrato
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle2" gutterBottom sx={{ mb: 2, fontWeight: 600 }}>
+                Detalhes por Contrato:
+              </Typography>
+              {selectedColaborador.contratos.map((contrato, index) => (
+                <Box key={contrato.contrato_id} sx={{ mb: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 2 }}>
+                  <Typography variant="body2" fontWeight="600" gutterBottom>
+                    {contrato.nome_cliente}
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Horas lançadas
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {contrato.horas_lancadas.toFixed(2)}h
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Valor/hora
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(contrato.valor_hora)}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Total
+                      </Typography>
+                      <Typography variant="body2" fontWeight="500">
+                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(contrato.valor_total)}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Box>
+              ))}
+              <Box sx={{ mt: 2, p: 2, bgcolor: '#e3f2fd', borderRadius: 2 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Total Geral
                 </Typography>
-                <Typography variant="h6" fontWeight="600">
-                  {selectedColaborador?.total_horas_lancadas.toFixed(2)}h
-                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <Typography variant="caption" color="text.secondary">
+                      Total de horas
+                    </Typography>
+                    <Typography variant="h6" fontWeight="600">
+                      {selectedColaborador.total_horas_lancadas.toFixed(2)}h
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography variant="caption" color="text.secondary">
+                      Valor total
+                    </Typography>
+                    <Typography variant="h6" fontWeight="600">
+                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedColaborador.total_valor_lancado)}
+                    </Typography>
+                  </Grid>
+                </Grid>
               </Box>
+            </Box>
+          ) : (
+            // Um único contrato - mostrar formato simples
+            <Grid container spacing={2} sx={{ mb: 2 }}>
+              <Grid item xs={4}>
+                <Box sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 2, textAlign: 'center' }}>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Horas lançadas
+                  </Typography>
+                  <Typography variant="h6" fontWeight="600">
+                    {selectedColaborador?.total_horas_lancadas.toFixed(2)}h
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={4}>
+                <Box sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 2, textAlign: 'center' }}>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Valor da hora
+                  </Typography>
+                  <Typography variant="h6" fontWeight="600">
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedColaborador?.valor_hora || 0)}
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={4}>
+                <Box sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 2, textAlign: 'center' }}>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Valor total
+                  </Typography>
+                  <Typography variant="h6" fontWeight="600">
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedColaborador?.total_valor_lancado || 0)}
+                  </Typography>
+                </Box>
+              </Grid>
             </Grid>
-            <Grid item xs={4}>
-              <Box sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 2, textAlign: 'center' }}>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Valor da hora
-                </Typography>
-                <Typography variant="h6" fontWeight="600">
-                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedColaborador?.valor_hora || 0)}
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={4}>
-              <Box sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 2, textAlign: 'center' }}>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Valor total
-                </Typography>
-                <Typography variant="h6" fontWeight="600">
-                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedColaborador?.total_valor_lancado || 0)}
-                </Typography>
-              </Box>
-            </Grid>
-          </Grid>
+          )}
 
-          <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
-            <TextField
-              fullWidth
-              label="Horas Aprovadas"
-              type="number"
-              value={horasAprovadas}
-              onChange={(e) => setHorasAprovadas(Number(e.target.value))}
-              inputProps={{
-                step: 0.25,
-                min: 0,
-              }}
-              helperText="Ajuste o total de horas"
-            />
+          <TextField
+            fullWidth
+            label="Valor Aprovado"
+            value={valorAprovadoDisplay}
+            onChange={(e) => handleValorAprovadoChange(e.target.value)}
+            helperText="Ajuste o valor total se necessário"
+            sx={{ mt: 2 }}
+          />
 
-            <TextField
-              fullWidth
-              label="Valor Aprovado"
-              value={valorAprovadoDisplay}
-              onChange={(e) => handleValorAprovadoChange(e.target.value)}
-              helperText="Ajuste o valor total"
-            />
-          </Stack>
-
-          {(horasAprovadas !== selectedColaborador?.total_horas_lancadas || valorAprovado !== selectedColaborador?.total_valor_lancado) && (
+          {valorAprovado !== selectedColaborador?.total_valor_lancado && (
             <Alert severity="warning" sx={{ mt: 2 }}>
               <Typography variant="body2">
-                <strong>Atenção:</strong> Você está modificando os valores de aprovação:
+                <strong>Atenção:</strong> Você está modificando o valor de aprovação:
               </Typography>
-              {horasAprovadas !== selectedColaborador?.total_horas_lancadas && (
-                <Typography variant="body2" sx={{ mt: 0.5 }}>
-                  • Horas: {horasAprovadas.toFixed(2)}h (lançadas: {selectedColaborador?.total_horas_lancadas.toFixed(2)}h)
-                </Typography>
-              )}
-              {valorAprovado !== selectedColaborador?.total_valor_lancado && (
-                <Typography variant="body2" sx={{ mt: 0.5 }}>
-                  • Valor: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorAprovado)}
-                  (lançado: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedColaborador?.total_valor_lancado || 0)})
-                </Typography>
-              )}
+              <Typography variant="body2" sx={{ mt: 0.5 }}>
+                • Valor: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorAprovado)}
+                (lançado: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedColaborador?.total_valor_lancado || 0)})
+              </Typography>
             </Alert>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogAprovacao(false)}>Cancelar</Button>
           <Button onClick={confirmAprovar} variant="contained" color="success" startIcon={<CheckCircleIcon />}>
-            Aprovar {horasAprovadas.toFixed(2)}h - {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorAprovado)}
+            Aprovar - {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorAprovado)}
           </Button>
         </DialogActions>
       </Dialog>
