@@ -64,6 +64,7 @@ export interface ResumoMesResponse {
   mes: string; // YYYY-MM
   contratos: ResumoContratoMes[];
   total_horas_lancadas: number;
+  total_horas_aprovadas?: number;
   total_valor_lancado: number;
   status_mes?: StatusMes;
   data_envio?: string;

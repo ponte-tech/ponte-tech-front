@@ -109,6 +109,7 @@ export default function TimesheetAprovacoesPage() {
   const [dialogPagamentoLote, setDialogPagamentoLote] = useState(false);
   const [selectedColaborador, setSelectedColaborador] = useState<ColaboradorTimesheetStatus | null>(null);
   const [motivoReprovacao, setMotivoReprovacao] = useState('');
+  const [horasAprovadas, setHorasAprovadas] = useState<number>(0);
 
   // Drawer de detalhes
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -230,6 +231,7 @@ export default function TimesheetAprovacoesPage() {
 
   const handleAprovar = (colaborador: ColaboradorTimesheetStatus) => {
     setSelectedColaborador(colaborador);
+    setHorasAprovadas(colaborador.total_horas_lancadas);
     setDialogAprovacao(true);
   };
 
@@ -242,9 +244,22 @@ export default function TimesheetAprovacoesPage() {
   const confirmAprovar = async () => {
     if (!selectedColaborador) return;
 
+    if (horasAprovadas <= 0) {
+      setSnackbar({
+        open: true,
+        message: 'O total de horas aprovadas deve ser maior que zero',
+        severity: 'error',
+      });
+      return;
+    }
+
     try {
-      // Aprovar timesheet
-      await timesheetService.aprovarMes(selectedColaborador.colaborador_id, selectedColaborador.mes);
+      // Aprovar timesheet com horas editadas
+      await timesheetService.aprovarMes(
+        selectedColaborador.colaborador_id,
+        selectedColaborador.mes,
+        horasAprovadas
+      );
 
       // Aprovar automaticamente todas as notas fiscais pendentes do colaborador
       const notas = notasFiscaisPorColaborador[selectedColaborador.colaborador_id] || [];
@@ -263,7 +278,7 @@ export default function TimesheetAprovacoesPage() {
 
       setSnackbar({
         open: true,
-        message: `Timesheet de ${selectedColaborador.nome_completo} aprovado com sucesso!${notasPendentes.length > 0 ? ` ${notasPendentes.length} nota(s) fiscal(is) aprovada(s) automaticamente.` : ''}`,
+        message: `Timesheet de ${selectedColaborador.nome_completo} aprovado com ${horasAprovadas.toFixed(2)}h!${notasPendentes.length > 0 ? ` ${notasPendentes.length} nota(s) fiscal(is) aprovada(s) automaticamente.` : ''}`,
         severity: 'success',
       });
       setDialogAprovacao(false);
@@ -1004,20 +1019,54 @@ export default function TimesheetAprovacoesPage() {
       </Card>
 
       {/* Dialog de Aprovação */}
-      <Dialog open={dialogAprovacao} onClose={() => setDialogAprovacao(false)}>
+      <Dialog open={dialogAprovacao} onClose={() => setDialogAprovacao(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Aprovar Timesheet</DialogTitle>
         <DialogContent>
-          <Typography>
-            Deseja aprovar o timesheet de <strong>{selectedColaborador?.nome_completo}</strong> referente ao mês de <strong>{selectedColaborador && formatMes(selectedColaborador.mes)}</strong>?
+          <Typography gutterBottom>
+            Aprovar timesheet de <strong>{selectedColaborador?.nome_completo}</strong> referente ao mês de <strong>{selectedColaborador && formatMes(selectedColaborador.mes)}</strong>
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-            Total de horas: <strong>{selectedColaborador?.total_horas_lancadas.toFixed(2)}h</strong>
-          </Typography>
+
+          <Alert severity="info" sx={{ mt: 2, mb: 3 }}>
+            Você pode ajustar o total de horas aprovadas antes de confirmar.
+          </Alert>
+
+          <Box sx={{ mb: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 2 }}>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Total de horas lançadas pelo colaborador:
+            </Typography>
+            <Typography variant="h6" fontWeight="600">
+              {selectedColaborador?.total_horas_lancadas.toFixed(2)}h
+            </Typography>
+          </Box>
+
+          <TextField
+            fullWidth
+            label="Horas Aprovadas"
+            type="number"
+            value={horasAprovadas}
+            onChange={(e) => setHorasAprovadas(Number(e.target.value))}
+            inputProps={{
+              step: 0.25,
+              min: 0,
+            }}
+            sx={{ mt: 2 }}
+            helperText="Ajuste o total de horas que serão aprovadas"
+          />
+
+          {horasAprovadas !== selectedColaborador?.total_horas_lancadas && (
+            <Alert severity="warning" sx={{ mt: 2 }}>
+              <Typography variant="body2">
+                <strong>Atenção:</strong> Você está aprovando {horasAprovadas.toFixed(2)}h de um total de {selectedColaborador?.total_horas_lancadas.toFixed(2)}h lançadas.
+                {horasAprovadas > (selectedColaborador?.total_horas_lancadas || 0) && ' O valor aprovado é maior que o lançado.'}
+                {horasAprovadas < (selectedColaborador?.total_horas_lancadas || 0) && ' Algumas horas não serão aprovadas.'}
+              </Typography>
+            </Alert>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogAprovacao(false)}>Cancelar</Button>
           <Button onClick={confirmAprovar} variant="contained" color="success" startIcon={<CheckCircleIcon />}>
-            Confirmar Aprovação
+            Aprovar {horasAprovadas.toFixed(2)}h
           </Button>
         </DialogActions>
       </Dialog>

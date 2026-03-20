@@ -80,8 +80,10 @@ export const enviarMesParaAprovacao = async (mes: string): Promise<ResumoMesResp
 };
 
 // Admin - Aprovar mês de um colaborador
-export const aprovarMes = async (colaboradorId: string, mes: string): Promise<void> => {
-  await api.post(`/api/admin/timesheet/${colaboradorId}/mes/${mes}/aprovar`);
+export const aprovarMes = async (colaboradorId: string, mes: string, horasAprovadas?: number): Promise<void> => {
+  await api.post(`/api/admin/timesheet/${colaboradorId}/mes/${mes}/aprovar`,
+    horasAprovadas !== undefined ? { horas_aprovadas: horasAprovadas } : undefined
+  );
 };
 
 // Admin - Reprovar mês de um colaborador

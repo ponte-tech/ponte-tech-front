@@ -236,6 +236,7 @@ export default function MinhasHorasPage() {
           aprovadoPor={resumoData.aprovado_por}
           motivoReprovacao={resumoData.motivo_reprovacao}
           totalHoras={resumoData.total_horas_lancadas}
+          horasAprovadas={resumoData.total_horas_aprovadas}
           onEnviarParaAprovacao={handleEnviarParaAprovacao}
           loading={loading}
         />

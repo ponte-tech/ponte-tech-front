@@ -28,6 +28,7 @@ interface StatusMesProps {
   aprovadoPor?: string;
   motivoReprovacao?: string;
   totalHoras: number;
+  horasAprovadas?: number;
   onEnviarParaAprovacao?: () => void;
   loading?: boolean;
 }
@@ -62,6 +63,7 @@ export default function StatusMes({
   aprovadoPor,
   motivoReprovacao,
   totalHoras,
+  horasAprovadas,
   onEnviarParaAprovacao,
   loading = false,
 }: StatusMesProps) {
@@ -134,28 +136,55 @@ export default function StatusMes({
                   },
                 }}
               />
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  px: 2,
-                  py: 0.75,
-                  borderRadius: 2,
-                  background: alpha('#8270FF', 0.08),
-                }}
-              >
-                <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                  Total de horas:
-                </Typography>
-                <Typography variant="h6" fontWeight={700} sx={{
-                  background: 'linear-gradient(135deg, #8270FF 0%, #a78bfa 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}>
-                  {totalHoras.toFixed(2)}h
-                </Typography>
-              </Box>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    px: 2,
+                    py: 0.75,
+                    borderRadius: 2,
+                    background: alpha('#8270FF', 0.08),
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                    Total de horas lançadas:
+                  </Typography>
+                  <Typography variant="h6" fontWeight={700} sx={{
+                    background: 'linear-gradient(135deg, #8270FF 0%, #a78bfa 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                  }}>
+                    {totalHoras.toFixed(2)}h
+                  </Typography>
+                </Box>
+
+                {statusMes === 'APROVADO' && horasAprovadas !== undefined && (
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      px: 2,
+                      py: 0.75,
+                      borderRadius: 2,
+                      background: alpha('#10b981', 0.08),
+                    }}
+                  >
+                    <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                      Horas aprovadas:
+                    </Typography>
+                    <Typography variant="h6" fontWeight={700} sx={{
+                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                    }}>
+                      {horasAprovadas.toFixed(2)}h
+                    </Typography>
+                  </Box>
+                )}
+              </Stack>
             </Box>
 
             {statusMes === 'PENDENTE_ENVIO' && totalHoras > 0 && (
