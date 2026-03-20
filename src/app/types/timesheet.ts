@@ -103,6 +103,7 @@ export interface ColaboradorTimesheetStatus {
   status_mes: StatusMes;
   total_horas_lancadas: number;
   total_horas_contratadas: number;
+  total_valor_lancado: number;
   percentual_lancado: number;
   data_envio?: string;
   data_aprovacao?: string;
