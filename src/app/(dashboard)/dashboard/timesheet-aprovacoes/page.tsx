@@ -48,6 +48,7 @@ import {
 import JSZip from 'jszip';
 import { useAuth } from '@/app/hooks/useAuth';
 import timesheetService from '@/app/services/timesheetService';
+import { applyCurrencyMask, removeCurrencyMask } from '@/app/utils/currencyMask';
 import fiscalService from '@/app/services/fiscalService';
 import { FilterSearch, AccessDenied } from '@/app/shared/components';
 import type { ColaboradorTimesheetStatus, StatusMes } from '@/app/types/timesheet';
@@ -111,6 +112,7 @@ export default function TimesheetAprovacoesPage() {
   const [motivoReprovacao, setMotivoReprovacao] = useState('');
   const [horasAprovadas, setHorasAprovadas] = useState<number>(0);
   const [valorAprovado, setValorAprovado] = useState<number>(0);
+  const [valorAprovadoDisplay, setValorAprovadoDisplay] = useState<string>('R$ 0,00');
 
   // Drawer de detalhes
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -233,7 +235,11 @@ export default function TimesheetAprovacoesPage() {
   const handleAprovar = (colaborador: ColaboradorTimesheetStatus) => {
     setSelectedColaborador(colaborador);
     setHorasAprovadas(colaborador.total_horas_lancadas);
-    setValorAprovado(colaborador.total_valor_lancado || 0);
+    const valor = colaborador.total_valor_lancado || 0;
+    setValorAprovado(valor);
+    setValorAprovadoDisplay(
+      new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor)
+    );
     setDialogAprovacao(true);
   };
 
@@ -241,6 +247,13 @@ export default function TimesheetAprovacoesPage() {
     setSelectedColaborador(colaborador);
     setMotivoReprovacao('');
     setDialogReprovacao(true);
+  };
+
+  const handleValorAprovadoChange = (value: string) => {
+    const masked = applyCurrencyMask(value);
+    const numeric = removeCurrencyMask(masked);
+    setValorAprovadoDisplay(masked);
+    setValorAprovado(numeric);
   };
 
   const confirmAprovar = async () => {
@@ -290,7 +303,7 @@ export default function TimesheetAprovacoesPage() {
 
       setSnackbar({
         open: true,
-        message: `Timesheet de ${selectedColaborador.nome_completo} aprovado com ${horasAprovadas.toFixed(2)}h (R$ ${valorAprovado.toFixed(2)})!${notasPendentes.length > 0 ? ` ${notasPendentes.length} nota(s) fiscal(is) aprovada(s) automaticamente.` : ''}`,
+        message: `Timesheet de ${selectedColaborador.nome_completo} aprovado com ${horasAprovadas.toFixed(2)}h (${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorAprovado)})!${notasPendentes.length > 0 ? ` ${notasPendentes.length} nota(s) fiscal(is) aprovada(s) automaticamente.` : ''}`,
         severity: 'success',
       });
       setDialogAprovacao(false);
@@ -1042,24 +1055,38 @@ export default function TimesheetAprovacoesPage() {
             Você pode ajustar o total de horas e valor aprovados antes de confirmar.
           </Alert>
 
-          <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-            <Box sx={{ flex: 1, p: 2, bgcolor: '#f5f5f5', borderRadius: 2 }}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Horas lançadas:
-              </Typography>
-              <Typography variant="h6" fontWeight="600">
-                {selectedColaborador?.total_horas_lancadas.toFixed(2)}h
-              </Typography>
-            </Box>
-            <Box sx={{ flex: 1, p: 2, bgcolor: '#f5f5f5', borderRadius: 2 }}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Valor lançado:
-              </Typography>
-              <Typography variant="h6" fontWeight="600">
-                R$ {(selectedColaborador?.total_valor_lancado || 0).toFixed(2)}
-              </Typography>
-            </Box>
-          </Stack>
+          <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid item xs={4}>
+              <Box sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 2, textAlign: 'center' }}>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Horas lançadas
+                </Typography>
+                <Typography variant="h6" fontWeight="600">
+                  {selectedColaborador?.total_horas_lancadas.toFixed(2)}h
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={4}>
+              <Box sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 2, textAlign: 'center' }}>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Valor da hora
+                </Typography>
+                <Typography variant="h6" fontWeight="600">
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedColaborador?.valor_hora || 0)}
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={4}>
+              <Box sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 2, textAlign: 'center' }}>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Valor total
+                </Typography>
+                <Typography variant="h6" fontWeight="600">
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedColaborador?.total_valor_lancado || 0)}
+                </Typography>
+              </Box>
+            </Grid>
+          </Grid>
 
           <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
             <TextField
@@ -1077,14 +1104,9 @@ export default function TimesheetAprovacoesPage() {
 
             <TextField
               fullWidth
-              label="Valor Aprovado (R$)"
-              type="number"
-              value={valorAprovado}
-              onChange={(e) => setValorAprovado(Number(e.target.value))}
-              inputProps={{
-                step: 0.01,
-                min: 0,
-              }}
+              label="Valor Aprovado"
+              value={valorAprovadoDisplay}
+              onChange={(e) => handleValorAprovadoChange(e.target.value)}
               helperText="Ajuste o valor total"
             />
           </Stack>
@@ -1101,7 +1123,8 @@ export default function TimesheetAprovacoesPage() {
               )}
               {valorAprovado !== selectedColaborador?.total_valor_lancado && (
                 <Typography variant="body2" sx={{ mt: 0.5 }}>
-                  • Valor: R$ {valorAprovado.toFixed(2)} (lançado: R$ {(selectedColaborador?.total_valor_lancado || 0).toFixed(2)})
+                  • Valor: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorAprovado)}
+                  (lançado: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedColaborador?.total_valor_lancado || 0)})
                 </Typography>
               )}
             </Alert>
@@ -1110,7 +1133,7 @@ export default function TimesheetAprovacoesPage() {
         <DialogActions>
           <Button onClick={() => setDialogAprovacao(false)}>Cancelar</Button>
           <Button onClick={confirmAprovar} variant="contained" color="success" startIcon={<CheckCircleIcon />}>
-            Aprovar {horasAprovadas.toFixed(2)}h - R$ {valorAprovado.toFixed(2)}
+            Aprovar {horasAprovadas.toFixed(2)}h - {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorAprovado)}
           </Button>
         </DialogActions>
       </Dialog>
