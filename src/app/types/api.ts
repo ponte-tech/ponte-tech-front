@@ -334,6 +334,8 @@ export interface UpdateColaboradorRequest {
 // Tipos de Contrato
 export type ContratoStatus = "ativo" | "inativo";
 
+export type TipoContrato = "fechado" | "aberto";
+
 export interface Contrato {
   contrato_id: string;
   user_id: string;
@@ -346,6 +348,7 @@ export interface Contrato {
   valor_hora: number;
   total_hora_mes: number;
   valor_total: number;
+  tipo_contrato: TipoContrato;
   status: ContratoStatus;
   data_cadastro: string;
   data_atualizacao: string;
@@ -359,6 +362,7 @@ export interface CreateContratoRequest {
   data_fim: string;
   valor_hora: number;
   total_hora_mes: number;
+  tipo_contrato?: TipoContrato;
 }
 
 export interface UpdateContratoRequest {
@@ -369,6 +373,7 @@ export interface UpdateContratoRequest {
   data_fim?: string;
   valor_hora?: number;
   total_hora_mes?: number;
+  tipo_contrato?: TipoContrato;
 }
 
 export interface ListContratosResponse {

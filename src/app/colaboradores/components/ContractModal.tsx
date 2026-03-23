@@ -39,6 +39,7 @@ export default function ContractModal({ open, onClose, onSave, loading = false, 
     data_fim: "",
     valor_hora: 0,
     total_hora_mes: 160,
+    tipo_contrato: "fechado",
   });
 
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -61,6 +62,7 @@ export default function ContractModal({ open, onClose, onSave, loading = false, 
           data_fim: editingContract.data_fim,
           valor_hora: editingContract.valor_hora,
           total_hora_mes: editingContract.total_hora_mes,
+          tipo_contrato: editingContract.tipo_contrato || "fechado",
         });
         setValorHoraDisplay(formatCurrency(editingContract.valor_hora));
       } else {
@@ -73,6 +75,7 @@ export default function ContractModal({ open, onClose, onSave, loading = false, 
           data_fim: "",
           valor_hora: 0,
           total_hora_mes: 160,
+          tipo_contrato: "fechado",
         });
         setValorHoraDisplay("R$ 0,00");
       }
@@ -235,7 +238,22 @@ export default function ContractModal({ open, onClose, onSave, loading = false, 
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth required>
+                <InputLabel>Tipo de Contrato</InputLabel>
+                <Select
+                  value={formData.tipo_contrato}
+                  label="Tipo de Contrato"
+                  onChange={(e) => handleChange("tipo_contrato", e.target.value)}
+                  disabled={loading}
+                >
+                  <MenuItem value="fechado">Fechado (horas fixas)</MenuItem>
+                  <MenuItem value="aberto">Aberto (horas variáveis)</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
                 label="Valor Total Mensal"
