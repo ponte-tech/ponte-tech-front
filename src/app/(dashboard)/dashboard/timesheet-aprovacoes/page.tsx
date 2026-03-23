@@ -50,6 +50,8 @@ import { useAuth } from '@/app/hooks/useAuth';
 import timesheetService from '@/app/services/timesheetService';
 import { applyCurrencyMask, removeCurrencyMask } from '@/app/utils/currencyMask';
 import fiscalService from '@/app/services/fiscalService';
+import comunicacaoService from '@/app/services/comunicacaoService';
+import colaboradoresService from '@/app/services/colaboradoresService';
 import { FilterSearch, AccessDenied } from '@/app/shared/components';
 import type { ColaboradorTimesheetStatus, StatusMes } from '@/app/types/timesheet';
 import type { NotaFiscal } from '@/app/types/fiscal';
@@ -300,6 +302,24 @@ export default function TimesheetAprovacoesPage() {
 
       // Atualizar lista silenciosamente (sem esconder a tabela)
       await loadColaboradores(true);
+
+      // Enviar mensagem WhatsApp para o colaborador
+      try {
+        const colaborador = await colaboradoresService.getById(selectedColaborador.colaborador_id);
+
+        if (colaborador.celular) {
+          const mesFormatado = formatMes(selectedColaborador.mes);
+          const mensagem = `Olá ${selectedColaborador.nome_completo}!\n\nSuas horas do mês de ${mesFormatado} foram aprovadas! ✅\n\n⚠️ *IMPORTANTE - Emissão da Nota Fiscal:*\n• A nota fiscal deve ser emitida APENAS no primeiro dia útil do mês subsequente\n• Data limite: até o 5º dia útil do mês\n• Isso evita atrasos no seu pagamento\n\n_Esta é uma mensagem automática. Não é necessário responder._`;
+
+          await comunicacaoService.sendMessage({
+            phone: colaborador.celular,
+            message: mensagem,
+          });
+        }
+      } catch (whatsappError) {
+        console.error('Erro ao enviar mensagem WhatsApp:', whatsappError);
+        // Não mostra erro ao usuário, pois a aprovação foi bem-sucedida
+      }
 
       setSnackbar({
         open: true,
