@@ -23,16 +23,26 @@ export const getContratos = async (): Promise<Contrato[]> => {
 };
 
 // Calendário e Lançamentos
-export const getMesCalendario = async (mes: string): Promise<MesResponse> => {
+export const getMesCalendario = async (mes: string, skipCache = false): Promise<MesResponse> => {
+  const params: any = { mes };
+  if (skipCache) {
+    params._t = Date.now(); // Timestamp para bypass de cache
+  }
+
   const response = await api.get<ApiResponse<MesResponse>>(`${BASE_URL}/timesheet/mes`, {
-    params: { mes },
+    params
   });
   return response.data.data!;
 };
 
-export const getResumoMes = async (mes: string): Promise<ResumoMesResponse> => {
+export const getResumoMes = async (mes: string, skipCache = false): Promise<ResumoMesResponse> => {
+  const params: any = { mes };
+  if (skipCache) {
+    params._t = Date.now(); // Timestamp para bypass de cache
+  }
+
   const response = await api.get<ApiResponse<ResumoMesResponse>>(`${BASE_URL}/timesheet/resumo`, {
-    params: { mes },
+    params
   });
   return response.data.data!;
 };
@@ -62,6 +72,10 @@ export const updateLancamento = async (id: string, data: Partial<Apontamento>): 
 
 export const deleteLancamento = async (id: string): Promise<void> => {
   await api.delete(`${BASE_URL}/timesheet/lancamentos/${id}`);
+};
+
+export const deleteAllLancamentosMes = async (): Promise<void> => {
+  await api.delete(`${BASE_URL}/timesheet/mes/lancamentos`);
 };
 
 export const submeterLancamento = async (id: string): Promise<Apontamento> => {
@@ -120,6 +134,7 @@ const timesheetServiceExport = {
   getLancamento,
   updateLancamento,
   deleteLancamento,
+  deleteAllLancamentosMes,
   submeterLancamento,
   enviarMesParaAprovacao,
   aprovarMes,

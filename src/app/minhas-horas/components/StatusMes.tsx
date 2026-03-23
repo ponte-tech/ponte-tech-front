@@ -18,6 +18,7 @@ import {
   HourglassEmpty as HourglassIcon,
   Send as SendIcon,
   Warning as WarningIcon,
+  DeleteSweep as DeleteSweepIcon,
 } from '@mui/icons-material';
 import type { StatusMes } from '@/app/types/timesheet';
 
@@ -30,6 +31,7 @@ interface StatusMesProps {
   totalHoras: number;
   valorAprovado?: number;
   onEnviarParaAprovacao?: () => void;
+  onDeletarTodosLancamentos?: () => void;
   loading?: boolean;
 }
 
@@ -65,6 +67,7 @@ export default function StatusMes({
   totalHoras,
   valorAprovado,
   onEnviarParaAprovacao,
+  onDeletarTodosLancamentos,
   loading = false,
 }: StatusMesProps) {
   const config = statusConfig[statusMes];
@@ -187,33 +190,60 @@ export default function StatusMes({
               </Stack>
             </Box>
 
-            {statusMes === 'PENDENTE_ENVIO' && totalHoras > 0 && (
-              <Button
-                variant="contained"
-                sx={{
-                  background: 'linear-gradient(135deg, #8270FF 0%, #a78bfa 100%)',
-                  boxShadow: '0 4px 12px rgba(130, 112, 255, 0.3)',
-                  borderRadius: 2,
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  px: 3,
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #7059e5 0%, #9575e6 100%)',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 6px 20px rgba(130, 112, 255, 0.4)',
-                  },
-                  '&:disabled': {
-                    background: alpha('#8270FF', 0.3),
-                  },
-                }}
-                startIcon={<SendIcon />}
-                onClick={onEnviarParaAprovacao}
-                disabled={loading}
-              >
-                Enviar para Aprovação
-              </Button>
-            )}
+            <Stack direction="row" spacing={2}>
+              {statusMes !== 'APROVADO' && totalHoras > 0 && onDeletarTodosLancamentos && (
+                <Button
+                  variant="outlined"
+                  color="error"
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    px: 3,
+                    borderWidth: 2,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      borderWidth: 2,
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
+                    },
+                  }}
+                  startIcon={<DeleteSweepIcon />}
+                  onClick={onDeletarTodosLancamentos}
+                  disabled={loading}
+                >
+                  Excluir Todos os Lançamentos
+                </Button>
+              )}
+
+              {statusMes === 'PENDENTE_ENVIO' && totalHoras > 0 && (
+                <Button
+                  variant="contained"
+                  sx={{
+                    background: 'linear-gradient(135deg, #8270FF 0%, #a78bfa 100%)',
+                    boxShadow: '0 4px 12px rgba(130, 112, 255, 0.3)',
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    px: 3,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #7059e5 0%, #9575e6 100%)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 6px 20px rgba(130, 112, 255, 0.4)',
+                    },
+                    '&:disabled': {
+                      background: alpha('#8270FF', 0.3),
+                    },
+                  }}
+                  startIcon={<SendIcon />}
+                  onClick={onEnviarParaAprovacao}
+                  disabled={loading}
+                >
+                  Enviar para Aprovação
+                </Button>
+              )}
+            </Stack>
           </Box>
 
           {/* Informações Adicionais */}

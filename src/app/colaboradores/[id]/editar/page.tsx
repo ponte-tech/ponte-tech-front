@@ -451,6 +451,7 @@ export default function EditarColaboradorPage() {
 
   const handleAddContract = async (contract: CreateContratoRequest, contratoId?: string) => {
     try {
+      console.log('[DEBUG] Salvando contrato:', { contratoId, contract });
       if (contratoId) {
         // Editar contrato existente
         await contratosService.update(colaboradorId, contratoId, contract);
@@ -1315,6 +1316,7 @@ export default function EditarColaboradorPage() {
                           <TableCell align="right">Horas/Mês</TableCell>
                           <TableCell align="right">Valor Total</TableCell>
                           <TableCell align="center">Status</TableCell>
+                          <TableCell align="center">Tipo</TableCell>
                           {isAdmin && <TableCell align="center">Ações</TableCell>}
                         </TableRow>
                       </TableHead>
@@ -1340,6 +1342,23 @@ export default function EditarColaboradorPage() {
                               ) : (
                                 <Typography color="text.secondary">Inativo</Typography>
                               )}
+                            </TableCell>
+                            <TableCell align="center">
+                              <Box
+                                sx={{
+                                  display: "inline-block",
+                                  bgcolor: contract.tipo_contrato === "fechado" ? "#8270FF" : "#f59e0b",
+                                  color: "#FFFFFF",
+                                  fontWeight: 600,
+                                  fontSize: "0.75rem",
+                                  px: 1.5,
+                                  py: 0.5,
+                                  borderRadius: "12px",
+                                  minWidth: "70px",
+                                }}
+                              >
+                                {contract.tipo_contrato === "fechado" ? "Fechado" : "Aberto"}
+                              </Box>
                             </TableCell>
                             {isAdmin && (
                               <TableCell align="center">

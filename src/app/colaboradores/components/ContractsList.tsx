@@ -117,6 +117,7 @@ export default function ContractsList({ userId, onContractAdded }: ContractsList
                   <TableCell align="right">Horas/Mês</TableCell>
                   <TableCell align="right">Valor Total</TableCell>
                   <TableCell align="center">Status</TableCell>
+                  <TableCell align="center">Tipo</TableCell>
                   <TableCell align="center">Ações</TableCell>
                 </TableRow>
               </TableHead>
@@ -158,6 +159,18 @@ export default function ContractsList({ userId, onContractAdded }: ContractsList
                           icon={<InactiveIcon />}
                         />
                       )}
+                    </TableCell>
+                    <TableCell align="center">
+                      <Chip
+                        label={contrato.tipo_contrato === "fechado" ? "Fechado" : "Aberto"}
+                        size="small"
+                        sx={{
+                          bgcolor: contrato.tipo_contrato === "fechado" ? "#8270FF" : "#f59e0b",
+                          color: "#FFFFFF",
+                          fontWeight: 600,
+                          minWidth: 80,
+                        }}
+                      />
                     </TableCell>
                     <TableCell align="center">
                       {contrato.status === "inativo" && (

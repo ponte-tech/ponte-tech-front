@@ -215,9 +215,23 @@ export default function DetalhesTimesheetDrawer({
                   {resumo.contratos.map((contrato) => (
                     <Card key={contrato.contrato_id} variant="outlined">
                       <CardContent>
-                        <Typography variant="subtitle1" fontWeight="600" gutterBottom>
-                          {contrato.nome_cliente}
-                        </Typography>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                          <Typography variant="subtitle1" fontWeight="600">
+                            {contrato.nome_cliente}
+                          </Typography>
+                          {contrato.tipo_contrato && (
+                            <Chip
+                              label={contrato.tipo_contrato === "fechado" ? "Horas Fechadas" : "Valor por Hora"}
+                              size="small"
+                              sx={{
+                                bgcolor: contrato.tipo_contrato === "fechado" ? "#8270FF" : "#f59e0b",
+                                color: "#FFFFFF",
+                                fontWeight: 600,
+                                fontSize: "0.7rem",
+                              }}
+                            />
+                          )}
+                        </Box>
 
                         <Grid container spacing={2} sx={{ mt: 1 }}>
                           <Grid item xs={6}>

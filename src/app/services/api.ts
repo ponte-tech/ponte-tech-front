@@ -16,6 +16,13 @@ const api = axios.create({
   },
 });
 
+// Configuração de retry
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // 1 segundo
+
+// Função auxiliar para delay
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 // Função para verificar se o token está expirado
 function isTokenExpired(token: string): boolean {
   try {
@@ -64,12 +71,39 @@ api.interceptors.request.use(
   }
 );
 
-// Interceptor de resposta - trata erros globalmente
+// Interceptor de resposta - trata erros globalmente com retry
 api.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error: AxiosError) => {
+  async (error: AxiosError) => {
+    const config = error.config as InternalAxiosRequestConfig & { _retry?: number };
+
+    // Verificar se é um erro de rede que pode ser retentado
+    const isNetworkError = error.code === 'ERR_NETWORK' ||
+                          error.code === 'ECONNABORTED' ||
+                          error.code === 'ERR_NETWORK_CHANGED' ||
+                          error.message?.includes('Network Error');
+
+    // Inicializar contador de retry
+    if (!config._retry) {
+      config._retry = 0;
+    }
+
+    // Retry para erros de rede ou timeout, mas não para erros 4xx (exceto 429)
+    const shouldRetry = (isNetworkError || error.response?.status === 429 || error.response?.status! >= 500)
+                       && config._retry < MAX_RETRIES;
+
+    if (shouldRetry && config) {
+      config._retry++;
+      console.warn(`Tentativa ${config._retry} de ${MAX_RETRIES} após erro de rede...`);
+
+      // Delay exponencial: 1s, 2s, 4s
+      await delay(RETRY_DELAY * Math.pow(2, config._retry - 1));
+
+      return api.request(config);
+    }
+
     if (error.response) {
       const status = error.response.status;
       const responseData = error.response.data as any;
@@ -95,8 +129,8 @@ api.interceptors.response.use(
         console.error("Erro no servidor. Por favor, tente novamente mais tarde.");
       }
     } else if (error.request) {
-      // Requisição feita mas sem resposta
-      console.error("Erro de rede: Não foi possível conectar ao servidor");
+      // Requisição feita mas sem resposta (após todas as tentativas)
+      console.error("Erro de rede: Não foi possível conectar ao servidor após múltiplas tentativas");
     }
 
     return Promise.reject(error);

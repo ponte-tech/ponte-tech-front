@@ -13,6 +13,11 @@ import {
   Snackbar,
   Tabs,
   Tab,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -44,14 +49,16 @@ export default function MinhasHorasPage() {
   const [error, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [dialogLancamentosOpen, setDialogLancamentosOpen] = useState(false);
+  const [dialogConfirmacaoOpen, setDialogConfirmacaoOpen] = useState(false);
   const [dataInicialForm, setDataInicialForm] = useState<string | undefined>();
   const [dataSelecionada, setDataSelecionada] = useState<string | null>(null);
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'warning' | 'info' }>({
     open: false,
     message: '',
     severity: 'success',
   });
   const [abaAtiva, setAbaAtiva] = useState(0);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Inicializar mês atual apenas no cliente (evita erro de hydration)
   useEffect(() => {
@@ -154,6 +161,7 @@ export default function MinhasHorasPage() {
 
       setMesData(mesResp);
       setResumoData(resumoResp);
+      setRefreshKey(prev => prev + 1);
 
       setSnackbar({
         open: true,
@@ -184,6 +192,7 @@ export default function MinhasHorasPage() {
 
       setMesData(mesResp);
       setResumoData(resumoResp);
+      setRefreshKey(prev => prev + 1);
 
       setSnackbar({
         open: true,
@@ -221,6 +230,55 @@ export default function MinhasHorasPage() {
       setSnackbar({
         open: true,
         message: error.response?.data?.message || 'Erro ao enviar para aprovação',
+        severity: 'error',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeletarTodosLancamentos = () => {
+    setDialogConfirmacaoOpen(true);
+  };
+
+  const handleConfirmarDelecao = async () => {
+    try {
+      setDialogConfirmacaoOpen(false);
+      setLoading(true);
+
+      // O backend agora aguarda a propagação da consistência eventual antes de retornar
+      await timesheetService.deleteAllLancamentosMes();
+
+      // Recarregar dados
+      const [mesResp, resumoResp] = await Promise.all([
+        timesheetService.getMesCalendario(mesAtual, true),
+        timesheetService.getResumoMes(mesAtual, true),
+      ]);
+
+      setMesData(mesResp);
+      setResumoData(resumoResp);
+
+      // Incrementar chave de refresh para forçar re-renderização
+      setRefreshKey(prev => prev + 1);
+
+      setSnackbar({
+        open: true,
+        message: 'Todos os lançamentos do mês foram excluídos com sucesso!',
+        severity: 'success',
+      });
+    } catch (err) {
+      const error = err as { code?: string; response?: { data?: { message?: string } } };
+
+      let errorMessage = 'Erro ao excluir lançamentos';
+      if (error.code === 'ERR_NETWORK' || error.code === 'ERR_NETWORK_CHANGED') {
+        errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+
+      setSnackbar({
+        open: true,
+        message: errorMessage,
         severity: 'error',
       });
     } finally {
@@ -283,6 +341,13 @@ export default function MinhasHorasPage() {
         </Alert>
       )}
 
+      {/* Indicador de Carregamento */}
+      {loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
+          <CircularProgress size={24} />
+        </Box>
+      )}
+
       {/* Status do Mês */}
       {resumoData && (
         <StatusMes
@@ -294,6 +359,7 @@ export default function MinhasHorasPage() {
           totalHoras={resumoData.total_horas_lancadas}
           valorAprovado={resumoData.total_valor_lancado}
           onEnviarParaAprovacao={handleEnviarParaAprovacao}
+          onDeletarTodosLancamentos={handleDeletarTodosLancamentos}
           loading={loading}
         />
       )}
@@ -312,7 +378,7 @@ export default function MinhasHorasPage() {
 
       {/* Conteúdo das Abas */}
       {abaAtiva === 0 && mesData && (
-        <Box>
+        <Box key={`calendario-${refreshKey}`}>
           <CalendarioHoras
             dias={mesData.dias}
             mesAtual={mesAtual}
@@ -323,7 +389,7 @@ export default function MinhasHorasPage() {
       )}
 
       {abaAtiva === 1 && resumoData && (
-        <Box>
+        <Box key={`resumo-${refreshKey}`}>
           <ResumoHoras resumo={resumoData} />
         </Box>
       )}
@@ -350,6 +416,41 @@ export default function MinhasHorasPage() {
         contratos={contratos}
         dataInicial={dataInicialForm}
       />
+
+      {/* Dialog de Confirmação de Exclusão */}
+      <Dialog
+        open={dialogConfirmacaoOpen}
+        onClose={() => setDialogConfirmacaoOpen(false)}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          Confirmar Exclusão de Todos os Lançamentos
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Tem certeza que deseja excluir TODOS os lançamentos do mês atual?
+            <br />
+            <br />
+            <strong>Esta ação não pode ser desfeita!</strong>
+            <br />
+            <br />
+            {resumoData && resumoData.total_horas_lancadas > 0 && (
+              <>
+                Você está prestes a excluir <strong>{resumoData.total_horas_lancadas.toFixed(2)} horas</strong> de lançamentos.
+              </>
+            )}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDialogConfirmacaoOpen(false)} color="primary">
+            Cancelar
+          </Button>
+          <Button onClick={handleConfirmarDelecao} color="error" variant="contained" autoFocus>
+            Sim, Excluir Todos
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Snackbar */}
       <Snackbar

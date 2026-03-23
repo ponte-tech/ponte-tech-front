@@ -115,6 +115,8 @@ export default function CalendarioHoras({
     };
   }, [dias, theme]);
 
+  const calendarKey = `calendar-${mesAtual}-${eventos.length}`;
+
   // Handler de clique em evento
   const handleEventClick = (info: EventClickArg) => {
     const data = info.event.extendedProps.data;
@@ -316,6 +318,7 @@ export default function CalendarioHoras({
           },
         }}>
           <FullCalendar
+            key={calendarKey}
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
             initialView="dayGridMonth"
             headerToolbar={{

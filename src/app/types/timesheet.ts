@@ -58,6 +58,7 @@ export interface ResumoContratoMes {
   horas_restantes: number;
   valor_total_lancado: number;
   percentual_usado: number;
+  tipo_contrato?: string;
 }
 
 export interface ResumoMesResponse {
