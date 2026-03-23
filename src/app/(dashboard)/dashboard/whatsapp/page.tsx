@@ -74,7 +74,15 @@ export default function WhatsAppPage() {
         setLoadingConversations(true);
       }
       const response = await comunicacaoService.listConversations({ limit: 100 });
-      setConversations(response.conversations || []);
+
+      // Ordenar conversas por data da última mensagem (mais recentes primeiro)
+      const sortedConversations = (response.conversations || []).sort((a, b) => {
+        const dateA = new Date(a.last_message_at || 0).getTime();
+        const dateB = new Date(b.last_message_at || 0).getTime();
+        return dateB - dateA; // Ordem decrescente (mais recente primeiro)
+      });
+
+      setConversations(sortedConversations);
     } catch (error: any) {
       console.error("Erro ao carregar conversas:", error);
       if (!silent) {
@@ -173,14 +181,20 @@ export default function WhatsAppPage() {
 
       setMessages((prev) => [...prev, newMessage]);
 
-      // Update conversation
-      setConversations((prev) =>
-        prev.map((conv) =>
+      // Update conversation and reorder
+      setConversations((prev) => {
+        const updated = prev.map((conv) =>
           conv.phone === selectedPhone
             ? { ...conv, last_message: message, last_message_at: response.sent_at }
             : conv
-        )
-      );
+        );
+        // Reordenar por data da última mensagem (mais recentes primeiro)
+        return updated.sort((a, b) => {
+          const dateA = new Date(a.last_message_at || 0).getTime();
+          const dateB = new Date(b.last_message_at || 0).getTime();
+          return dateB - dateA;
+        });
+      });
 
       setSnackbar({
         open: true,
