@@ -1413,124 +1413,106 @@ export default function KanbanPage() {
       <Dialog
         open={dueDateAlertOpen}
         onClose={() => setDueDateAlertOpen(false)}
-        maxWidth="sm"
+        maxWidth="xs"
         fullWidth
         PaperProps={{
           sx: {
-            borderRadius: 3,
-            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
+            borderRadius: 2,
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
           },
         }}
       >
-        <DialogTitle
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 2,
-            pb: 2,
-            borderBottom: "1px solid",
-            borderColor: "divider",
-          }}
-        >
-          <Box
-            sx={{
-              width: 48,
-              height: 48,
-              borderRadius: 2,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              bgcolor: "warning.light",
-            }}
-          >
-            <WarningAmberIcon sx={{ fontSize: 28, color: "warning.dark" }} />
-          </Box>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="h6" fontWeight={700}>
-              ⚠️ Tasks com Vencimento Hoje
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {dueTodayCards.length} {dueTodayCards.length === 1 ? "task vence" : "tasks vencem"} hoje
-            </Typography>
-          </Box>
+        <DialogTitle sx={{ pb: 1 }}>
+          <Typography variant="h6" fontWeight={600} sx={{ fontSize: "1.125rem" }}>
+            Tarefas para hoje
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {dueTodayCards.length} {dueTodayCards.length === 1 ? "tarefa vence" : "tarefas vencem"} hoje
+          </Typography>
         </DialogTitle>
 
-        <DialogContent sx={{ pt: 3 }}>
-          <List sx={{ p: 0 }}>
-            {dueTodayCards.map((card, index) => (
-              <React.Fragment key={card.card_id}>
-                {index > 0 && <MuiDivider sx={{ my: 1 }} />}
-                <ListItem
-                  sx={{
-                    p: 2,
-                    borderRadius: 2,
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                    "&:hover": {
-                      bgcolor: "action.hover",
-                      transform: "translateX(4px)",
-                    },
-                  }}
-                  onClick={() => handleOpenCardFromAlert(card)}
-                >
-                  <Box sx={{ width: "100%" }}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-                      <EventIcon sx={{ fontSize: 18, color: "warning.main" }} />
-                      <Typography variant="body1" fontWeight={600}>
-                        {card.title}
-                      </Typography>
-                    </Box>
-                    {card.description && (
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          display: "-webkit-box",
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: "vertical",
-                          mb: 1,
-                        }}
-                      >
-                        {card.description}
-                      </Typography>
-                    )}
-                    <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                      <Chip
-                        label={`Vence hoje: ${new Date().toLocaleDateString("pt-BR")}`}
-                        size="small"
-                        color="warning"
-                        sx={{ fontWeight: 600 }}
-                      />
-                      {columns.find((col) => col.column_id === card.column_id) && (
-                        <Chip
-                          label={columns.find((col) => col.column_id === card.column_id)?.name}
-                          size="small"
-                          variant="outlined"
-                        />
-                      )}
-                    </Box>
-                  </Box>
-                </ListItem>
-              </React.Fragment>
+        <DialogContent sx={{ px: 3, py: 2 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+            {dueTodayCards.map((card) => (
+              <Box
+                key={card.card_id}
+                onClick={() => handleOpenCardFromAlert(card)}
+                sx={{
+                  p: 2,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 1.5,
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                  "&:hover": {
+                    borderColor: "primary.main",
+                    bgcolor: "action.hover",
+                  },
+                }}
+              >
+                <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
+                  {card.title}
+                </Typography>
+                {card.description && (
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{
+                      display: "-webkit-box",
+                      WebkitLineClamp: 1,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                      mb: 1,
+                    }}
+                  >
+                    {card.description}
+                  </Typography>
+                )}
+                <Box sx={{ display: "flex", gap: 0.5, mt: 1 }}>
+                  <Chip
+                    label="Hoje"
+                    size="small"
+                    sx={{
+                      height: 20,
+                      fontSize: "0.688rem",
+                      bgcolor: "warning.light",
+                      color: "warning.dark",
+                      fontWeight: 500,
+                    }}
+                  />
+                  {columns.find((col) => col.column_id === card.column_id) && (
+                    <Chip
+                      label={columns.find((col) => col.column_id === card.column_id)?.name}
+                      size="small"
+                      sx={{
+                        height: 20,
+                        fontSize: "0.688rem",
+                        bgcolor: "grey.100",
+                        color: "text.secondary",
+                      }}
+                    />
+                  )}
+                </Box>
+              </Box>
             ))}
-          </List>
+          </Box>
         </DialogContent>
 
-        <DialogActions sx={{ px: 3, pb: 3, pt: 2 }}>
+        <DialogActions sx={{ px: 3, pb: 2.5, pt: 1 }}>
           <Button
             onClick={() => setDueDateAlertOpen(false)}
-            variant="contained"
+            variant="text"
             fullWidth
             sx={{
-              borderRadius: 2,
               textTransform: "none",
-              fontWeight: 600,
-              py: 1.5,
+              fontWeight: 500,
+              color: "text.secondary",
+              "&:hover": {
+                bgcolor: "action.hover",
+              },
             }}
           >
-            Entendi
+            Fechar
           </Button>
         </DialogActions>
       </Dialog>
