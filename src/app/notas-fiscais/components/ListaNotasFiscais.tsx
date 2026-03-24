@@ -14,6 +14,7 @@ import {
   Tooltip,
   Typography,
   Box,
+  Skeleton,
 } from '@mui/material';
 import {
   Description as PdfIcon,
@@ -81,6 +82,56 @@ export default function ListaNotasFiscais({ notas, loading }: ListaNotasFiscaisP
       window.open(nota.arquivo_url, '_blank');
     }
   };
+
+  // Show skeleton while loading
+  if (loading) {
+    return (
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Cliente</TableCell>
+              <TableCell>Mês Referência</TableCell>
+              <TableCell>Arquivo</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Data Envio</TableCell>
+              <TableCell align="center">Ações</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {[1, 2, 3, 4, 5].map((i) => (
+              <TableRow key={i}>
+                <TableCell>
+                  <Skeleton variant="text" width="80%" height={20} />
+                </TableCell>
+                <TableCell>
+                  <Skeleton variant="text" width="60%" height={20} />
+                </TableCell>
+                <TableCell>
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <Skeleton variant="circular" width={20} height={20} />
+                    <Box sx={{ flex: 1 }}>
+                      <Skeleton variant="text" width="80%" height={20} />
+                      <Skeleton variant="text" width="40%" height={16} />
+                    </Box>
+                  </Box>
+                </TableCell>
+                <TableCell>
+                  <Skeleton variant="rectangular" width={80} height={24} sx={{ borderRadius: 3 }} />
+                </TableCell>
+                <TableCell>
+                  <Skeleton variant="text" width="70%" height={20} />
+                </TableCell>
+                <TableCell align="center">
+                  <Skeleton variant="circular" width={32} height={32} sx={{ mx: 'auto' }} />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    );
+  }
 
   // Filtrar notas válidas (com ID)
   const notasValidas = notas.filter((nota) => nota.nota_fiscal_id);

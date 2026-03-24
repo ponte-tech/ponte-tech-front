@@ -11,6 +11,8 @@ import {
   Alert,
   CircularProgress,
   Snackbar,
+  Skeleton,
+  Paper,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -169,13 +171,24 @@ export default function NotasFiscaisPage() {
       )}
 
       {/* Filtros */}
-      <FiltrosNotas
-        statusFiltro={statusFiltro}
-        mesFiltro={mesFiltro}
-        onStatusChange={setStatusFiltro}
-        onMesChange={setMesFiltro}
-        totalNotas={notasFiltradas.length}
-      />
+      {loading ? (
+        <Paper sx={{ p: 2, mb: 3 }}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+            <Skeleton variant="rectangular" width={200} height={40} sx={{ borderRadius: 1 }} />
+            <Skeleton variant="rectangular" width={200} height={40} sx={{ borderRadius: 1 }} />
+            <Box flex={1} />
+            <Skeleton variant="rectangular" width={80} height={32} sx={{ borderRadius: 3 }} />
+          </Stack>
+        </Paper>
+      ) : (
+        <FiltrosNotas
+          statusFiltro={statusFiltro}
+          mesFiltro={mesFiltro}
+          onStatusChange={setStatusFiltro}
+          onMesChange={setMesFiltro}
+          totalNotas={notasFiltradas.length}
+        />
+      )}
 
       {/* Lista de Notas */}
       <ListaNotasFiscais notas={notasFiltradas} loading={loading} />

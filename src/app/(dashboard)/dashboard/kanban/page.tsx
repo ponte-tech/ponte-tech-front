@@ -24,6 +24,7 @@ import {
   Checkbox,
   Divider as MuiDivider,
   Badge,
+  Skeleton,
 } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import CloseIcon from "@mui/icons-material/Close";
@@ -787,15 +788,32 @@ export default function KanbanPage() {
 
   if (loading) {
     return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "400px",
-        }}
-      >
-        <CircularProgress sx={{ color: "#8270FF" }} />
+      <Box sx={{ height: "calc(100vh - 80px)", display: "flex", flexDirection: "column" }}>
+        {/* Header Skeleton */}
+        <Box sx={{ px: 2, py: 1, bgcolor: "#ffffff", borderBottom: "1px solid #e0e0e0" }}>
+          <Skeleton variant="rectangular" width="100%" height={40} sx={{ borderRadius: 1 }} />
+        </Box>
+
+        {/* Board Skeleton - Simplified */}
+        <Box
+          sx={{
+            flexGrow: 1,
+            p: 1.5,
+            bgcolor: "#fafafa",
+            display: "flex",
+            gap: 1.5,
+          }}
+        >
+          {[1, 2, 3, 4].map((colIndex) => (
+            <Skeleton
+              key={colIndex}
+              variant="rectangular"
+              width={300}
+              height="100%"
+              sx={{ borderRadius: 2, minWidth: 300 }}
+            />
+          ))}
+        </Box>
       </Box>
     );
   }
@@ -1057,11 +1075,19 @@ export default function KanbanPage() {
           },
         }}
       >
-        {loadingColumns ? (
-          <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-            <CircularProgress sx={{ color: "#8270FF" }} />
+        {loadingColumns && !loading ? (
+          <Box sx={{ display: "flex", gap: 1.5, height: "100%", flexWrap: "nowrap" }}>
+            {[1, 2, 3].map((colIndex) => (
+              <Skeleton
+                key={colIndex}
+                variant="rectangular"
+                width={300}
+                height="100%"
+                sx={{ borderRadius: 2, minWidth: 300 }}
+              />
+            ))}
           </Box>
-        ) : (
+        ) : !loadingColumns && !loading ? (
           <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} collisionDetection={closestCorners}>
             <SortableContext items={columns.map((c) => c.column_id)} strategy={horizontalListSortingStrategy}>
               <Box sx={{ display: "flex", gap: 1.5, height: "100%", flexWrap: "nowrap", alignItems: "stretch" }}>
@@ -1172,7 +1198,7 @@ export default function KanbanPage() {
               ) : null}
             </DragOverlay>
           </DndContext>
-        )}
+        ) : null}
       </Box>
 
       {/* Modals */}

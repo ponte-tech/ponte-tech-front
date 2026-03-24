@@ -18,6 +18,8 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  Skeleton,
+  Grid,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -288,14 +290,25 @@ export default function MinhasHorasPage() {
 
   if (loading && !mesData) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="60vh"
-      >
-        <CircularProgress />
-      </Box>
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        {/* Header Skeleton */}
+        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={2} mb={4}>
+          <Box sx={{ flex: 1 }}>
+            <Skeleton variant="text" width="40%" height={40} sx={{ mb: 1 }} />
+            <Skeleton variant="text" width="60%" height={24} />
+          </Box>
+          <Skeleton variant="rectangular" width={200} height={42} sx={{ borderRadius: 1 }} />
+        </Stack>
+
+        {/* Status Card Skeleton */}
+        <Skeleton variant="rectangular" width="100%" height={120} sx={{ mb: 3, borderRadius: 2 }} />
+
+        {/* Tabs Skeleton */}
+        <Skeleton variant="rectangular" width="100%" height={48} sx={{ mb: 3, borderRadius: 1 }} />
+
+        {/* Calendar/Content Skeleton */}
+        <Skeleton variant="rectangular" width="100%" height={500} sx={{ borderRadius: 2 }} />
+      </Container>
     );
   }
 
