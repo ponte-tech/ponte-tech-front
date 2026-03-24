@@ -23,6 +23,8 @@ import {
   Autocomplete,
   Chip,
   Avatar,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import {
   Article as ArticleIcon,
@@ -37,6 +39,7 @@ import {
   CloudUpload as CloudUploadIcon,
   Delete as DeleteIcon,
   Download as DownloadIcon,
+  Share as ShareIcon,
 } from "@mui/icons-material";
 import { Card } from "@/app/types/kanban";
 import { Cliente } from "@/app/types/api";
@@ -86,6 +89,9 @@ export default function CardModal({
   const [attachments, setAttachments] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+
+  // Share snackbar state
+  const [shareSnackbarOpen, setShareSnackbarOpen] = useState(false);
 
   useEffect(() => {
     if (card) {
@@ -274,6 +280,21 @@ export default function CardModal({
     }
 
     return value;
+  };
+
+  // Handle share card - copy URL to clipboard
+  const handleShareCard = async () => {
+    if (!card) return;
+
+    const url = `${window.location.origin}/dashboard/kanban?card=${card.card_id}`;
+
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareSnackbarOpen(true);
+    } catch (error) {
+      console.error("Erro ao copiar URL:", error);
+      alert("Erro ao copiar link. Tente novamente.");
+    }
   };
 
   return (
@@ -1179,22 +1200,56 @@ export default function CardModal({
           )}
         </Box>
       </DialogContent>
-      <DialogActions sx={{ p: 2, borderTop: 1, borderColor: "divider" }}>
-        <Button onClick={onClose}>Cancelar</Button>
-        <Button
-          onClick={handleSubmit}
-          variant="contained"
-          sx={{
-            bgcolor: "#8270FF",
-            "&:hover": {
-              bgcolor: alpha("#8270FF", 0.8),
-            },
-          }}
-          disabled={!formData.title.trim()}
-        >
-          {card ? "Salvar" : "Criar"}
-        </Button>
+      <DialogActions sx={{ p: 2, borderTop: 1, borderColor: "divider", justifyContent: "space-between" }}>
+        <Box>
+          {card && (
+            <Button
+              onClick={handleShareCard}
+              startIcon={<ShareIcon />}
+              sx={{
+                color: "#8270FF",
+                "&:hover": {
+                  bgcolor: alpha("#8270FF", 0.08),
+                },
+              }}
+            >
+              Compartilhar
+            </Button>
+          )}
+        </Box>
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <Button onClick={onClose}>Cancelar</Button>
+          <Button
+            onClick={handleSubmit}
+            variant="contained"
+            sx={{
+              bgcolor: "#8270FF",
+              "&:hover": {
+                bgcolor: alpha("#8270FF", 0.8),
+              },
+            }}
+            disabled={!formData.title.trim()}
+          >
+            {card ? "Salvar" : "Criar"}
+          </Button>
+        </Box>
       </DialogActions>
+
+      {/* Snackbar para notificação de compartilhamento */}
+      <Snackbar
+        open={shareSnackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setShareSnackbarOpen(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setShareSnackbarOpen(false)}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          Link copiado para a área de transferência!
+        </Alert>
+      </Snackbar>
     </Dialog>
   );
 }
