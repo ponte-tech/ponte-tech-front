@@ -318,27 +318,50 @@ export default function KanbanPage() {
     }
     const nextBusinessDayStr = nextBusinessDay.toISOString().split('T')[0];
 
+    console.log('[OVERVIEW DEBUG] Hoje:', todayStr);
+    console.log('[OVERVIEW DEBUG] Próximo dia útil:', nextBusinessDayStr);
+    console.log('[OVERVIEW DEBUG] Total de cards:', cardsList.length);
+
     // Identificar colunas finalizadas
     const completedColumnNames = ['concluído', 'concluido', 'finalizado', 'done', 'completed', 'fechado'];
     const completedColumnIds = columnsList
       .filter(col => completedColumnNames.some(name => col.name.toLowerCase().includes(name)))
       .map(col => col.column_id);
 
+    console.log('[OVERVIEW DEBUG] Colunas finalizadas:', completedColumnIds);
+
     // Agrupar tarefas urgentes por colaborador
     const tasksByColab: Record<string, Array<{ card: Card; urgencyType: 'overdue' | 'today' | 'next_business_day' }>> = {};
 
     cardsList.forEach(card => {
-      if (!card.delivery_date) return;
-      if (!card.assigned_to || card.assigned_to.length === 0) return;
-      if (completedColumnIds.includes(card.column_id)) return;
+      console.log('[OVERVIEW DEBUG] Verificando card:', card.title, '| delivery_date:', card.delivery_date, '| assigned_to:', card.assigned_to);
+
+      if (!card.delivery_date) {
+        console.log('[OVERVIEW DEBUG]   -> Sem delivery_date');
+        return;
+      }
+      if (!card.assigned_to || card.assigned_to.length === 0) {
+        console.log('[OVERVIEW DEBUG]   -> Sem assigned_to');
+        return;
+      }
+      if (completedColumnIds.includes(card.column_id)) {
+        console.log('[OVERVIEW DEBUG]   -> Está em coluna finalizada');
+        return;
+      }
 
       const isOverdue = card.delivery_date < todayStr;
       const isToday = card.delivery_date === todayStr;
       const isNextBusinessDay = card.delivery_date === nextBusinessDayStr;
 
-      if (!isOverdue && !isToday && !isNextBusinessDay) return;
+      console.log('[OVERVIEW DEBUG]   -> isOverdue:', isOverdue, '| isToday:', isToday, '| isNextBusinessDay:', isNextBusinessDay);
+
+      if (!isOverdue && !isToday && !isNextBusinessDay) {
+        console.log('[OVERVIEW DEBUG]   -> Não atende critério de urgência');
+        return;
+      }
 
       const urgencyType = isOverdue ? 'overdue' : isToday ? 'today' : 'next_business_day';
+      console.log('[OVERVIEW DEBUG]   -> ADICIONADA! urgencyType:', urgencyType);
 
       card.assigned_to.forEach(colabId => {
         if (!tasksByColab[colabId]) {
@@ -347,6 +370,8 @@ export default function KanbanPage() {
         tasksByColab[colabId].push({ card, urgencyType });
       });
     });
+
+    console.log('[OVERVIEW DEBUG] Total de colaboradores com tarefas urgentes:', Object.keys(tasksByColab).length);
 
     // Converter para array e adicionar dados do colaborador
     const result = Object.entries(tasksByColab)
@@ -363,6 +388,7 @@ export default function KanbanPage() {
         return b.tasks.length - a.tasks.length;
       });
 
+    console.log('[OVERVIEW DEBUG] Resultado final:', result.length, 'colaboradores');
     setUrgentTasksByColaborador(result);
   };
 
