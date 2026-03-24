@@ -1074,6 +1074,42 @@ export default function KanbanPage() {
 
           <Tooltip
             title={
+              boards.find((b) => b.board_id === selectedBoardId)?.is_default ||
+              boards[0]?.board_id === selectedBoardId
+                ? "O board principal não pode ser excluído"
+                : "Excluir Board"
+            }
+            arrow
+          >
+            <span>
+              <IconButton
+                size="small"
+                onClick={handleDeleteBoard}
+                disabled={
+                  boards.find((b) => b.board_id === selectedBoardId)?.is_default ||
+                  boards[0]?.board_id === selectedBoardId
+                }
+                sx={{
+                  width: 28,
+                  height: 28,
+                  color: "#999",
+                  "&:hover": {
+                    color: "#f44336",
+                    bgcolor: "rgba(244, 67, 54, 0.08)",
+                  },
+                  "&.Mui-disabled": {
+                    color: "#ccc",
+                    cursor: "not-allowed",
+                  },
+                }}
+              >
+                <DeleteIcon sx={{ fontSize: "1.1rem" }} />
+              </IconButton>
+            </span>
+          </Tooltip>
+
+          <Tooltip
+            title={
               dueTodayCards.length > 0
                 ? `${dueTodayCards.length} ${dueTodayCards.length === 1 ? "tarefa vence" : "tarefas vencem"} hoje`
                 : "Nenhuma tarefa com vencimento hoje"
@@ -1112,42 +1148,6 @@ export default function KanbanPage() {
                 <NotificationsIcon sx={{ fontSize: "1.1rem" }} />
               </Badge>
             </IconButton>
-          </Tooltip>
-
-          <Tooltip
-            title={
-              boards.find((b) => b.board_id === selectedBoardId)?.is_default ||
-              boards[0]?.board_id === selectedBoardId
-                ? "O board principal não pode ser excluído"
-                : "Excluir Board"
-            }
-            arrow
-          >
-            <span>
-              <IconButton
-                size="small"
-                onClick={handleDeleteBoard}
-                disabled={
-                  boards.find((b) => b.board_id === selectedBoardId)?.is_default ||
-                  boards[0]?.board_id === selectedBoardId
-                }
-                sx={{
-                  width: 28,
-                  height: 28,
-                  color: "#999",
-                  "&:hover": {
-                    color: "#f44336",
-                    bgcolor: "rgba(244, 67, 54, 0.08)",
-                  },
-                  "&.Mui-disabled": {
-                    color: "#ccc",
-                    cursor: "not-allowed",
-                  },
-                }}
-              >
-                <DeleteIcon sx={{ fontSize: "1.1rem" }} />
-              </IconButton>
-            </span>
           </Tooltip>
         </Box>
       </Box>
