@@ -29,12 +29,21 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Link,
 } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import CloseIcon from "@mui/icons-material/Close";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import EventIcon from "@mui/icons-material/Event";
 import NotificationsIcon from "@mui/icons-material/Notifications";
+import PeopleIcon from "@mui/icons-material/People";
 import { DndContext, DragEndEvent, DragOverlay, closestCorners, DragStartEvent } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 import AddIcon from "@mui/icons-material/Add";
@@ -92,6 +101,16 @@ export default function KanbanPage() {
   // Due date alert states
   const [dueDateAlertOpen, setDueDateAlertOpen] = useState(false);
   const [dueTodayCards, setDueTodayCards] = useState<Card[]>([]);
+
+  // Colaboradores overview modal
+  const [colaboradoresOverviewOpen, setColaboradoresOverviewOpen] = useState(false);
+  const [urgentTasksByColaborador, setUrgentTasksByColaborador] = useState<Array<{
+    colaborador: any;
+    tasks: Array<{
+      card: Card;
+      urgencyType: 'overdue' | 'today' | 'next_business_day';
+    }>;
+  }>>([]);
 
   // Drag state
   const [activeCard, setActiveCard] = useState<Card | null>(null);
@@ -207,6 +226,9 @@ export default function KanbanPage() {
 
       // Verificar tasks com vencimento hoje (passar columnsList ao invés de usar state)
       checkDueTodayCards(allCards, columnsList);
+
+      // Calcular tarefas urgentes por colaborador
+      calculateUrgentTasksByColaborador(allCards, columnsList);
     } catch (error: any) {
       console.error("Erro ao carregar board:", error);
       setSnackbar({
@@ -278,6 +300,70 @@ export default function KanbanPage() {
       setDueTodayCards(dueTodayList);
       setDueDateAlertOpen(true);
     }
+  };
+
+  const calculateUrgentTasksByColaborador = (cardsList: Card[], columnsList: Column[]) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayStr = today.toISOString().split('T')[0];
+
+    const nextBusinessDay = new Date(today);
+    const dayOfWeek = today.getDay();
+    if (dayOfWeek === 5) {
+      nextBusinessDay.setDate(today.getDate() + 3);
+    } else if (dayOfWeek === 6) {
+      nextBusinessDay.setDate(today.getDate() + 2);
+    } else {
+      nextBusinessDay.setDate(today.getDate() + 1);
+    }
+    const nextBusinessDayStr = nextBusinessDay.toISOString().split('T')[0];
+
+    // Identificar colunas finalizadas
+    const completedColumnNames = ['concluído', 'concluido', 'finalizado', 'done', 'completed', 'fechado'];
+    const completedColumnIds = columnsList
+      .filter(col => completedColumnNames.some(name => col.name.toLowerCase().includes(name)))
+      .map(col => col.column_id);
+
+    // Agrupar tarefas urgentes por colaborador
+    const tasksByColab: Record<string, Array<{ card: Card; urgencyType: 'overdue' | 'today' | 'next_business_day' }>> = {};
+
+    cardsList.forEach(card => {
+      if (!card.delivery_date) return;
+      if (!card.assigned_to || card.assigned_to.length === 0) return;
+      if (completedColumnIds.includes(card.column_id)) return;
+
+      const isOverdue = card.delivery_date < todayStr;
+      const isToday = card.delivery_date === todayStr;
+      const isNextBusinessDay = card.delivery_date === nextBusinessDayStr;
+
+      if (!isOverdue && !isToday && !isNextBusinessDay) return;
+
+      const urgencyType = isOverdue ? 'overdue' : isToday ? 'today' : 'next_business_day';
+
+      card.assigned_to.forEach(colabId => {
+        if (!tasksByColab[colabId]) {
+          tasksByColab[colabId] = [];
+        }
+        tasksByColab[colabId].push({ card, urgencyType });
+      });
+    });
+
+    // Converter para array e adicionar dados do colaborador
+    const result = Object.entries(tasksByColab)
+      .map(([colabId, tasks]) => ({
+        colaborador: colaboradores.find(c => c.id === colabId),
+        tasks,
+      }))
+      .filter(item => item.colaborador) // Filtrar colaboradores não encontrados
+      .sort((a, b) => {
+        // Ordenar por quantidade de tarefas vencidas primeiro, depois total
+        const aOverdue = a.tasks.filter(t => t.urgencyType === 'overdue').length;
+        const bOverdue = b.tasks.filter(t => t.urgencyType === 'overdue').length;
+        if (aOverdue !== bOverdue) return bOverdue - aOverdue;
+        return b.tasks.length - a.tasks.length;
+      });
+
+    setUrgentTasksByColaborador(result);
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -1133,6 +1219,44 @@ export default function KanbanPage() {
 
           <Tooltip
             title={
+              urgentTasksByColaborador.length > 0
+                ? `${urgentTasksByColaborador.length} ${urgentTasksByColaborador.length === 1 ? "colaborador com tarefas urgentes" : "colaboradores com tarefas urgentes"}`
+                : "Nenhum colaborador com tarefas urgentes"
+            }
+            arrow
+          >
+            <IconButton
+              size="small"
+              onClick={() => setColaboradoresOverviewOpen(true)}
+              sx={{
+                width: 28,
+                height: 28,
+                color: urgentTasksByColaborador.length > 0 ? "#8270FF" : "#999",
+                "&:hover": {
+                  bgcolor: "rgba(130, 112, 255, 0.08)",
+                },
+              }}
+            >
+              <Badge
+                badgeContent={urgentTasksByColaborador.length}
+                color="error"
+                sx={{
+                  "& .MuiBadge-badge": {
+                    bgcolor: "#8270FF",
+                    color: "white",
+                    fontSize: "0.625rem",
+                    height: 16,
+                    minWidth: 16,
+                  },
+                }}
+              >
+                <PeopleIcon sx={{ fontSize: "1.1rem" }} />
+              </Badge>
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip
+            title={
               dueTodayCards.length > 0
                 ? `${dueTodayCards.length} ${dueTodayCards.length === 1 ? "tarefa urgente" : "tarefas urgentes"}`
                 : "Nenhuma tarefa urgente"
@@ -1639,6 +1763,164 @@ export default function KanbanPage() {
         <DialogActions sx={{ px: 3, pb: 2.5, pt: 1 }}>
           <Button
             onClick={() => setDueDateAlertOpen(false)}
+            variant="contained"
+            fullWidth
+            sx={{
+              textTransform: "none",
+              fontWeight: 600,
+              bgcolor: "#8270FF",
+              color: "white",
+              "&:hover": {
+                bgcolor: "#6B5FCC",
+              },
+            }}
+          >
+            Fechar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Colaboradores Overview Modal */}
+      <Dialog
+        open={colaboradoresOverviewOpen}
+        onClose={() => setColaboradoresOverviewOpen(false)}
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+          },
+        }}
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <Box component="span" sx={{ display: "block", fontWeight: 600, fontSize: "1.125rem" }}>
+            Visão Geral - Tarefas Urgentes por Colaborador
+          </Box>
+          <Typography variant="caption" color="text.secondary">
+            {urgentTasksByColaborador.length} {urgentTasksByColaborador.length === 1 ? "colaborador" : "colaboradores"} com tarefas urgentes
+          </Typography>
+        </DialogTitle>
+
+        <DialogContent sx={{ px: 3, py: 2 }}>
+          {urgentTasksByColaborador.length === 0 ? (
+            <Box sx={{ textAlign: "center", py: 4 }}>
+              <Typography variant="body2" color="text.secondary">
+                Nenhum colaborador com tarefas urgentes
+              </Typography>
+            </Box>
+          ) : (
+            <TableContainer component={Paper} variant="outlined">
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ bgcolor: "grey.50" }}>
+                    <TableCell sx={{ fontWeight: 600 }}>Colaborador</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Tarefa</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>ID</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Vencimento</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }} align="center">Link</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {urgentTasksByColaborador.map(({ colaborador, tasks }) =>
+                    tasks.map((task, taskIndex) => (
+                      <TableRow
+                        key={`${colaborador.id}-${task.card.card_id}`}
+                        hover
+                        sx={{
+                          "&:hover": { bgcolor: "action.hover" },
+                          borderLeft: task.urgencyType === 'overdue' ? '3px solid #F44336' :
+                                     task.urgencyType === 'today' ? '3px solid #FF9800' : '3px solid #8270FF'
+                        }}
+                      >
+                        {taskIndex === 0 ? (
+                          <TableCell rowSpan={tasks.length} sx={{ verticalAlign: "top", fontWeight: 500 }}>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                              {colaborador.foto_perfil_url ? (
+                                <Avatar src={colaborador.foto_perfil_url} sx={{ width: 32, height: 32 }} />
+                              ) : (
+                                <Avatar sx={{ width: 32, height: 32, bgcolor: "#8270FF" }}>
+                                  {colaborador.nome_completo?.charAt(0) || "?"}
+                                </Avatar>
+                              )}
+                              <Box>
+                                <Typography variant="body2" fontWeight={500}>
+                                  {colaborador.nome_completo}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {tasks.length} {tasks.length === 1 ? "tarefa" : "tarefas"}
+                                </Typography>
+                              </Box>
+                            </Box>
+                          </TableCell>
+                        ) : null}
+                        <TableCell>
+                          <Typography variant="body2" noWrap maxWidth={250}>
+                            {task.card.title}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="caption" fontFamily="monospace" color="text.secondary">
+                            #{task.card.card_id.substring(0, 8)}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" fontSize="0.813rem">
+                            {new Date(task.card.delivery_date || '').toLocaleDateString('pt-BR')}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={
+                              task.urgencyType === 'overdue' ? 'Vencida' :
+                              task.urgencyType === 'today' ? 'Hoje' : 'Próximo dia útil'
+                            }
+                            size="small"
+                            sx={{
+                              height: 20,
+                              fontSize: "0.688rem",
+                              bgcolor: task.urgencyType === 'overdue' ? '#F44336' :
+                                      task.urgencyType === 'today' ? '#FF9800' : '#8270FF',
+                              color: "white",
+                              fontWeight: 500,
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <Link
+                            component="button"
+                            variant="body2"
+                            onClick={() => {
+                              setSelectedCard(task.card);
+                              setCardModalOpen(true);
+                              setColaboradoresOverviewOpen(false);
+                            }}
+                            sx={{
+                              color: "#8270FF",
+                              textDecoration: "none",
+                              fontWeight: 500,
+                              fontSize: "0.813rem",
+                              "&:hover": {
+                                textDecoration: "underline",
+                              },
+                            }}
+                          >
+                            Ver tarefa
+                          </Link>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </DialogContent>
+
+        <DialogActions sx={{ px: 3, pb: 2.5, pt: 1 }}>
+          <Button
+            onClick={() => setColaboradoresOverviewOpen(false)}
             variant="contained"
             fullWidth
             sx={{
