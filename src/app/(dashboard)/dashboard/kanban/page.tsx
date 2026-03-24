@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
 import {
   Box,
   Button,
@@ -67,7 +67,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 
-export default function KanbanPage() {
+function KanbanPageContent() {
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -2008,5 +2008,24 @@ export default function KanbanPage() {
         </Alert>
       </Snackbar>
     </Box>
+  );
+}
+
+export default function KanbanPage() {
+  return (
+    <Suspense
+      fallback={
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="80vh"
+        >
+          <CircularProgress />
+        </Box>
+      }
+    >
+      <KanbanPageContent />
+    </Suspense>
   );
 }
