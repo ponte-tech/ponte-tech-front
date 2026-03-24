@@ -225,8 +225,21 @@ export default function KanbanPage() {
 
     const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
 
+    // Identificar colunas finalizadas (por nome)
+    const completedColumnNames = ['concluído', 'concluido', 'finalizado', 'done', 'completed', 'fechado'];
+    const completedColumnIds = columns
+      .filter(col =>
+        completedColumnNames.some(name =>
+          col.name.toLowerCase().includes(name)
+        )
+      )
+      .map(col => col.column_id);
+
     const dueTodayList = cardsList.filter(card => {
       if (!card.delivery_date) return false;
+
+      // Verificar se não está em coluna finalizada
+      if (completedColumnIds.includes(card.column_id)) return false;
 
       // delivery_date está no formato YYYY-MM-DD
       return card.delivery_date === todayStr;
