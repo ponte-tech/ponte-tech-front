@@ -242,6 +242,11 @@ export default function KanbanPage() {
       // Verificar se não está em coluna finalizada
       if (completedColumnIds.includes(card.column_id)) return false;
 
+      // Verificar se o usuário logado está atribuído à task
+      if (!card.assigned_to || card.assigned_to.length === 0) return false;
+      if (!user?.userId) return false;
+      if (!card.assigned_to.includes(user.userId)) return false;
+
       // delivery_date está no formato YYYY-MM-DD
       return card.delivery_date === todayStr;
     });
