@@ -27,6 +27,14 @@ import {
   LinearProgress,
   Avatar,
   alpha,
+  Tabs,
+  Tab,
+  Divider,
+  Chip,
+  Stepper,
+  Step,
+  StepLabel,
+  Collapse,
 } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
@@ -40,6 +48,15 @@ import {
   CloudUpload as CloudUploadIcon,
   PhotoCamera as PhotoCameraIcon,
   Close as CloseIcon,
+  Person as PersonIcon,
+  Home as HomeIcon,
+  Phone as PhoneIcon,
+  AccountBalance as AccountBalanceIcon,
+  Work as WorkIcon,
+  CheckCircle as CheckCircleIcon,
+  Error as ErrorIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
 } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
@@ -53,6 +70,27 @@ import ContractModal from "../../components/ContractModal";
 import empresaService from "@/app/services/empresaService";
 import type { Empresa } from "@/app/types/empresa";
 import { DeleteDialog } from "@/app/shared/components";
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`profile-tabpanel-${index}`}
+      aria-labelledby={`profile-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
+    </div>
+  );
+}
 
 export default function EditarColaboradorPage() {
   const router = useRouter();
@@ -69,6 +107,15 @@ export default function EditarColaboradorPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [contractsKey, setContractsKey] = useState(0);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
+  const [currentTab, setCurrentTab] = useState(0);
+
+  // Collapsed sections state
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    personalInfo: true,
+    emergencyContact: false,
+    address: false,
+    financial: false,
+  });
 
   // Password change states
   const [currentPassword, setCurrentPassword] = useState("");
@@ -97,14 +144,12 @@ export default function EditarColaboradorPage() {
   const isColaborador = user?.userType === "colaborador";
   const colaboradorId = params.id as string;
 
-  // Evita erro de hidratação - só renderiza após montagem no cliente
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
     if (user) {
-      // Colaboradores só podem editar seu próprio perfil
       if (isColaborador && user.id !== colaboradorId) {
         router.push(`/colaboradores/${user.id}/editar`);
       } else if (!isAdmin && !isColaborador) {
@@ -117,12 +162,15 @@ export default function EditarColaboradorPage() {
     if (isAdmin || isColaborador) {
       loadColaborador();
       loadContracts();
-      // Apenas admins podem listar todas as empresas
       if (isAdmin) {
         loadEmpresas();
       }
     }
   }, [colaboradorId, isAdmin, isColaborador]);
+
+  const toggleSection = (section: string) => {
+    setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
+  };
 
   const loadEmpresas = async () => {
     try {
@@ -140,7 +188,6 @@ export default function EditarColaboradorPage() {
       const data = await colaboradoresService.getById(colaboradorId, isColaborador);
       setColaborador(data);
 
-      // Para colaboradores, usar o nome da empresa retornado pela API
       if (isColaborador && data.empresa_id) {
         setEmpresas([{
           empresa_id: data.empresa_id,
@@ -162,21 +209,14 @@ export default function EditarColaboradorPage() {
 
   const loadContracts = async () => {
     try {
-      console.log('[DEBUG] Carregando contratos:', { colaboradorId, isColaborador });
       const data = await contratosService.getByUserId(colaboradorId, isColaborador);
-      console.log('[DEBUG] Contratos carregados:', data);
       setContracts(data);
     } catch (err: any) {
       console.error("Erro ao carregar contratos:", err);
-      console.error("Detalhes do erro:", {
-        message: err.message,
-        response: err.response?.data,
-        status: err.response?.status
-      });
     }
   };
 
-  // Funções de máscara
+  // Mask functions
   const applyMaskCPF = (value: string) => {
     return value
       .replace(/\D/g, "")
@@ -279,7 +319,7 @@ export default function EditarColaboradorPage() {
     }
   };
 
-  // Funções de validação
+  // Validation functions
   const validateCPF = (cpf: string): boolean => {
     const cleaned = cpf.replace(/\D/g, "");
     if (cleaned.length !== 11) return false;
@@ -345,7 +385,6 @@ export default function EditarColaboradorPage() {
 
     let maskedValue = value;
 
-    // Aplicar máscaras
     if (field === "cpf") {
       maskedValue = applyMaskCPF(value);
     } else if (field === "cnpj") {
@@ -406,7 +445,6 @@ export default function EditarColaboradorPage() {
       });
     }
 
-    // Limpar erro do campo ao digitar
     setFieldErrors((prev) => {
       const newErrors = { ...prev };
       delete newErrors[field];
@@ -461,8 +499,7 @@ export default function EditarColaboradorPage() {
   const handleAvatarFileSelect = (file: File) => {
     setAvatarError(null);
 
-    // Validar arquivo
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       setAvatarError("Arquivo muito grande. Tamanho máximo: 5MB");
       return;
@@ -476,7 +513,6 @@ export default function EditarColaboradorPage() {
 
     setAvatarFile(file);
 
-    // Criar preview
     const reader = new FileReader();
     reader.onloadend = () => {
       setAvatarPreview(reader.result as string);
@@ -519,7 +555,6 @@ export default function EditarColaboradorPage() {
 
       const fotoURL = await avatarService.uploadAvatar(avatarFile);
 
-      // Atualizar o colaborador com a nova foto
       setColaborador((prev) => {
         if (!prev) return prev;
         return {
@@ -528,18 +563,14 @@ export default function EditarColaboradorPage() {
         };
       });
 
-      // Atualizar contexto de autenticação (localStorage)
       if (user && user.id === colaboradorId) {
         const updatedUser = { ...user, foto_perfil_url: fotoURL };
         localStorage.setItem("user", JSON.stringify(updatedUser));
-        // Forçar reload do contexto
         window.dispatchEvent(new Event("storage"));
       }
 
-      // Atualizar preview para a URL do S3 para transição suave
       setAvatarPreview(fotoURL);
 
-      // Limpar seleção após um pequeno delay
       setTimeout(() => {
         setAvatarFile(null);
         setAvatarPreview(null);
@@ -571,7 +602,6 @@ export default function EditarColaboradorPage() {
 
       await avatarService.deleteAvatar();
 
-      // Atualizar o colaborador removendo a foto
       setColaborador((prev) => {
         if (!prev) return prev;
         return {
@@ -580,11 +610,9 @@ export default function EditarColaboradorPage() {
         };
       });
 
-      // Atualizar contexto de autenticação (localStorage)
       if (user && user.id === colaboradorId) {
         const updatedUser = { ...user, foto_perfil_url: undefined };
         localStorage.setItem("user", JSON.stringify(updatedUser));
-        // Forçar reload do contexto
         window.dispatchEvent(new Event("storage"));
       }
 
@@ -607,7 +635,6 @@ export default function EditarColaboradorPage() {
     setAvatarError(null);
   };
 
-  // Calcular totais dos contratos ativos
   const calculateTotals = () => {
     const activeContracts = contracts.filter(c => c.status === 'ativo');
     const totalHoras = activeContracts.reduce((sum, c) => sum + c.total_hora_mes, 0);
@@ -619,12 +646,9 @@ export default function EditarColaboradorPage() {
 
   const handleAddContract = async (contract: CreateContratoRequest, contratoId?: string) => {
     try {
-      console.log('[DEBUG] Salvando contrato:', { contratoId, contract });
       if (contratoId) {
-        // Editar contrato existente
         await contratosService.update(colaboradorId, contratoId, contract);
       } else {
-        // Criar novo contrato
         await contratosService.create(colaboradorId, contract);
       }
       await loadContracts();
@@ -671,7 +695,6 @@ export default function EditarColaboradorPage() {
     return date.toLocaleDateString("pt-BR");
   };
 
-  // Password strength calculation
   const calculatePasswordStrength = (password: string): number => {
     let strength = 0;
     if (password.length >= 8) strength += 25;
@@ -696,12 +719,10 @@ export default function EditarColaboradorPage() {
 
   const passwordStrength = calculatePasswordStrength(newPassword);
 
-  // Handle password change
   const handlePasswordChange = async () => {
     setPasswordError("");
     setPasswordSuccess(false);
 
-    // Validations
     if (!currentPassword || !newPassword || !confirmPassword) {
       setPasswordError("Por favor, preencha todos os campos de senha");
       return;
@@ -732,7 +753,6 @@ export default function EditarColaboradorPage() {
       setNewPassword("");
       setConfirmPassword("");
 
-      // Auto-hide success message after 5 seconds
       setTimeout(() => {
         setPasswordSuccess(false);
       }, 5000);
@@ -752,37 +772,30 @@ export default function EditarColaboradorPage() {
     setSuccess(false);
 
     try {
-      // Validações básicas
       if (!colaborador.nome_completo || !colaborador.cnpj || !colaborador.empresa_id || !colaborador.celular) {
         throw new Error("Por favor, preencha todos os campos obrigatórios");
       }
 
-      // Validar nome (deve ter pelo menos nome e sobrenome)
       if (colaborador.nome_completo.trim().split(" ").length < 2) {
         throw new Error("Por favor, informe o nome completo");
       }
 
-      // Validar CNPJ
       if (!validateCNPJ(colaborador.cnpj)) {
         throw new Error("CNPJ inválido");
       }
 
-      // Validar celular
       if (!validatePhone(colaborador.celular)) {
         throw new Error("Celular inválido. Use o formato (00) 00000-0000");
       }
 
-      // Validar telefone de emergência se preenchido
       if (colaborador.telefone_contato_emergencia && !validatePhone(colaborador.telefone_contato_emergencia)) {
         throw new Error("Telefone de emergência inválido. Use o formato (00) 00000-0000");
       }
 
-      // Validar CEP
       if (!validateCEP(colaborador.endereco?.cep || "")) {
         throw new Error("CEP inválido. Use o formato 00000-000");
       }
 
-      // Validar endereço
       if (
         !colaborador.endereco?.cep ||
         !colaborador.endereco?.logradouro ||
@@ -794,17 +807,14 @@ export default function EditarColaboradorPage() {
         throw new Error("Por favor, preencha todos os campos do endereço");
       }
 
-      // Validar estado
       if (colaborador.endereco.estado.length !== 2) {
         throw new Error("Estado inválido. Use a sigla com 2 letras (ex: SP)");
       }
 
-      // Validar dados financeiros
       if (!colaborador.dados_financeiros?.chave_pix) {
         throw new Error("Por favor, informe a chave PIX");
       }
 
-      // Validar dia do pagamento
       const diaPagamento = parseInt(colaborador.dados_financeiros.data_pagamento);
       if (isNaN(diaPagamento) || diaPagamento < 1 || diaPagamento > 31) {
         throw new Error("Dia do pagamento deve ser entre 1 e 31");
@@ -827,7 +837,7 @@ export default function EditarColaboradorPage() {
       setSuccess(true);
 
       setTimeout(() => {
-        router.push(`/colaboradores/${colaboradorId}`);
+        router.push(isAdmin ? "/colaboradores" : "/dashboard");
       }, 1500);
     } catch (err: any) {
       setError(err.message || "Erro ao atualizar colaborador");
@@ -868,23 +878,56 @@ export default function EditarColaboradorPage() {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      {/* Header */}
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-        <Box>
-          <Button
-            startIcon={<ArrowBackIcon />}
-            onClick={() => router.push(`/colaboradores/${colaboradorId}`)}
-            sx={{ mb: 1, textTransform: "none" }}
+    <Box sx={{ maxWidth: 1400, mx: "auto", p: { xs: 2, md: 3 } }}>
+      {/* Header with Profile Preview */}
+      <Box sx={{ mb: 4 }}>
+        <Box sx={{
+          display: "flex",
+          flexDirection: { xs: "column", md: "row" },
+          alignItems: { xs: "center", md: "flex-start" },
+          gap: 3,
+          p: 3,
+          borderRadius: 3,
+          bgcolor: alpha("#8270FF", 0.03),
+          border: `1px solid ${alpha("#8270FF", 0.1)}`,
+        }}>
+          <Avatar
+            src={avatarPreview || colaborador.foto_perfil_url || ""}
+            sx={{
+              width: 96,
+              height: 96,
+              border: "4px solid",
+              borderColor: "#8270FF",
+              boxShadow: "0 8px 24px rgba(130, 112, 255, 0.25)",
+              fontSize: "2.5rem",
+              bgcolor: alpha("#8270FF", 0.1),
+              color: "#8270FF",
+            }}
           >
-            Voltar
-          </Button>
-          <Typography variant="h4" fontWeight="bold">
-            Editar Colaborador
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Atualize as informações do colaborador
-          </Typography>
+            {colaborador.nome_completo?.charAt(0)?.toUpperCase() || "U"}
+          </Avatar>
+          <Box sx={{ flex: 1, textAlign: { xs: "center", md: "left" } }}>
+            <Typography variant="h4" fontWeight="700" sx={{ color: "#1a1a1a", mb: 0.5 }}>
+              {colaborador.nome_completo}
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
+              {colaborador.email}
+            </Typography>
+            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", justifyContent: { xs: "center", md: "flex-start" } }}>
+              <Chip
+                icon={<WorkIcon />}
+                label={empresas.find(e => e.empresa_id === colaborador.empresa_id)?.razao_social || "Empresa"}
+                size="small"
+                sx={{ bgcolor: alpha("#8270FF", 0.1), color: "#8270FF", fontWeight: 500 }}
+              />
+              <Chip
+                label={colaborador.status === "ativo" ? "Ativo" : "Inativo"}
+                size="small"
+                color={colaborador.status === "ativo" ? "success" : "default"}
+                sx={{ fontWeight: 500 }}
+              />
+            </Box>
+          </Box>
         </Box>
       </Box>
 
@@ -895,26 +938,60 @@ export default function EditarColaboradorPage() {
         </Alert>
       )}
       {success && (
-        <Alert severity="success" sx={{ mb: 3 }}>
-          Colaborador atualizado com sucesso! Redirecionando...
+        <Alert severity="success" sx={{ mb: 3 }} icon={<CheckCircleIcon />}>
+          Dados salvos com sucesso! Redirecionando...
         </Alert>
       )}
 
-      {/* Form */}
-      <form onSubmit={handleSubmit}>
-        <Grid container spacing={3}>
-          {/* Informações Pessoais */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Informações Pessoais
-                </Typography>
+      {/* Navigation Tabs */}
+      <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
+        <Tabs
+          value={currentTab}
+          onChange={(e, newValue) => setCurrentTab(newValue)}
+          sx={{
+            "& .MuiTab-root": {
+              textTransform: "none",
+              fontSize: "1rem",
+              fontWeight: 500,
+              minHeight: 64,
+            },
+            "& .Mui-selected": {
+              color: "#8270FF !important",
+            },
+            "& .MuiTabs-indicator": {
+              backgroundColor: "#8270FF",
+              height: 3,
+            },
+          }}
+        >
+          <Tab icon={<PersonIcon />} iconPosition="start" label="Perfil" />
+          <Tab icon={<LockIcon />} iconPosition="start" label="Segurança" />
+          <Tab icon={<WorkIcon />} iconPosition="start" label="Contratos" />
+        </Tabs>
+      </Box>
 
-                {/* Avatar Upload Section */}
-                <Box sx={{ mb: 4, mt: 3 }}>
-                  <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, alignItems: { xs: "center", md: "flex-start" }, gap: 3 }}>
-                    {/* Avatar Display */}
+      {/* Tab Panels */}
+      <form onSubmit={handleSubmit}>
+        {/* Profile Tab */}
+        <TabPanel value={currentTab} index={0}>
+          <Grid container spacing={3}>
+            {/* Avatar Upload Section */}
+            <Grid item xs={12}>
+              <Card sx={{ borderRadius: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
+                    <PhotoCameraIcon sx={{ color: "#8270FF", fontSize: 28 }} />
+                    <Box>
+                      <Typography variant="h6" fontWeight="600">
+                        Foto de Perfil
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Personalize seu perfil com uma foto
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 3 }}>
                     <Box sx={{ position: "relative" }}>
                       <Avatar
                         src={avatarPreview || colaborador.foto_perfil_url || ""}
@@ -951,18 +1028,9 @@ export default function EditarColaboradorPage() {
                       )}
                     </Box>
 
-                    {/* Upload Controls */}
-                    <Box sx={{ flex: 1, width: "100%" }}>
+                    <Box sx={{ flex: 1 }}>
                       {!avatarFile ? (
                         <>
-                          <Typography variant="subtitle1" fontWeight="600" gutterBottom>
-                            Foto de Perfil
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                            Adicione uma foto para personalizar seu perfil. JPG, PNG ou WebP até 5MB.
-                          </Typography>
-
-                          {/* Drag and Drop Area */}
                           <Box
                             onDrop={handleAvatarDrop}
                             onDragOver={handleAvatarDragOver}
@@ -993,7 +1061,7 @@ export default function EditarColaboradorPage() {
                             <label htmlFor="avatar-upload" style={{ cursor: "pointer" }}>
                               <CloudUploadIcon sx={{ fontSize: 48, color: "#8270FF", mb: 1 }} />
                               <Typography variant="body2" fontWeight="500" sx={{ mb: 0.5 }}>
-                                Arraste e solte sua foto aqui ou clique para selecionar
+                                Arraste e solte ou clique para selecionar
                               </Typography>
                               <Typography variant="caption" color="text.secondary">
                                 JPG, PNG ou WebP (máx. 5MB)
@@ -1001,7 +1069,6 @@ export default function EditarColaboradorPage() {
                             </label>
                           </Box>
 
-                          {/* Remove Photo Button */}
                           {colaborador.foto_perfil_url && (
                             <Button
                               variant="outlined"
@@ -1009,11 +1076,7 @@ export default function EditarColaboradorPage() {
                               startIcon={<DeleteIcon />}
                               onClick={handleAvatarDeleteClick}
                               disabled={uploadingAvatar}
-                              sx={{
-                                mt: 2,
-                                textTransform: "none",
-                                borderRadius: 2,
-                              }}
+                              sx={{ mt: 2, textTransform: "none", borderRadius: 2 }}
                             >
                               Remover Foto
                             </Button>
@@ -1021,9 +1084,6 @@ export default function EditarColaboradorPage() {
                         </>
                       ) : (
                         <>
-                          <Typography variant="subtitle1" fontWeight="600" gutterBottom>
-                            Nova Foto Selecionada
-                          </Typography>
                           <Box
                             sx={{
                               display: "flex",
@@ -1048,10 +1108,7 @@ export default function EditarColaboradorPage() {
                               size="small"
                               onClick={handleCancelAvatarSelection}
                               disabled={uploadingAvatar}
-                              sx={{
-                                color: "text.secondary",
-                                "&:hover": { color: "error.main" },
-                              }}
+                              sx={{ color: "text.secondary", "&:hover": { color: "error.main" } }}
                             >
                               <CloseIcon fontSize="small" />
                             </IconButton>
@@ -1068,9 +1125,7 @@ export default function EditarColaboradorPage() {
                                 textTransform: "none",
                                 borderRadius: 2,
                                 px: 3,
-                                "&:hover": {
-                                  bgcolor: "#6a5ce0",
-                                },
+                                "&:hover": { bgcolor: "#6a5ce0" },
                               }}
                             >
                               {uploadingAvatar ? "Enviando..." : "Enviar Foto"}
@@ -1096,7 +1151,6 @@ export default function EditarColaboradorPage() {
                         </>
                       )}
 
-                      {/* Error Message */}
                       {avatarError && (
                         <Alert severity="error" sx={{ mt: 2 }} onClose={() => setAvatarError(null)}>
                           {avatarError}
@@ -1104,689 +1158,822 @@ export default function EditarColaboradorPage() {
                       )}
                     </Box>
                   </Box>
-                </Box>
+                </CardContent>
+              </Card>
+            </Grid>
 
-                <Grid container spacing={2} sx={{ mt: 1 }}>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Nome Completo"
-                      required
-                      value={colaborador.nome_completo}
-                      onChange={(e) => handleChange("nome_completo", e.target.value)}
-                      onBlur={(e) => handleBlur("nome_completo", e.target.value)}
-                      disabled={saving}
-                      error={!!fieldErrors.nome_completo}
-                      helperText={fieldErrors.nome_completo}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="CPF"
-                      value={colaborador.cpf}
-                      disabled
-                      helperText="CPF não pode ser alterado"
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="CNPJ"
-                      required
-                      value={colaborador.cnpj}
-                      onChange={(e) => handleChange("cnpj", e.target.value)}
-                      onBlur={(e) => handleBlur("cnpj", e.target.value)}
-                      disabled={saving}
-                      placeholder="00.000.000/0000-00"
-                      error={!!fieldErrors.cnpj}
-                      helperText={fieldErrors.cnpj}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <FormControl fullWidth required error={!!fieldErrors.empresa_id}>
-                      <InputLabel>Empresa</InputLabel>
-                      <Select
-                        value={colaborador.empresa_id || ""}
-                        label="Empresa"
-                        onChange={(e) => handleChange("empresa_id", e.target.value)}
-                        disabled={saving || isColaborador}
-                      >
-                        {empresas.map((empresa) => (
-                          <MenuItem key={empresa.empresa_id} value={empresa.empresa_id}>
-                            {empresa.razao_social}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                      {mounted && isColaborador && (
-                        <FormHelperText>Empresa não pode ser alterada</FormHelperText>
-                      )}
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Celular"
-                      required
-                      value={colaborador.celular}
-                      onChange={(e) => handleChange("celular", e.target.value)}
-                      onBlur={(e) => handleBlur("celular", e.target.value)}
-                      disabled={saving}
-                      placeholder="(00) 00000-0000"
-                      error={!!fieldErrors.celular}
-                      helperText={fieldErrors.celular}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Email"
-                      value={colaborador.email}
-                      disabled
-                      helperText="Email não pode ser alterado"
-                    />
-                  </Grid>
-                  {/* Campo Status - apenas para admins */}
-                  {isAdmin && (
-                    <Grid item xs={12} md={6}>
-                      <TextField
-                        select
-                        fullWidth
-                        label="Status"
-                        required
-                        value={colaborador.status}
-                        onChange={(e) => handleChange("status", e.target.value)}
-                        disabled={saving}
-                      >
-                        <MenuItem value="ativo">Ativo</MenuItem>
-                        <MenuItem value="inativo">Inativo</MenuItem>
-                      </TextField>
-                    </Grid>
-                  )}
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Contato de Emergência */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Contato de Emergência
-                </Typography>
-                <Grid container spacing={2} sx={{ mt: 1 }}>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Nome do Contato"
-                      value={colaborador.nome_contato_emergencia || ""}
-                      onChange={(e) => handleChange("nome_contato_emergencia", e.target.value)}
-                      disabled={saving}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Telefone do Contato"
-                      value={colaborador.telefone_contato_emergencia || ""}
-                      onChange={(e) => handleChange("telefone_contato_emergencia", e.target.value)}
-                      onBlur={(e) => handleBlur("telefone_contato_emergencia", e.target.value)}
-                      disabled={saving}
-                      placeholder="(00) 00000-0000"
-                      error={!!fieldErrors.telefone_contato_emergencia}
-                      helperText={fieldErrors.telefone_contato_emergencia}
-                    />
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Endereço */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Endereço
-                </Typography>
-                <Grid container spacing={2} sx={{ mt: 1 }}>
-                  <Grid item xs={12} md={3}>
-                    <TextField
-                      fullWidth
-                      label="CEP"
-                      required
-                      value={colaborador.endereco?.cep || ""}
-                      onChange={(e) => handleChange("endereco.cep", e.target.value)}
-                      onBlur={(e) => handleBlur("endereco.cep", e.target.value)}
-                      disabled={saving}
-                      placeholder="00000-000"
-                      error={!!fieldErrors["endereco.cep"]}
-                      helperText={fieldErrors["endereco.cep"]}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={7}>
-                    <TextField
-                      fullWidth
-                      label="Logradouro"
-                      required
-                      value={colaborador.endereco?.logradouro || ""}
-                      onChange={(e) => handleChange("endereco.logradouro", e.target.value)}
-                      disabled={saving}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={2}>
-                    <TextField
-                      fullWidth
-                      label="Número"
-                      required
-                      value={colaborador.endereco?.numero || ""}
-                      onChange={(e) => handleChange("endereco.numero", e.target.value)}
-                      disabled={saving}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Complemento"
-                      value={colaborador.endereco?.complemento || ""}
-                      onChange={(e) => handleChange("endereco.complemento", e.target.value)}
-                      disabled={saving}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Bairro"
-                      required
-                      value={colaborador.endereco?.bairro || ""}
-                      onChange={(e) => handleChange("endereco.bairro", e.target.value)}
-                      disabled={saving}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Cidade"
-                      required
-                      value={colaborador.endereco?.cidade || ""}
-                      onChange={(e) => handleChange("endereco.cidade", e.target.value)}
-                      disabled={saving}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Estado"
-                      required
-                      value={colaborador.endereco?.estado || ""}
-                      onChange={(e) => handleChange("endereco.estado", e.target.value)}
-                      disabled={saving}
-                      placeholder="SP"
-                      inputProps={{ maxLength: 2 }}
-                    />
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Dados Financeiros */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Dados Financeiros
-                </Typography>
-                <Grid container spacing={2} sx={{ mt: 1 }}>
-                  <Grid item xs={12} md={4}>
-                    <FormControl fullWidth required>
-                      <InputLabel>Tipo de Chave PIX</InputLabel>
-                      <Select
-                        value={colaborador.dados_financeiros?.tipo_chave_pix || "cpf"}
-                        label="Tipo de Chave PIX"
-                        onChange={(e) => handleChange("dados_financeiros.tipo_chave_pix", e.target.value as TipoChavePix)}
-                        disabled={saving}
-                      >
-                        <MenuItem value="cpf">CPF</MenuItem>
-                        <MenuItem value="cnpj">CNPJ</MenuItem>
-                        <MenuItem value="email">Email</MenuItem>
-                        <MenuItem value="telefone">Telefone</MenuItem>
-                        <MenuItem value="aleatoria">Chave Aleatória</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12} md={4}>
-                    <TextField
-                      fullWidth
-                      label="Chave PIX"
-                      required
-                      value={colaborador.dados_financeiros?.chave_pix || ""}
-                      onChange={(e) => handleChange("dados_financeiros.chave_pix", e.target.value)}
-                      disabled={saving}
-                      placeholder={
-                        colaborador.dados_financeiros?.tipo_chave_pix === "cpf" ? "000.000.000-00" :
-                        colaborador.dados_financeiros?.tipo_chave_pix === "cnpj" ? "00.000.000/0000-00" :
-                        colaborador.dados_financeiros?.tipo_chave_pix === "telefone" ? "(00) 00000-0000" :
-                        colaborador.dados_financeiros?.tipo_chave_pix === "email" ? "email@exemplo.com" :
-                        "Chave aleatória"
-                      }
-                      helperText={
-                        colaborador.dados_financeiros?.tipo_chave_pix === "aleatoria"
-                          ? "Cole aqui a chave aleatória gerada pelo banco"
-                          : undefined
-                      }
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={4}>
-                    <TextField
-                      fullWidth
-                      label="Dia do Pagamento"
-                      type="number"
-                      required
-                      value={colaborador.dados_financeiros?.data_pagamento || "5"}
-                      onChange={(e) => handleChange("dados_financeiros.data_pagamento", e.target.value)}
-                      disabled={saving}
-                      inputProps={{ min: 1, max: 31 }}
-                      helperText="Dia do mês (1-31)"
-                    />
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Segurança - Alterar Senha */}
-          {mounted && isColaborador && user?.id === colaboradorId && (
+            {/* Personal Information - Collapsible */}
             <Grid item xs={12}>
-              <Card>
-                <CardContent sx={{ p: 3 }}>
-                  <Typography variant="h6" fontWeight="600" gutterBottom>
-                    Segurança
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                    Altere sua senha para manter sua conta segura
-                  </Typography>
-
-                  {/* Password Alerts */}
-                  {passwordError && (
-                    <Alert severity="error" sx={{ mb: 3 }} onClose={() => setPasswordError("")}>
-                      {passwordError}
-                    </Alert>
-                  )}
-                  {passwordSuccess && (
-                    <Alert severity="success" sx={{ mb: 3 }} onClose={() => setPasswordSuccess(false)}>
-                      Senha alterada com sucesso!
-                    </Alert>
-                  )}
-
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} md={4}>
-                      <TextField
-                        fullWidth
-                        label="Senha Atual"
-                        type={showCurrentPassword ? "text" : "password"}
-                        value={currentPassword}
-                        onChange={(e) => setCurrentPassword(e.target.value)}
-                        disabled={loadingPassword}
-                        autoComplete="off"
-                        InputProps={{
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <LockIcon sx={{ color: "#8270FF" }} />
-                            </InputAdornment>
-                          ),
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <IconButton
-                                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                                edge="end"
-                                sx={{ color: "#8270FF" }}
-                              >
-                                {showCurrentPassword ? <VisibilityOff /> : <Visibility />}
-                              </IconButton>
-                            </InputAdornment>
-                          ),
-                        }}
-                      />
-                    </Grid>
-
-                    <Grid item xs={12} md={4}>
-                      <TextField
-                        fullWidth
-                        label="Nova Senha"
-                        type={showNewPassword ? "text" : "password"}
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        disabled={loadingPassword}
-                        autoComplete="off"
-                        helperText="Mínimo de 8 caracteres"
-                        InputProps={{
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <LockIcon sx={{ color: "#8270FF" }} />
-                            </InputAdornment>
-                          ),
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <IconButton
-                                onClick={() => setShowNewPassword(!showNewPassword)}
-                                edge="end"
-                                sx={{ color: "#8270FF" }}
-                              >
-                                {showNewPassword ? <VisibilityOff /> : <Visibility />}
-                              </IconButton>
-                            </InputAdornment>
-                          ),
-                        }}
-                      />
-                      {newPassword && (
-                        <Box sx={{ mt: 1 }}>
-                          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 0.5 }}>
-                            <Typography variant="caption" color="text.secondary">
-                              Força da senha:
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              fontWeight="600"
-                              sx={{ color: getPasswordStrengthColor(passwordStrength) }}
+              <Card sx={{ borderRadius: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                <CardContent sx={{ p: 0 }}>
+                  <Box
+                    onClick={() => toggleSection("personalInfo")}
+                    sx={{
+                      p: 3,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      "&:hover": { bgcolor: alpha("#8270FF", 0.02) },
+                    }}
+                  >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                      <PersonIcon sx={{ color: "#8270FF", fontSize: 28 }} />
+                      <Box>
+                        <Typography variant="h6" fontWeight="600">
+                          Informações Pessoais
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Dados básicos e contato
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <IconButton>
+                      {expandedSections.personalInfo ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    </IconButton>
+                  </Box>
+                  <Collapse in={expandedSections.personalInfo}>
+                    <Divider />
+                    <Box sx={{ p: 3 }}>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} md={6}>
+                          <TextField
+                            fullWidth
+                            label="Nome Completo"
+                            required
+                            value={colaborador.nome_completo}
+                            onChange={(e) => handleChange("nome_completo", e.target.value)}
+                            onBlur={(e) => handleBlur("nome_completo", e.target.value)}
+                            disabled={saving}
+                            error={!!fieldErrors.nome_completo}
+                            helperText={fieldErrors.nome_completo}
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                          <TextField
+                            fullWidth
+                            label="CPF"
+                            value={colaborador.cpf}
+                            disabled
+                            helperText="CPF não pode ser alterado"
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                          <TextField
+                            fullWidth
+                            label="CNPJ"
+                            required
+                            value={colaborador.cnpj}
+                            onChange={(e) => handleChange("cnpj", e.target.value)}
+                            onBlur={(e) => handleBlur("cnpj", e.target.value)}
+                            disabled={saving}
+                            placeholder="00.000.000/0000-00"
+                            error={!!fieldErrors.cnpj}
+                            helperText={fieldErrors.cnpj}
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                          <FormControl fullWidth required error={!!fieldErrors.empresa_id}>
+                            <InputLabel>Empresa</InputLabel>
+                            <Select
+                              value={colaborador.empresa_id || ""}
+                              label="Empresa"
+                              onChange={(e) => handleChange("empresa_id", e.target.value)}
+                              disabled={saving || isColaborador}
                             >
-                              {getPasswordStrengthLabel(passwordStrength)}
-                            </Typography>
-                          </Box>
-                          <LinearProgress
-                            variant="determinate"
-                            value={passwordStrength}
-                            sx={{
-                              height: 6,
-                              borderRadius: 3,
-                              backgroundColor: "#e0e0e0",
-                              "& .MuiLinearProgress-bar": {
-                                backgroundColor: getPasswordStrengthColor(passwordStrength),
-                                borderRadius: 3,
-                              },
+                              {empresas.map((empresa) => (
+                                <MenuItem key={empresa.empresa_id} value={empresa.empresa_id}>
+                                  {empresa.razao_social}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                            {mounted && isColaborador && (
+                              <FormHelperText>Empresa não pode ser alterada</FormHelperText>
+                            )}
+                          </FormControl>
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                          <TextField
+                            fullWidth
+                            label="Celular"
+                            required
+                            value={colaborador.celular}
+                            onChange={(e) => handleChange("celular", e.target.value)}
+                            onBlur={(e) => handleBlur("celular", e.target.value)}
+                            disabled={saving}
+                            placeholder="(00) 00000-0000"
+                            error={!!fieldErrors.celular}
+                            helperText={fieldErrors.celular}
+                            InputProps={{
+                              startAdornment: (
+                                <InputAdornment position="start">
+                                  <PhoneIcon sx={{ color: "#8270FF" }} />
+                                </InputAdornment>
+                              ),
                             }}
                           />
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                          <TextField
+                            fullWidth
+                            label="Email"
+                            value={colaborador.email}
+                            disabled
+                            helperText="Email não pode ser alterado"
+                          />
+                        </Grid>
+                        {isAdmin && (
+                          <Grid item xs={12} md={6}>
+                            <TextField
+                              select
+                              fullWidth
+                              label="Status"
+                              required
+                              value={colaborador.status}
+                              onChange={(e) => handleChange("status", e.target.value)}
+                              disabled={saving}
+                            >
+                              <MenuItem value="ativo">Ativo</MenuItem>
+                              <MenuItem value="inativo">Inativo</MenuItem>
+                            </TextField>
+                          </Grid>
+                        )}
+                      </Grid>
+                    </Box>
+                  </Collapse>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Emergency Contact - Collapsible */}
+            <Grid item xs={12}>
+              <Card sx={{ borderRadius: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                <CardContent sx={{ p: 0 }}>
+                  <Box
+                    onClick={() => toggleSection("emergencyContact")}
+                    sx={{
+                      p: 3,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      "&:hover": { bgcolor: alpha("#8270FF", 0.02) },
+                    }}
+                  >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                      <PhoneIcon sx={{ color: "#8270FF", fontSize: 28 }} />
+                      <Box>
+                        <Typography variant="h6" fontWeight="600">
+                          Contato de Emergência
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Para casos de urgência
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <IconButton>
+                      {expandedSections.emergencyContact ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    </IconButton>
+                  </Box>
+                  <Collapse in={expandedSections.emergencyContact}>
+                    <Divider />
+                    <Box sx={{ p: 3 }}>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} md={6}>
+                          <TextField
+                            fullWidth
+                            label="Nome do Contato"
+                            value={colaborador.nome_contato_emergencia || ""}
+                            onChange={(e) => handleChange("nome_contato_emergencia", e.target.value)}
+                            disabled={saving}
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                          <TextField
+                            fullWidth
+                            label="Telefone do Contato"
+                            value={colaborador.telefone_contato_emergencia || ""}
+                            onChange={(e) => handleChange("telefone_contato_emergencia", e.target.value)}
+                            onBlur={(e) => handleBlur("telefone_contato_emergencia", e.target.value)}
+                            disabled={saving}
+                            placeholder="(00) 00000-0000"
+                            error={!!fieldErrors.telefone_contato_emergencia}
+                            helperText={fieldErrors.telefone_contato_emergencia}
+                          />
+                        </Grid>
+                      </Grid>
+                    </Box>
+                  </Collapse>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Address - Collapsible */}
+            <Grid item xs={12}>
+              <Card sx={{ borderRadius: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                <CardContent sx={{ p: 0 }}>
+                  <Box
+                    onClick={() => toggleSection("address")}
+                    sx={{
+                      p: 3,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      "&:hover": { bgcolor: alpha("#8270FF", 0.02) },
+                    }}
+                  >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                      <HomeIcon sx={{ color: "#8270FF", fontSize: 28 }} />
+                      <Box>
+                        <Typography variant="h6" fontWeight="600">
+                          Endereço
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Localização residencial
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <IconButton>
+                      {expandedSections.address ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    </IconButton>
+                  </Box>
+                  <Collapse in={expandedSections.address}>
+                    <Divider />
+                    <Box sx={{ p: 3 }}>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} md={3}>
+                          <TextField
+                            fullWidth
+                            label="CEP"
+                            required
+                            value={colaborador.endereco?.cep || ""}
+                            onChange={(e) => handleChange("endereco.cep", e.target.value)}
+                            onBlur={(e) => handleBlur("endereco.cep", e.target.value)}
+                            disabled={saving}
+                            placeholder="00000-000"
+                            error={!!fieldErrors["endereco.cep"]}
+                            helperText={fieldErrors["endereco.cep"]}
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={7}>
+                          <TextField
+                            fullWidth
+                            label="Logradouro"
+                            required
+                            value={colaborador.endereco?.logradouro || ""}
+                            onChange={(e) => handleChange("endereco.logradouro", e.target.value)}
+                            disabled={saving}
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={2}>
+                          <TextField
+                            fullWidth
+                            label="Número"
+                            required
+                            value={colaborador.endereco?.numero || ""}
+                            onChange={(e) => handleChange("endereco.numero", e.target.value)}
+                            disabled={saving}
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                          <TextField
+                            fullWidth
+                            label="Complemento"
+                            value={colaborador.endereco?.complemento || ""}
+                            onChange={(e) => handleChange("endereco.complemento", e.target.value)}
+                            disabled={saving}
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                          <TextField
+                            fullWidth
+                            label="Bairro"
+                            required
+                            value={colaborador.endereco?.bairro || ""}
+                            onChange={(e) => handleChange("endereco.bairro", e.target.value)}
+                            disabled={saving}
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                          <TextField
+                            fullWidth
+                            label="Cidade"
+                            required
+                            value={colaborador.endereco?.cidade || ""}
+                            onChange={(e) => handleChange("endereco.cidade", e.target.value)}
+                            disabled={saving}
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                          <TextField
+                            fullWidth
+                            label="Estado"
+                            required
+                            value={colaborador.endereco?.estado || ""}
+                            onChange={(e) => handleChange("endereco.estado", e.target.value)}
+                            disabled={saving}
+                            placeholder="SP"
+                            inputProps={{ maxLength: 2 }}
+                          />
+                        </Grid>
+                      </Grid>
+                    </Box>
+                  </Collapse>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Financial Data - Collapsible */}
+            <Grid item xs={12}>
+              <Card sx={{ borderRadius: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                <CardContent sx={{ p: 0 }}>
+                  <Box
+                    onClick={() => toggleSection("financial")}
+                    sx={{
+                      p: 3,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      "&:hover": { bgcolor: alpha("#8270FF", 0.02) },
+                    }}
+                  >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                      <AccountBalanceIcon sx={{ color: "#8270FF", fontSize: 28 }} />
+                      <Box>
+                        <Typography variant="h6" fontWeight="600">
+                          Dados Financeiros
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Informações de pagamento
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <IconButton>
+                      {expandedSections.financial ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    </IconButton>
+                  </Box>
+                  <Collapse in={expandedSections.financial}>
+                    <Divider />
+                    <Box sx={{ p: 3 }}>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} md={4}>
+                          <FormControl fullWidth required>
+                            <InputLabel>Tipo de Chave PIX</InputLabel>
+                            <Select
+                              value={colaborador.dados_financeiros?.tipo_chave_pix || "cpf"}
+                              label="Tipo de Chave PIX"
+                              onChange={(e) => handleChange("dados_financeiros.tipo_chave_pix", e.target.value as TipoChavePix)}
+                              disabled={saving}
+                            >
+                              <MenuItem value="cpf">CPF</MenuItem>
+                              <MenuItem value="cnpj">CNPJ</MenuItem>
+                              <MenuItem value="email">Email</MenuItem>
+                              <MenuItem value="telefone">Telefone</MenuItem>
+                              <MenuItem value="aleatoria">Chave Aleatória</MenuItem>
+                            </Select>
+                          </FormControl>
+                        </Grid>
+                        <Grid item xs={12} md={4}>
+                          <TextField
+                            fullWidth
+                            label="Chave PIX"
+                            required
+                            value={colaborador.dados_financeiros?.chave_pix || ""}
+                            onChange={(e) => handleChange("dados_financeiros.chave_pix", e.target.value)}
+                            disabled={saving}
+                            placeholder={
+                              colaborador.dados_financeiros?.tipo_chave_pix === "cpf" ? "000.000.000-00" :
+                              colaborador.dados_financeiros?.tipo_chave_pix === "cnpj" ? "00.000.000/0000-00" :
+                              colaborador.dados_financeiros?.tipo_chave_pix === "telefone" ? "(00) 00000-0000" :
+                              colaborador.dados_financeiros?.tipo_chave_pix === "email" ? "email@exemplo.com" :
+                              "Chave aleatória"
+                            }
+                            helperText={
+                              colaborador.dados_financeiros?.tipo_chave_pix === "aleatoria"
+                                ? "Cole aqui a chave aleatória gerada pelo banco"
+                                : undefined
+                            }
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={4}>
+                          <TextField
+                            fullWidth
+                            label="Dia do Pagamento"
+                            type="number"
+                            required
+                            value={colaborador.dados_financeiros?.data_pagamento || "5"}
+                            onChange={(e) => handleChange("dados_financeiros.data_pagamento", e.target.value)}
+                            disabled={saving}
+                            inputProps={{ min: 1, max: 31 }}
+                            helperText="Dia do mês (1-31)"
+                          />
+                        </Grid>
+                      </Grid>
+                    </Box>
+                  </Collapse>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Actions */}
+            <Grid item xs={12}>
+              <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
+                <Button
+                  variant="outlined"
+                  onClick={() => router.push(isAdmin ? "/colaboradores" : "/dashboard")}
+                  disabled={saving}
+                  sx={{
+                    textTransform: "none",
+                    borderRadius: 2,
+                    px: 3,
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  startIcon={saving ? <CircularProgress size={20} /> : <SaveIcon />}
+                  disabled={saving}
+                  sx={{
+                    bgcolor: "#8270FF",
+                    "&:hover": { bgcolor: "#6c5ce7" },
+                    textTransform: "none",
+                    borderRadius: 2,
+                    px: 4,
+                    minWidth: 150,
+                  }}
+                >
+                  {saving ? "Salvando..." : "Salvar Alterações"}
+                </Button>
+              </Box>
+            </Grid>
+          </Grid>
+        </TabPanel>
+
+        {/* Security Tab */}
+        <TabPanel value={currentTab} index={1}>
+          {mounted && isColaborador && user?.id === colaboradorId && (
+            <Card sx={{ borderRadius: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
+                  <LockIcon sx={{ color: "#8270FF", fontSize: 28 }} />
+                  <Box>
+                    <Typography variant="h6" fontWeight="600">
+                      Alterar Senha
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Mantenha sua conta segura atualizando sua senha regularmente
+                    </Typography>
+                  </Box>
+                </Box>
+
+                {passwordError && (
+                  <Alert severity="error" sx={{ mb: 3 }} onClose={() => setPasswordError("")}>
+                    {passwordError}
+                  </Alert>
+                )}
+                {passwordSuccess && (
+                  <Alert severity="success" sx={{ mb: 3 }} onClose={() => setPasswordSuccess(false)}>
+                    Senha alterada com sucesso!
+                  </Alert>
+                )}
+
+                <Grid container spacing={3}>
+                  <Grid item xs={12} md={4}>
+                    <TextField
+                      fullWidth
+                      label="Senha Atual"
+                      type={showCurrentPassword ? "text" : "password"}
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      disabled={loadingPassword}
+                      autoComplete="off"
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <LockIcon sx={{ color: "#8270FF" }} />
+                          </InputAdornment>
+                        ),
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                              edge="end"
+                              sx={{ color: "#8270FF" }}
+                            >
+                              {showCurrentPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={4}>
+                    <TextField
+                      fullWidth
+                      label="Nova Senha"
+                      type={showNewPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      disabled={loadingPassword}
+                      autoComplete="off"
+                      helperText="Mínimo de 8 caracteres"
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <LockIcon sx={{ color: "#8270FF" }} />
+                          </InputAdornment>
+                        ),
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              onClick={() => setShowNewPassword(!showNewPassword)}
+                              edge="end"
+                              sx={{ color: "#8270FF" }}
+                            >
+                              {showNewPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                    {newPassword && (
+                      <Box sx={{ mt: 1 }}>
+                        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 0.5 }}>
+                          <Typography variant="caption" color="text.secondary">
+                            Força da senha:
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            fontWeight="600"
+                            sx={{ color: getPasswordStrengthColor(passwordStrength) }}
+                          >
+                            {getPasswordStrengthLabel(passwordStrength)}
+                          </Typography>
                         </Box>
-                      )}
-                    </Grid>
-
-                    <Grid item xs={12} md={4}>
-                      <TextField
-                        fullWidth
-                        label="Confirmar Nova Senha"
-                        type={showConfirmPassword ? "text" : "password"}
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        disabled={loadingPassword}
-                        autoComplete="off"
-                        error={confirmPassword !== "" && newPassword !== confirmPassword}
-                        helperText={
-                          confirmPassword !== "" && newPassword !== confirmPassword
-                            ? "As senhas não coincidem"
-                            : undefined
-                        }
-                        InputProps={{
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <LockIcon sx={{ color: "#8270FF" }} />
-                            </InputAdornment>
-                          ),
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <IconButton
-                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                edge="end"
-                                sx={{ color: "#8270FF" }}
-                              >
-                                {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                              </IconButton>
-                            </InputAdornment>
-                          ),
-                        }}
-                      />
-                    </Grid>
-
-                    <Grid item xs={12}>
-                      <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-                        <Button
-                          variant="contained"
-                          onClick={handlePasswordChange}
-                          disabled={
-                            loadingPassword ||
-                            !currentPassword ||
-                            !newPassword ||
-                            !confirmPassword ||
-                            newPassword !== confirmPassword
-                          }
+                        <LinearProgress
+                          variant="determinate"
+                          value={passwordStrength}
                           sx={{
-                            bgcolor: "#8270FF",
-                            "&:hover": { bgcolor: "#6c5ce7" },
-                            textTransform: "none",
-                            minWidth: 150,
+                            height: 6,
+                            borderRadius: 3,
+                            backgroundColor: "#e0e0e0",
+                            "& .MuiLinearProgress-bar": {
+                              backgroundColor: getPasswordStrengthColor(passwordStrength),
+                              borderRadius: 3,
+                            },
                           }}
-                        >
-                          {loadingPassword ? (
-                            <>
-                              <CircularProgress size={20} sx={{ mr: 1, color: "white" }} />
-                              Alterando...
-                            </>
-                          ) : (
-                            "Alterar Senha"
-                          )}
-                        </Button>
+                        />
+                      </Box>
+                    )}
+                  </Grid>
+
+                  <Grid item xs={12} md={4}>
+                    <TextField
+                      fullWidth
+                      label="Confirmar Nova Senha"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      disabled={loadingPassword}
+                      autoComplete="off"
+                      error={confirmPassword !== "" && newPassword !== confirmPassword}
+                      helperText={
+                        confirmPassword !== "" && newPassword !== confirmPassword
+                          ? "As senhas não coincidem"
+                          : undefined
+                      }
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <LockIcon sx={{ color: "#8270FF" }} />
+                          </InputAdornment>
+                        ),
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              edge="end"
+                              sx={{ color: "#8270FF" }}
+                            >
+                              {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                      <Button
+                        variant="contained"
+                        onClick={handlePasswordChange}
+                        disabled={
+                          loadingPassword ||
+                          !currentPassword ||
+                          !newPassword ||
+                          !confirmPassword ||
+                          newPassword !== confirmPassword
+                        }
+                        sx={{
+                          bgcolor: "#8270FF",
+                          "&:hover": { bgcolor: "#6c5ce7" },
+                          textTransform: "none",
+                          borderRadius: 2,
+                          px: 4,
+                          minWidth: 150,
+                        }}
+                      >
+                        {loadingPassword ? (
+                          <>
+                            <CircularProgress size={20} sx={{ mr: 1, color: "white" }} />
+                            Alterando...
+                          </>
+                        ) : (
+                          "Alterar Senha"
+                        )}
+                      </Button>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
+          )}
+        </TabPanel>
+
+        {/* Contracts Tab */}
+        <TabPanel value={currentTab} index={2}>
+          <Grid container spacing={3}>
+            {/* Summary Card */}
+            <Grid item xs={12}>
+              <Card sx={{
+                borderRadius: 2,
+                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                background: "linear-gradient(135deg, #8270FF 0%, #6a5ce0 100%)",
+                color: "white",
+              }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Typography variant="h6" fontWeight="600" gutterBottom sx={{ color: "white" }}>
+                    Resumo dos Contratos Ativos
+                  </Typography>
+                  <Grid container spacing={3} sx={{ mt: 1 }}>
+                    <Grid item xs={12} md={6}>
+                      <Box>
+                        <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>
+                          Total de Horas Mensais
+                        </Typography>
+                        <Typography variant="h4" fontWeight="700">
+                          {totalHoras.toFixed(1)}h
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Box>
+                        <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>
+                          Valor Total Mensal
+                        </Typography>
+                        <Typography variant="h4" fontWeight="700">
+                          {formatCurrency(totalValor)}
+                        </Typography>
                       </Box>
                     </Grid>
                   </Grid>
                 </CardContent>
               </Card>
             </Grid>
-          )}
 
-          {/* Totais dos Contratos */}
-          <Grid item xs={12}>
-            <Card sx={{ bgcolor: "#f8f9fa" }}>
-              <CardContent sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="600" gutterBottom>
-                  Resumo dos Contratos Ativos
-                </Typography>
-                <Grid container spacing={2} sx={{ mt: 1 }}>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Total de Horas Mensais"
-                      type="text"
-                      value={`${totalHoras.toFixed(1)} horas`}
-                      disabled
-                      InputProps={{
-                        readOnly: true,
-                      }}
-                      sx={{
-                        "& .MuiInputBase-input.Mui-disabled": {
-                          WebkitTextFillColor: "#000",
-                          fontWeight: 600,
-                          fontSize: "1.1rem",
-                        },
-                      }}
-                      helperText="Somatória de horas de todos os contratos ativos"
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Valor Total Mensal"
-                      type="text"
-                      value={formatCurrency(totalValor)}
-                      disabled
-                      InputProps={{
-                        readOnly: true,
-                      }}
-                      sx={{
-                        "& .MuiInputBase-input.Mui-disabled": {
-                          WebkitTextFillColor: "#2ecc71",
-                          fontWeight: 600,
-                          fontSize: "1.1rem",
-                        },
-                      }}
-                      helperText="Somatória de valores de todos os contratos ativos"
-                    />
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
+            {/* Contracts List */}
+            <Grid item xs={12}>
+              <Card sx={{ borderRadius: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                      <WorkIcon sx={{ color: "#8270FF", fontSize: 28 }} />
+                      <Box>
+                        <Typography variant="h6" fontWeight="600">
+                          Contratos
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {contracts.length} {contracts.length === 1 ? 'contrato' : 'contratos'}
+                        </Typography>
+                      </Box>
+                    </Box>
+                    {isAdmin && (
+                      <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => setModalOpen(true)}
+                        disabled={saving}
+                        sx={{
+                          bgcolor: "#8270FF",
+                          "&:hover": { bgcolor: "#6c5ce7" },
+                          textTransform: "none",
+                          borderRadius: 2,
+                        }}
+                      >
+                        Adicionar Contrato
+                      </Button>
+                    )}
+                  </Box>
 
-          {/* Contratos */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-                  <Typography variant="h6" fontWeight="600">
-                    Contratos
-                  </Typography>
-                  {isAdmin && (
-                    <Button
-                      variant="contained"
-                      startIcon={<AddIcon />}
-                      onClick={() => setModalOpen(true)}
-                      disabled={saving}
-                      sx={{
-                        bgcolor: "#8270FF",
-                        "&:hover": { bgcolor: "#6c5ce7" },
-                        textTransform: "none",
-                      }}
-                    >
-                      Adicionar Contrato
-                    </Button>
-                  )}
-                </Box>
-
-                {contracts.length === 0 ? (
-                  <Alert severity="info">
-                    {isAdmin
-                      ? 'Nenhum contrato adicionado. Clique em "Adicionar Contrato" para começar.'
-                      : 'Nenhum contrato cadastrado.'}
-                  </Alert>
-                ) : (
-                  <TableContainer component={Paper} variant="outlined">
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>Cliente</TableCell>
-                          <TableCell>Descrição</TableCell>
-                          <TableCell>Início</TableCell>
-                          <TableCell>Fim</TableCell>
-                          <TableCell align="right">Valor/Hora</TableCell>
-                          <TableCell align="right">Horas/Mês</TableCell>
-                          <TableCell align="right">Valor Total</TableCell>
-                          <TableCell align="center">Status</TableCell>
-                          <TableCell align="center">Tipo</TableCell>
-                          {isAdmin && <TableCell align="center">Ações</TableCell>}
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {contracts.map((contract) => (
-                          <TableRow key={contract.contrato_id}>
-                            <TableCell>{contract.nome_cliente}</TableCell>
-                            <TableCell sx={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                              {contract.descricao}
-                            </TableCell>
-                            <TableCell>{formatDate(contract.data_inicio)}</TableCell>
-                            <TableCell>{formatDate(contract.data_fim)}</TableCell>
-                            <TableCell align="right">{formatCurrency(contract.valor_hora)}</TableCell>
-                            <TableCell align="right">{contract.total_hora_mes}h</TableCell>
-                            <TableCell align="right">
-                              <Typography fontWeight="600" color="primary">
-                                {formatCurrency(contract.valor_hora * contract.total_hora_mes)}
-                              </Typography>
-                            </TableCell>
-                            <TableCell align="center">
-                              {contract.status === 'ativo' ? (
-                                <Typography color="success.main" fontWeight="500">Ativo</Typography>
-                              ) : (
-                                <Typography color="text.secondary">Inativo</Typography>
-                              )}
-                            </TableCell>
-                            <TableCell align="center">
-                              <Box
-                                sx={{
-                                  display: "inline-block",
-                                  bgcolor: contract.tipo_contrato === "fechado" ? "#8270FF" : "#f59e0b",
-                                  color: "#FFFFFF",
-                                  fontWeight: 600,
-                                  fontSize: "0.75rem",
-                                  px: 1.5,
-                                  py: 0.5,
-                                  borderRadius: "12px",
-                                  minWidth: "70px",
-                                }}
-                              >
-                                {contract.tipo_contrato === "fechado" ? "Fechado" : "Aberto"}
-                              </Box>
-                            </TableCell>
-                            {isAdmin && (
-                              <TableCell align="center">
-                                <IconButton
-                                  size="small"
-                                  color="primary"
-                                  onClick={() => handleEditContract(contract)}
-                                  disabled={saving}
-                                  title="Editar contrato"
-                                >
-                                  <EditIcon />
-                                </IconButton>
-                                <IconButton
-                                  size="small"
-                                  color="error"
-                                  onClick={() => handleDeleteContract(contract.contrato_id)}
-                                  disabled={saving}
-                                  title="Deletar contrato"
-                                >
-                                  <DeleteIcon />
-                                </IconButton>
-                              </TableCell>
-                            )}
+                  {contracts.length === 0 ? (
+                    <Alert severity="info">
+                      {isAdmin
+                        ? 'Nenhum contrato adicionado. Clique em "Adicionar Contrato" para começar.'
+                        : 'Nenhum contrato cadastrado.'}
+                    </Alert>
+                  ) : (
+                    <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow sx={{ bgcolor: alpha("#8270FF", 0.05) }}>
+                            <TableCell sx={{ fontWeight: 600 }}>Cliente</TableCell>
+                            <TableCell sx={{ fontWeight: 600 }}>Descrição</TableCell>
+                            <TableCell sx={{ fontWeight: 600 }}>Início</TableCell>
+                            <TableCell sx={{ fontWeight: 600 }}>Fim</TableCell>
+                            <TableCell align="right" sx={{ fontWeight: 600 }}>Valor/Hora</TableCell>
+                            <TableCell align="right" sx={{ fontWeight: 600 }}>Horas/Mês</TableCell>
+                            <TableCell align="right" sx={{ fontWeight: 600 }}>Valor Total</TableCell>
+                            <TableCell align="center" sx={{ fontWeight: 600 }}>Status</TableCell>
+                            <TableCell align="center" sx={{ fontWeight: 600 }}>Tipo</TableCell>
+                            {isAdmin && <TableCell align="center" sx={{ fontWeight: 600 }}>Ações</TableCell>}
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                )}
-              </CardContent>
-            </Card>
+                        </TableHead>
+                        <TableBody>
+                          {contracts.map((contract) => (
+                            <TableRow key={contract.contrato_id} sx={{ "&:hover": { bgcolor: alpha("#8270FF", 0.02) } }}>
+                              <TableCell>{contract.nome_cliente}</TableCell>
+                              <TableCell sx={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {contract.descricao}
+                              </TableCell>
+                              <TableCell>{formatDate(contract.data_inicio)}</TableCell>
+                              <TableCell>{formatDate(contract.data_fim)}</TableCell>
+                              <TableCell align="right">{formatCurrency(contract.valor_hora)}</TableCell>
+                              <TableCell align="right">{contract.total_hora_mes}h</TableCell>
+                              <TableCell align="right">
+                                <Typography fontWeight="600" color="#8270FF">
+                                  {formatCurrency(contract.valor_hora * contract.total_hora_mes)}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">
+                                {contract.status === 'ativo' ? (
+                                  <Chip label="Ativo" color="success" size="small" />
+                                ) : (
+                                  <Chip label="Inativo" size="small" />
+                                )}
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={contract.tipo_contrato === "fechado" ? "Fechado" : "Aberto"}
+                                  size="small"
+                                  sx={{
+                                    bgcolor: contract.tipo_contrato === "fechado" ? "#8270FF" : "#f59e0b",
+                                    color: "#fff",
+                                    fontWeight: 600,
+                                  }}
+                                />
+                              </TableCell>
+                              {isAdmin && (
+                                <TableCell align="center">
+                                  <IconButton
+                                    size="small"
+                                    color="primary"
+                                    onClick={() => handleEditContract(contract)}
+                                    disabled={saving}
+                                    title="Editar contrato"
+                                  >
+                                    <EditIcon />
+                                  </IconButton>
+                                  <IconButton
+                                    size="small"
+                                    color="error"
+                                    onClick={() => handleDeleteContract(contract.contrato_id)}
+                                    disabled={saving}
+                                    title="Deletar contrato"
+                                  >
+                                    <DeleteIcon />
+                                  </IconButton>
+                                </TableCell>
+                              )}
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  )}
+                </CardContent>
+              </Card>
+            </Grid>
           </Grid>
-
-          {/* Actions */}
-          <Grid item xs={12}>
-            <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
-              <Button
-                variant="outlined"
-                onClick={() => router.push(`/colaboradores/${colaboradorId}`)}
-                disabled={saving}
-                sx={{ textTransform: "none" }}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                startIcon={saving ? <CircularProgress size={20} /> : <SaveIcon />}
-                disabled={saving}
-                sx={{
-                  bgcolor: "#8270FF",
-                  "&:hover": { bgcolor: "#6c5ce7" },
-                  textTransform: "none",
-                  minWidth: 150,
-                }}
-              >
-                {saving ? "Salvando..." : "Salvar Alterações"}
-              </Button>
-            </Box>
-          </Grid>
-        </Grid>
+        </TabPanel>
       </form>
 
-      {/* Modal de Contrato - Apenas Admin */}
+      {/* Contract Modal */}
       {mounted && isAdmin && (
         <ContractModal
           open={modalOpen}
