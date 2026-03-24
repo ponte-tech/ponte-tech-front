@@ -34,6 +34,7 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import CloseIcon from "@mui/icons-material/Close";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import EventIcon from "@mui/icons-material/Event";
+import NotificationsIcon from "@mui/icons-material/Notifications";
 import { DndContext, DragEndEvent, DragOverlay, closestCorners, DragStartEvent } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 import AddIcon from "@mui/icons-material/Add";
@@ -1064,6 +1065,48 @@ export default function KanbanPage() {
                 <AddIcon sx={{ fontSize: "1.1rem" }} />
               </IconButton>
             </span>
+          </Tooltip>
+
+          <Tooltip
+            title={
+              dueTodayCards.length > 0
+                ? `${dueTodayCards.length} ${dueTodayCards.length === 1 ? "tarefa vence" : "tarefas vencem"} hoje`
+                : "Nenhuma tarefa com vencimento hoje"
+            }
+            arrow
+          >
+            <IconButton
+              size="small"
+              onClick={() => {
+                if (dueTodayCards.length > 0) {
+                  setDueDateAlertOpen(true);
+                }
+              }}
+              sx={{
+                width: 28,
+                height: 28,
+                color: dueTodayCards.length > 0 ? "#8270FF" : "#999",
+                "&:hover": {
+                  bgcolor: "rgba(130, 112, 255, 0.08)",
+                },
+              }}
+            >
+              <Badge
+                badgeContent={dueTodayCards.length}
+                color="error"
+                sx={{
+                  "& .MuiBadge-badge": {
+                    bgcolor: "#8270FF",
+                    color: "white",
+                    fontSize: "0.625rem",
+                    height: 16,
+                    minWidth: 16,
+                  },
+                }}
+              >
+                <NotificationsIcon sx={{ fontSize: "1.1rem" }} />
+              </Badge>
+            </IconButton>
           </Tooltip>
 
           <Tooltip
