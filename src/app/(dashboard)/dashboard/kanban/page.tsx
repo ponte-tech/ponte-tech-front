@@ -1488,8 +1488,8 @@ export default function KanbanPage() {
                     sx={{
                       height: 20,
                       fontSize: "0.688rem",
-                      bgcolor: "warning.light",
-                      color: "warning.dark",
+                      bgcolor: "#8270FF",
+                      color: "white",
                       fontWeight: 500,
                     }}
                   />
@@ -1514,14 +1514,15 @@ export default function KanbanPage() {
         <DialogActions sx={{ px: 3, pb: 2.5, pt: 1 }}>
           <Button
             onClick={() => setDueDateAlertOpen(false)}
-            variant="text"
+            variant="contained"
             fullWidth
             sx={{
               textTransform: "none",
-              fontWeight: 500,
-              color: "text.secondary",
+              fontWeight: 600,
+              bgcolor: "#8270FF",
+              color: "white",
               "&:hover": {
-                bgcolor: "action.hover",
+                bgcolor: "#6B5FCC",
               },
             }}
           >
