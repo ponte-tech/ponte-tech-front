@@ -205,8 +205,8 @@ export default function KanbanPage() {
       }
       setCards(allCards);
 
-      // Verificar tasks com vencimento hoje
-      checkDueTodayCards(allCards);
+      // Verificar tasks com vencimento hoje (passar columnsList ao invés de usar state)
+      checkDueTodayCards(allCards, columnsList);
     } catch (error: any) {
       console.error("Erro ao carregar board:", error);
       setSnackbar({
@@ -220,15 +220,34 @@ export default function KanbanPage() {
     }
   };
 
-  const checkDueTodayCards = (cardsList: Card[]) => {
+  const checkDueTodayCards = (cardsList: Card[], columnsList: Column[]) => {
+    // Buscar o colaborador_id do usuário logado
+    // O colaborador.id é igual ao user.id (ambos são o mesmo ID)
+    const loggedColaborador = colaboradores.find((c: any) => c.id === user?.id);
+    if (!loggedColaborador) {
+      return;
+    }
+    const colaboradorId = loggedColaborador.id;
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
     const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+
+    // Calcular próximo dia útil (segunda-feira se hoje for sexta)
+    const nextBusinessDay = new Date(today);
+    const dayOfWeek = today.getDay(); // 0 = domingo, 5 = sexta, 6 = sábado
+    if (dayOfWeek === 5) { // Sexta-feira
+      nextBusinessDay.setDate(today.getDate() + 3); // Pular para segunda
+    } else if (dayOfWeek === 6) { // Sábado
+      nextBusinessDay.setDate(today.getDate() + 2); // Pular para segunda
+    } else {
+      nextBusinessDay.setDate(today.getDate() + 1); // Próximo dia
+    }
+    const nextBusinessDayStr = nextBusinessDay.toISOString().split('T')[0];
 
     // Identificar colunas finalizadas (por nome)
     const completedColumnNames = ['concluído', 'concluido', 'finalizado', 'done', 'completed', 'fechado'];
-    const completedColumnIds = columns
+    const completedColumnIds = columnsList
       .filter(col =>
         completedColumnNames.some(name =>
           col.name.toLowerCase().includes(name)
@@ -240,15 +259,17 @@ export default function KanbanPage() {
       if (!card.delivery_date) return false;
 
       // Verificar se não está em coluna finalizada
-      if (completedColumnIds.includes(card.column_id)) return false;
+      const isCompleted = completedColumnIds.includes(card.column_id);
+      if (isCompleted) return false;
 
-      // Verificar se o usuário logado está atribuído à task
+      // Verificar se o colaborador logado está atribuído à task
       if (!card.assigned_to || card.assigned_to.length === 0) return false;
-      if (!user?.userId) return false;
-      if (!card.assigned_to.includes(user.userId)) return false;
+      if (!card.assigned_to.includes(colaboradorId)) return false;
 
-      // delivery_date está no formato YYYY-MM-DD
-      return card.delivery_date === todayStr;
+      // Verificar se vence hoje OU no próximo dia útil
+      const matchesToday = card.delivery_date === todayStr;
+      const matchesNextBusinessDay = card.delivery_date === nextBusinessDayStr;
+      return matchesToday || matchesNextBusinessDay;
     });
 
     if (dueTodayList.length > 0) {
@@ -1484,9 +1505,9 @@ export default function KanbanPage() {
         }}
       >
         <DialogTitle sx={{ pb: 1 }}>
-          <Typography variant="h6" fontWeight={600} sx={{ fontSize: "1.125rem" }}>
+          <Box component="span" sx={{ display: "block", fontWeight: 600, fontSize: "1.125rem" }}>
             Tarefas para hoje
-          </Typography>
+          </Box>
           <Typography variant="caption" color="text.secondary">
             {dueTodayCards.length} {dueTodayCards.length === 1 ? "tarefa vence" : "tarefas vencem"} hoje
           </Typography>
