@@ -233,7 +233,7 @@ export default function KanbanPage() {
     today.setHours(0, 0, 0, 0);
     const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
 
-    // Calcular próximo dia útil (segunda-feira se hoje for sexta)
+    // Calcular próximo dia útil (segunda-feira se hoje for sexta/sábado)
     const nextBusinessDay = new Date(today);
     const dayOfWeek = today.getDay(); // 0 = domingo, 5 = sexta, 6 = sábado
     if (dayOfWeek === 5) { // Sexta-feira
@@ -266,10 +266,12 @@ export default function KanbanPage() {
       if (!card.assigned_to || card.assigned_to.length === 0) return false;
       if (!card.assigned_to.includes(colaboradorId)) return false;
 
-      // Verificar se vence hoje OU no próximo dia útil
-      const matchesToday = card.delivery_date === todayStr;
-      const matchesNextBusinessDay = card.delivery_date === nextBusinessDayStr;
-      return matchesToday || matchesNextBusinessDay;
+      // Verificar se está vencida OU vence hoje OU vence no próximo dia útil
+      const isOverdue = card.delivery_date < todayStr; // Vencida
+      const matchesToday = card.delivery_date === todayStr; // Vence hoje
+      const matchesNextBusinessDay = card.delivery_date === nextBusinessDayStr; // Vence próximo dia útil
+
+      return isOverdue || matchesToday || matchesNextBusinessDay;
     });
 
     if (dueTodayList.length > 0) {
@@ -1132,8 +1134,8 @@ export default function KanbanPage() {
           <Tooltip
             title={
               dueTodayCards.length > 0
-                ? `${dueTodayCards.length} ${dueTodayCards.length === 1 ? "tarefa vence" : "tarefas vencem"} hoje`
-                : "Nenhuma tarefa com vencimento hoje"
+                ? `${dueTodayCards.length} ${dueTodayCards.length === 1 ? "tarefa urgente" : "tarefas urgentes"}`
+                : "Nenhuma tarefa urgente"
             }
             arrow
           >
@@ -1506,10 +1508,10 @@ export default function KanbanPage() {
       >
         <DialogTitle sx={{ pb: 1 }}>
           <Box component="span" sx={{ display: "block", fontWeight: 600, fontSize: "1.125rem" }}>
-            Tarefas para hoje
+            Tarefas Urgentes
           </Box>
           <Typography variant="caption" color="text.secondary">
-            {dueTodayCards.length} {dueTodayCards.length === 1 ? "tarefa vence" : "tarefas vencem"} hoje
+            {dueTodayCards.length} {dueTodayCards.length === 1 ? "tarefa requer" : "tarefas requerem"} atenção
           </Typography>
         </DialogTitle>
 
@@ -1551,17 +1553,71 @@ export default function KanbanPage() {
                   </Typography>
                 )}
                 <Box sx={{ display: "flex", gap: 0.5, mt: 1 }}>
-                  <Chip
-                    label="Hoje"
-                    size="small"
-                    sx={{
-                      height: 20,
-                      fontSize: "0.688rem",
-                      bgcolor: "#8270FF",
-                      color: "white",
-                      fontWeight: 500,
-                    }}
-                  />
+                  {(() => {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const todayStr = today.toISOString().split('T')[0];
+
+                    const nextBusinessDay = new Date(today);
+                    const dayOfWeek = today.getDay();
+                    if (dayOfWeek === 5) {
+                      nextBusinessDay.setDate(today.getDate() + 3);
+                    } else if (dayOfWeek === 6) {
+                      nextBusinessDay.setDate(today.getDate() + 2);
+                    } else {
+                      nextBusinessDay.setDate(today.getDate() + 1);
+                    }
+                    const nextBusinessDayStr = nextBusinessDay.toISOString().split('T')[0];
+
+                    const isOverdue = card.delivery_date && card.delivery_date < todayStr;
+                    const isToday = card.delivery_date === todayStr;
+                    const isNextBusinessDay = card.delivery_date === nextBusinessDayStr;
+
+                    if (isOverdue) {
+                      return (
+                        <Chip
+                          label="Vencida"
+                          size="small"
+                          sx={{
+                            height: 20,
+                            fontSize: "0.688rem",
+                            bgcolor: "#F44336",
+                            color: "white",
+                            fontWeight: 500,
+                          }}
+                        />
+                      );
+                    } else if (isToday) {
+                      return (
+                        <Chip
+                          label="Hoje"
+                          size="small"
+                          sx={{
+                            height: 20,
+                            fontSize: "0.688rem",
+                            bgcolor: "#FF9800",
+                            color: "white",
+                            fontWeight: 500,
+                          }}
+                        />
+                      );
+                    } else if (isNextBusinessDay) {
+                      return (
+                        <Chip
+                          label="Próximo dia útil"
+                          size="small"
+                          sx={{
+                            height: 20,
+                            fontSize: "0.688rem",
+                            bgcolor: "#8270FF",
+                            color: "white",
+                            fontWeight: 500,
+                          }}
+                        />
+                      );
+                    }
+                    return null;
+                  })()}
                   {columns.find((col) => col.column_id === card.column_id) && (
                     <Chip
                       label={columns.find((col) => col.column_id === card.column_id)?.name}
