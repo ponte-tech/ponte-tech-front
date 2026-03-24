@@ -995,21 +995,23 @@ export default function KanbanPage() {
           <Box sx={{ flexGrow: 1 }} />
 
           {/* Actions */}
-          <Tooltip title="Novo Board" arrow>
-            <IconButton
-              size="small"
-              onClick={handleAddBoard}
-              sx={{
-                width: 28,
-                height: 28,
-                color: "#8270FF",
-                "&:hover": {
-                  bgcolor: "rgba(130, 112, 255, 0.08)",
-                },
-              }}
-            >
-              <AddIcon sx={{ fontSize: "1.1rem" }} />
-            </IconButton>
+          <Tooltip title="Criação de novos boards temporariamente desabilitada" arrow>
+            <span>
+              <IconButton
+                size="small"
+                disabled
+                sx={{
+                  width: 28,
+                  height: 28,
+                  color: "#8270FF",
+                  "&:hover": {
+                    bgcolor: "rgba(130, 112, 255, 0.08)",
+                  },
+                }}
+              >
+                <AddIcon sx={{ fontSize: "1.1rem" }} />
+              </IconButton>
+            </span>
           </Tooltip>
 
           <Tooltip
