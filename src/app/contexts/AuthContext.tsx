@@ -16,6 +16,7 @@ interface User {
   role?: string;
   perfis?: UserProfile[]; // Para suportar múltiplos perfis
   codigoVendedor?: string; // Apenas para vendedores
+  foto_perfil_url?: string; // URL da foto de perfil
 }
 
 interface AuthContextType {
@@ -58,6 +59,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     checkAuth();
+
+    // Listener para mudanças no localStorage (ex: atualização de foto de perfil)
+    const handleStorageChange = () => {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+        } catch (error) {
+          console.error("Erro ao atualizar usuário:", error);
+        }
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -82,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: perfilAtivo,
         perfis: response.user.perfis,
         codigoVendedor: response.user.codigo_vendedor,
+        foto_perfil_url: response.user.foto_perfil_url,
       };
 
       // Salvar token e usuário

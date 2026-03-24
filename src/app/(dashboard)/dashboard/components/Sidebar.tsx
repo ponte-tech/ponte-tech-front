@@ -31,6 +31,9 @@ import {
   ExpandLess,
   ExpandMore,
   WhatsApp as WhatsAppIcon,
+  ViewKanban as ViewKanbanIcon,
+  Insights as InsightsIcon,
+  Assignment as AssignmentIcon,
 } from "@mui/icons-material";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/app/hooks/useAuth";
@@ -91,6 +94,15 @@ const menuItems: MenuItem[] = [
     subItems: [
       { text: "Lançamento Contábil", path: "/dashboard/lancamento-contabil" },
       { text: "Impostos", path: "/dashboard/contabilidade/impostos" },
+    ]
+  },
+  {
+    text: "Demandas",
+    icon: <AssignmentIcon />,
+    allowedRoles: ["admin", "colaborador"],
+    subItems: [
+      { text: "Insights", path: "/dashboard/insights" },
+      { text: "Kanban", path: "/dashboard/kanban" },
     ]
   },
   {

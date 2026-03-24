@@ -25,6 +25,8 @@ import {
   FormHelperText,
   InputAdornment,
   LinearProgress,
+  Avatar,
+  alpha,
 } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
@@ -35,17 +37,22 @@ import {
   Lock as LockIcon,
   Visibility,
   VisibilityOff,
+  CloudUpload as CloudUploadIcon,
+  PhotoCamera as PhotoCameraIcon,
+  Close as CloseIcon,
 } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import colaboradoresService from "@/app/services/colaboradoresService";
 import contratosService from "@/app/services/contratosService";
 import authService from "@/app/services/authService";
+import avatarService from "@/app/services/avatarService";
 import { Colaborador, UpdateColaboradorRequest, CreateContratoRequest, TipoChavePix, Contrato } from "@/app/types/api";
 import { useAuth } from "@/app/hooks/useAuth";
 import ContractModal from "../../components/ContractModal";
 import empresaService from "@/app/services/empresaService";
 import type { Empresa } from "@/app/types/empresa";
+import { DeleteDialog } from "@/app/shared/components";
 
 export default function EditarColaboradorPage() {
   const router = useRouter();
@@ -74,6 +81,17 @@ export default function EditarColaboradorPage() {
   const [passwordError, setPasswordError] = useState("");
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  // Avatar upload states
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Delete avatar dialog states
+  const [deleteAvatarDialogOpen, setDeleteAvatarDialogOpen] = useState(false);
+  const [deleteAvatarError, setDeleteAvatarError] = useState<string | null>(null);
 
   const isAdmin = user?.userType === "admin";
   const isColaborador = user?.userType === "colaborador";
@@ -439,6 +457,156 @@ export default function EditarColaboradorPage() {
     }
   };
 
+  // Avatar upload handlers
+  const handleAvatarFileSelect = (file: File) => {
+    setAvatarError(null);
+
+    // Validar arquivo
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      setAvatarError("Arquivo muito grande. Tamanho máximo: 5MB");
+      return;
+    }
+
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      setAvatarError("Tipo de arquivo não permitido. Use JPG, PNG ou WebP");
+      return;
+    }
+
+    setAvatarFile(file);
+
+    // Criar preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAvatarPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleAvatarFileSelect(file);
+    }
+  };
+
+  const handleAvatarDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      handleAvatarFileSelect(file);
+    }
+  };
+
+  const handleAvatarDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleAvatarDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleAvatarUpload = async () => {
+    if (!avatarFile) return;
+
+    try {
+      setUploadingAvatar(true);
+      setAvatarError(null);
+
+      const fotoURL = await avatarService.uploadAvatar(avatarFile);
+
+      // Atualizar o colaborador com a nova foto
+      setColaborador((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          foto_perfil_url: fotoURL,
+        };
+      });
+
+      // Atualizar contexto de autenticação (localStorage)
+      if (user && user.id === colaboradorId) {
+        const updatedUser = { ...user, foto_perfil_url: fotoURL };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        // Forçar reload do contexto
+        window.dispatchEvent(new Event("storage"));
+      }
+
+      // Atualizar preview para a URL do S3 para transição suave
+      setAvatarPreview(fotoURL);
+
+      // Limpar seleção após um pequeno delay
+      setTimeout(() => {
+        setAvatarFile(null);
+        setAvatarPreview(null);
+      }, 500);
+
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err: any) {
+      setAvatarError(err.message || "Erro ao fazer upload da foto");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const handleAvatarDeleteClick = () => {
+    setDeleteAvatarError(null);
+    setDeleteAvatarDialogOpen(true);
+  };
+
+  const handleAvatarDeleteCancel = () => {
+    setDeleteAvatarDialogOpen(false);
+    setDeleteAvatarError(null);
+  };
+
+  const handleAvatarDeleteConfirm = async () => {
+    try {
+      setUploadingAvatar(true);
+      setDeleteAvatarError(null);
+
+      await avatarService.deleteAvatar();
+
+      // Atualizar o colaborador removendo a foto
+      setColaborador((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          foto_perfil_url: "",
+        };
+      });
+
+      // Atualizar contexto de autenticação (localStorage)
+      if (user && user.id === colaboradorId) {
+        const updatedUser = { ...user, foto_perfil_url: undefined };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        // Forçar reload do contexto
+        window.dispatchEvent(new Event("storage"));
+      }
+
+      setAvatarFile(null);
+      setAvatarPreview(null);
+      setDeleteAvatarDialogOpen(false);
+      setSuccess(true);
+
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err: any) {
+      setDeleteAvatarError(err.message || "Erro ao remover foto");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const handleCancelAvatarSelection = () => {
+    setAvatarFile(null);
+    setAvatarPreview(null);
+    setAvatarError(null);
+  };
+
   // Calcular totais dos contratos ativos
   const calculateTotals = () => {
     const activeContracts = contracts.filter(c => c.status === 'ativo');
@@ -742,6 +910,202 @@ export default function EditarColaboradorPage() {
                 <Typography variant="h6" fontWeight="600" gutterBottom>
                   Informações Pessoais
                 </Typography>
+
+                {/* Avatar Upload Section */}
+                <Box sx={{ mb: 4, mt: 3 }}>
+                  <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, alignItems: { xs: "center", md: "flex-start" }, gap: 3 }}>
+                    {/* Avatar Display */}
+                    <Box sx={{ position: "relative" }}>
+                      <Avatar
+                        src={avatarPreview || colaborador.foto_perfil_url || ""}
+                        sx={{
+                          width: 120,
+                          height: 120,
+                          border: "4px solid",
+                          borderColor: "#8270FF",
+                          boxShadow: "0 4px 12px rgba(130, 112, 255, 0.2)",
+                          fontSize: "3rem",
+                          bgcolor: alpha("#8270FF", 0.1),
+                          color: "#8270FF",
+                        }}
+                      >
+                        {colaborador.nome_completo?.charAt(0)?.toUpperCase() || "U"}
+                      </Avatar>
+                      {uploadingAvatar && (
+                        <Box
+                          sx={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            bgcolor: "rgba(0, 0, 0, 0.5)",
+                            borderRadius: "50%",
+                          }}
+                        >
+                          <CircularProgress size={40} sx={{ color: "#fff" }} />
+                        </Box>
+                      )}
+                    </Box>
+
+                    {/* Upload Controls */}
+                    <Box sx={{ flex: 1, width: "100%" }}>
+                      {!avatarFile ? (
+                        <>
+                          <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                            Foto de Perfil
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                            Adicione uma foto para personalizar seu perfil. JPG, PNG ou WebP até 5MB.
+                          </Typography>
+
+                          {/* Drag and Drop Area */}
+                          <Box
+                            onDrop={handleAvatarDrop}
+                            onDragOver={handleAvatarDragOver}
+                            onDragLeave={handleAvatarDragLeave}
+                            sx={{
+                              border: "2px dashed",
+                              borderColor: isDragging ? "#8270FF" : alpha("#8270FF", 0.3),
+                              borderRadius: 2,
+                              p: 3,
+                              textAlign: "center",
+                              bgcolor: isDragging ? alpha("#8270FF", 0.05) : "transparent",
+                              transition: "all 0.3s ease",
+                              cursor: "pointer",
+                              "&:hover": {
+                                borderColor: "#8270FF",
+                                bgcolor: alpha("#8270FF", 0.02),
+                              },
+                            }}
+                          >
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/jpg,image/png,image/webp"
+                              onChange={handleAvatarChange}
+                              style={{ display: "none" }}
+                              id="avatar-upload"
+                              disabled={uploadingAvatar}
+                            />
+                            <label htmlFor="avatar-upload" style={{ cursor: "pointer" }}>
+                              <CloudUploadIcon sx={{ fontSize: 48, color: "#8270FF", mb: 1 }} />
+                              <Typography variant="body2" fontWeight="500" sx={{ mb: 0.5 }}>
+                                Arraste e solte sua foto aqui ou clique para selecionar
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                JPG, PNG ou WebP (máx. 5MB)
+                              </Typography>
+                            </label>
+                          </Box>
+
+                          {/* Remove Photo Button */}
+                          {colaborador.foto_perfil_url && (
+                            <Button
+                              variant="outlined"
+                              color="error"
+                              startIcon={<DeleteIcon />}
+                              onClick={handleAvatarDeleteClick}
+                              disabled={uploadingAvatar}
+                              sx={{
+                                mt: 2,
+                                textTransform: "none",
+                                borderRadius: 2,
+                              }}
+                            >
+                              Remover Foto
+                            </Button>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <Typography variant="subtitle1" fontWeight="600" gutterBottom>
+                            Nova Foto Selecionada
+                          </Typography>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 2,
+                              p: 2,
+                              borderRadius: 2,
+                              bgcolor: alpha("#8270FF", 0.05),
+                              border: `1px solid ${alpha("#8270FF", 0.2)}`,
+                            }}
+                          >
+                            <PhotoCameraIcon sx={{ color: "#8270FF", fontSize: 32 }} />
+                            <Box sx={{ flex: 1 }}>
+                              <Typography variant="body2" fontWeight="500">
+                                {avatarFile.name}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {(avatarFile.size / 1024 / 1024).toFixed(2)} MB
+                              </Typography>
+                            </Box>
+                            <IconButton
+                              size="small"
+                              onClick={handleCancelAvatarSelection}
+                              disabled={uploadingAvatar}
+                              sx={{
+                                color: "text.secondary",
+                                "&:hover": { color: "error.main" },
+                              }}
+                            >
+                              <CloseIcon fontSize="small" />
+                            </IconButton>
+                          </Box>
+
+                          <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                            <Button
+                              variant="contained"
+                              startIcon={uploadingAvatar ? <CircularProgress size={16} sx={{ color: "#fff" }} /> : <CloudUploadIcon />}
+                              onClick={handleAvatarUpload}
+                              disabled={uploadingAvatar}
+                              sx={{
+                                bgcolor: "#8270FF",
+                                textTransform: "none",
+                                borderRadius: 2,
+                                px: 3,
+                                "&:hover": {
+                                  bgcolor: "#6a5ce0",
+                                },
+                              }}
+                            >
+                              {uploadingAvatar ? "Enviando..." : "Enviar Foto"}
+                            </Button>
+                            <Button
+                              variant="outlined"
+                              onClick={handleCancelAvatarSelection}
+                              disabled={uploadingAvatar}
+                              sx={{
+                                textTransform: "none",
+                                borderRadius: 2,
+                                borderColor: alpha("#8270FF", 0.3),
+                                color: "#8270FF",
+                                "&:hover": {
+                                  borderColor: "#8270FF",
+                                  bgcolor: alpha("#8270FF", 0.05),
+                                },
+                              }}
+                            >
+                              Cancelar
+                            </Button>
+                          </Box>
+                        </>
+                      )}
+
+                      {/* Error Message */}
+                      {avatarError && (
+                        <Alert severity="error" sx={{ mt: 2 }} onClose={() => setAvatarError(null)}>
+                          {avatarError}
+                        </Alert>
+                      )}
+                    </Box>
+                  </Box>
+                </Box>
+
                 <Grid container spacing={2} sx={{ mt: 1 }}>
                   <Grid item xs={12} md={6}>
                     <TextField
@@ -1433,6 +1797,18 @@ export default function EditarColaboradorPage() {
           editingContract={editingContract}
         />
       )}
+
+      {/* Delete Avatar Dialog */}
+      <DeleteDialog
+        open={deleteAvatarDialogOpen}
+        title="Remover Foto de Perfil"
+        itemName="sua foto de perfil"
+        itemType=""
+        error={deleteAvatarError}
+        onConfirm={handleAvatarDeleteConfirm}
+        onCancel={handleAvatarDeleteCancel}
+        loading={uploadingAvatar}
+      />
     </Box>
   );
 }

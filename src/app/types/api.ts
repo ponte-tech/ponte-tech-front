@@ -19,6 +19,7 @@ export interface User {
   status: string;
   data_cadastro: string;
   codigo_vendedor?: string; // Apenas para vendedores
+  foto_perfil_url?: string; // URL da foto de perfil
 }
 
 // Resposta de login
@@ -278,6 +279,7 @@ export interface Colaborador {
   empresa_id: string;
   celular: string;
   email: string;
+  foto_perfil_url?: string;
   endereco: EnderecoColaborador;
   dados_contratuais: DadosContratuais;
   dados_financeiros: DadosFinanceiros;
@@ -296,6 +298,7 @@ export interface ColaboradorListItem {
   email: string;
   clientes: string[];    // Lista de nomes de clientes (dos contratos ativos)
   valor_total: number;   // Soma dos valores totais de todos os contratos ativos
+  foto_perfil_url?: string; // URL da foto de perfil
   status: ColaboradorStatus;
   data_cadastro: string;
 }

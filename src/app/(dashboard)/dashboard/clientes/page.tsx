@@ -45,7 +45,7 @@ export default function ClientesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState<ClienteStatus | "">("");
+  const [filterStatus, setFilterStatus] = useState<ClienteStatus | "">("ativo");
 
   const isColaborador = user?.userType === "colaborador";
 
