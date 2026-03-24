@@ -25,9 +25,15 @@ import {
   Divider as MuiDivider,
   Badge,
   Skeleton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import CloseIcon from "@mui/icons-material/Close";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import EventIcon from "@mui/icons-material/Event";
 import { DndContext, DragEndEvent, DragOverlay, closestCorners, DragStartEvent } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 import AddIcon from "@mui/icons-material/Add";
@@ -81,6 +87,10 @@ export default function KanbanPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [cardToDelete, setCardToDelete] = useState<{ id: string; title: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Due date alert states
+  const [dueDateAlertOpen, setDueDateAlertOpen] = useState(false);
+  const [dueTodayCards, setDueTodayCards] = useState<Card[]>([]);
 
   // Drag state
   const [activeCard, setActiveCard] = useState<Card | null>(null);
@@ -193,6 +203,9 @@ export default function KanbanPage() {
         allCards.push(...cardsList);
       }
       setCards(allCards);
+
+      // Verificar tasks com vencimento hoje
+      checkDueTodayCards(allCards);
     } catch (error: any) {
       console.error("Erro ao carregar board:", error);
       setSnackbar({
@@ -203,6 +216,25 @@ export default function KanbanPage() {
       setLoadingColumns(false); // Ensure loading is set to false on error
     } finally {
       setLoadingColumns(false);
+    }
+  };
+
+  const checkDueTodayCards = (cardsList: Card[]) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+
+    const dueTodayList = cardsList.filter(card => {
+      if (!card.delivery_date) return false;
+
+      // delivery_date está no formato YYYY-MM-DD
+      return card.delivery_date === todayStr;
+    });
+
+    if (dueTodayList.length > 0) {
+      setDueTodayCards(dueTodayList);
+      setDueDateAlertOpen(true);
     }
   };
 
@@ -445,6 +477,13 @@ export default function KanbanPage() {
   const cancelDeleteCard = () => {
     setDeleteDialogOpen(false);
     setCardToDelete(null);
+  };
+
+  const handleOpenCardFromAlert = (card: Card) => {
+    setDueDateAlertOpen(false);
+    setSelectedCard(card);
+    setSelectedColumnForCard(card.column_id);
+    setCardModalOpen(true);
   };
 
   const handleQuickCreateCard = async (columnId: string, title: string) => {
@@ -1369,6 +1408,132 @@ export default function KanbanPage() {
         onCancel={cancelDeleteCard}
         loading={deleting}
       />
+
+      {/* Due Date Alert Dialog */}
+      <Dialog
+        open={dueDateAlertOpen}
+        onClose={() => setDueDateAlertOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            pb: 2,
+            borderBottom: "1px solid",
+            borderColor: "divider",
+          }}
+        >
+          <Box
+            sx={{
+              width: 48,
+              height: 48,
+              borderRadius: 2,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              bgcolor: "warning.light",
+            }}
+          >
+            <WarningAmberIcon sx={{ fontSize: 28, color: "warning.dark" }} />
+          </Box>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="h6" fontWeight={700}>
+              ⚠️ Tasks com Vencimento Hoje
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {dueTodayCards.length} {dueTodayCards.length === 1 ? "task vence" : "tasks vencem"} hoje
+            </Typography>
+          </Box>
+        </DialogTitle>
+
+        <DialogContent sx={{ pt: 3 }}>
+          <List sx={{ p: 0 }}>
+            {dueTodayCards.map((card, index) => (
+              <React.Fragment key={card.card_id}>
+                {index > 0 && <MuiDivider sx={{ my: 1 }} />}
+                <ListItem
+                  sx={{
+                    p: 2,
+                    borderRadius: 2,
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                    "&:hover": {
+                      bgcolor: "action.hover",
+                      transform: "translateX(4px)",
+                    },
+                  }}
+                  onClick={() => handleOpenCardFromAlert(card)}
+                >
+                  <Box sx={{ width: "100%" }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                      <EventIcon sx={{ fontSize: 18, color: "warning.main" }} />
+                      <Typography variant="body1" fontWeight={600}>
+                        {card.title}
+                      </Typography>
+                    </Box>
+                    {card.description && (
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          mb: 1,
+                        }}
+                      >
+                        {card.description}
+                      </Typography>
+                    )}
+                    <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                      <Chip
+                        label={`Vence hoje: ${new Date().toLocaleDateString("pt-BR")}`}
+                        size="small"
+                        color="warning"
+                        sx={{ fontWeight: 600 }}
+                      />
+                      {columns.find((col) => col.column_id === card.column_id) && (
+                        <Chip
+                          label={columns.find((col) => col.column_id === card.column_id)?.name}
+                          size="small"
+                          variant="outlined"
+                        />
+                      )}
+                    </Box>
+                  </Box>
+                </ListItem>
+              </React.Fragment>
+            ))}
+          </List>
+        </DialogContent>
+
+        <DialogActions sx={{ px: 3, pb: 3, pt: 2 }}>
+          <Button
+            onClick={() => setDueDateAlertOpen(false)}
+            variant="contained"
+            fullWidth
+            sx={{
+              borderRadius: 2,
+              textTransform: "none",
+              fontWeight: 600,
+              py: 1.5,
+            }}
+          >
+            Entendi
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Snackbar */}
       <Snackbar
