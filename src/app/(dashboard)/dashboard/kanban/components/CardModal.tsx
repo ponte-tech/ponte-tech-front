@@ -286,7 +286,8 @@ export default function CardModal({
   const handleShareCard = async () => {
     if (!card) return;
 
-    const url = `${window.location.origin}/dashboard/kanban?card=${card.card_id}`;
+    // Encode the card_id to handle special characters like #
+    const url = `${window.location.origin}/dashboard/kanban?card=${encodeURIComponent(card.card_id)}`;
 
     try {
       await navigator.clipboard.writeText(url);

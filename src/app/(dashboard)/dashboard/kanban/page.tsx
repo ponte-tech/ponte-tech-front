@@ -49,7 +49,7 @@ import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortabl
 import AddIcon from "@mui/icons-material/Add";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import { useAuth } from "@/app/hooks/useAuth";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import kanbanService from "@/app/services/kanbanService";
 import clienteService from "@/app/services/clienteService";
 import contratoService from "@/app/services/contratoService";
@@ -70,6 +70,7 @@ import Tooltip from "@mui/material/Tooltip";
 export default function KanbanPage() {
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // State
   const [boards, setBoards] = useState<Board[]>([]);
@@ -155,6 +156,27 @@ export default function KanbanPage() {
     }
   }, [selectedBoardId]);
 
+  // Abrir modal de card quando houver card_id na URL
+  useEffect(() => {
+    const cardId = searchParams.get('card');
+    if (cardId && cards.length > 0) {
+      console.log('[SHARE DEBUG] Procurando card com ID:', cardId);
+      console.log('[SHARE DEBUG] Cards disponíveis:', cards.map(c => c.card_id));
+
+      const card = cards.find(c => c.card_id === cardId);
+      if (card) {
+        console.log('[SHARE DEBUG] Card encontrado:', card.title);
+        setSelectedCard(card);
+        setCardModalOpen(true);
+        // Remover o parâmetro da URL sem recarregar a página
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+      } else {
+        console.log('[SHARE DEBUG] Card NÃO encontrado');
+      }
+    }
+  }, [searchParams, cards]);
+
   const loadInitialData = async () => {
     try {
       setLoading(true);
@@ -224,8 +246,14 @@ export default function KanbanPage() {
       }
       setCards(allCards);
 
+      // Verificar se há parâmetro 'card' na URL (compartilhamento)
+      const hasCardParam = searchParams.get('card');
+
       // Verificar tasks com vencimento hoje (passar columnsList ao invés de usar state)
-      checkDueTodayCards(allCards, columnsList);
+      // NÃO mostrar alerta se houver link compartilhado na URL
+      if (!hasCardParam) {
+        checkDueTodayCards(allCards, columnsList);
+      }
 
       // Calcular tarefas urgentes por colaborador
       calculateUrgentTasksByColaborador(allCards, columnsList);
