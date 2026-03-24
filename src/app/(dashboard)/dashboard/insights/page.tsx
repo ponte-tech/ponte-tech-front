@@ -19,11 +19,10 @@ import {
   Alert,
   Stack,
   alpha,
-  Fade,
-  Grow,
   Autocomplete,
   Chip,
   Avatar,
+  Skeleton,
 } from "@mui/material";
 import {
   BarChart,
@@ -188,129 +187,124 @@ export default function InsightsPage() {
     color: string;
     index: number;
   }) => (
-    <Grow in={true} timeout={300 + index * 100}>
-      <Card
-        sx={{
-          height: "100%",
-          background: `linear-gradient(135deg, ${alpha(color, 0.05)} 0%, ${alpha(color, 0.02)} 100%)`,
-          border: `1px solid ${alpha(color, 0.1)}`,
-          borderRadius: 3,
-          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-          "&:hover": {
-            transform: "translateY(-4px)",
-            boxShadow: `0 12px 24px ${alpha(color, 0.15)}`,
-            borderColor: alpha(color, 0.3),
-          },
-        }}
-      >
-        <CardContent sx={{ p: 3 }}>
-          <Box display="flex" alignItems="flex-start" justifyContent="space-between">
-            <Box flex={1}>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: "text.secondary",
-                  fontWeight: 500,
-                  mb: 1.5,
-                  fontSize: "0.813rem",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                }}
-              >
-                {title}
-              </Typography>
-              <Typography
-                variant="h4"
-                sx={{
-                  fontWeight: 700,
-                  mb: 1,
-                  color: "text.primary",
-                  fontSize: "2rem",
-                }}
-              >
-                {value}
-              </Typography>
-              {change !== undefined && (
-                <Box display="flex" alignItems="center" gap={0.5}>
-                  {change >= 0 ? (
-                    <TrendingUpIcon sx={{ color: "#10b981", fontSize: 18 }} />
-                  ) : (
-                    <TrendingDownIcon sx={{ color: "#ef4444", fontSize: 18 }} />
-                  )}
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: change >= 0 ? "#10b981" : "#ef4444",
-                      fontWeight: 600,
-                      fontSize: "0.875rem",
-                    }}
-                  >
-                    {Math.abs(change)}%
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    vs período anterior
-                  </Typography>
-                </Box>
-              )}
-            </Box>
-            <Box
+    <Card
+      sx={{
+        height: "100%",
+        background: `linear-gradient(135deg, ${alpha(color, 0.05)} 0%, ${alpha(color, 0.02)} 100%)`,
+        border: `1px solid ${alpha(color, 0.1)}`,
+        borderRadius: 3,
+        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        "&:hover": {
+          transform: "translateY(-4px)",
+          boxShadow: `0 12px 24px ${alpha(color, 0.15)}`,
+          borderColor: alpha(color, 0.3),
+        },
+      }}
+    >
+      <CardContent sx={{ p: 3 }}>
+        <Box display="flex" alignItems="flex-start" justifyContent="space-between">
+          <Box flex={1}>
+            <Typography
+              variant="body2"
               sx={{
-                width: 56,
-                height: 56,
-                borderRadius: 2.5,
-                background: `linear-gradient(135deg, ${color} 0%, ${alpha(color, 0.8)} 100%)`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: `0 4px 14px ${alpha(color, 0.4)}`,
+                color: "text.secondary",
+                fontWeight: 500,
+                mb: 1.5,
+                fontSize: "0.813rem",
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
               }}
             >
-              <Icon sx={{ color: "white", fontSize: 28 }} />
-            </Box>
+              {title}
+            </Typography>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                mb: 1,
+                color: "text.primary",
+                fontSize: "2rem",
+              }}
+            >
+              {value}
+            </Typography>
+            {change !== undefined && (
+              <Box display="flex" alignItems="center" gap={0.5}>
+                {change >= 0 ? (
+                  <TrendingUpIcon sx={{ color: "#10b981", fontSize: 18 }} />
+                ) : (
+                  <TrendingDownIcon sx={{ color: "#ef4444", fontSize: 18 }} />
+                )}
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: change >= 0 ? "#10b981" : "#ef4444",
+                    fontWeight: 600,
+                    fontSize: "0.875rem",
+                  }}
+                >
+                  {Math.abs(change)}%
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  vs período anterior
+                </Typography>
+              </Box>
+            )}
           </Box>
-        </CardContent>
-      </Card>
-    </Grow>
+          <Box
+            sx={{
+              width: 56,
+              height: 56,
+              borderRadius: 2.5,
+              background: `linear-gradient(135deg, ${color} 0%, ${alpha(color, 0.8)} 100%)`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: `0 4px 14px ${alpha(color, 0.4)}`,
+            }}
+          >
+            <Icon sx={{ color: "white", fontSize: 28 }} />
+          </Box>
+        </Box>
+      </CardContent>
+    </Card>
   );
 
   return (
     <Box sx={{ bgcolor: "#fafafa", minHeight: "100vh", py: 4 }}>
       <Container maxWidth="xl">
         {/* Header */}
-        <Fade in={true} timeout={500}>
-          <Box mb={4}>
-            <Typography
-              variant="h4"
-              sx={{
-                fontWeight: 800,
-                mb: 1,
-                background: "linear-gradient(135deg, #8270FF 0%, #6B5FCC 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                fontSize: "2rem",
-              }}
-            >
-              Insights de Demandas
-            </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ fontSize: "0.938rem" }}>
-              Análises e métricas de produtividade do Kanban
-            </Typography>
-          </Box>
-        </Fade>
-
-        {/* Filtros */}
-        <Fade in={true} timeout={600}>
-          <Paper
-            elevation={0}
+        <Box mb={4}>
+          <Typography
+            variant="h4"
             sx={{
-              p: 3,
-              mb: 4,
-              borderRadius: 3,
-              border: "1px solid",
-              borderColor: "divider",
-              background: "white",
+              fontWeight: 800,
+              mb: 1,
+              background: "linear-gradient(135deg, #8270FF 0%, #6B5FCC 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              fontSize: "2rem",
             }}
           >
+            Insights de Demandas
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ fontSize: "0.938rem" }}>
+            Análises e métricas de produtividade do Kanban
+          </Typography>
+        </Box>
+
+        {/* Filtros */}
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
+            mb: 4,
+            borderRadius: 3,
+            border: "1px solid",
+            borderColor: "divider",
+            background: "white",
+          }}
+        >
             <Box display="flex" alignItems="center" gap={1} mb={3}>
               <FilterListIcon sx={{ color: "#8270FF" }} />
               <Typography variant="h6" fontWeight={700} sx={{ fontSize: "1.125rem" }}>
@@ -543,29 +537,49 @@ export default function InsightsPage() {
                 Limpar
               </Button>
             </Stack>
-          </Paper>
-        </Fade>
+        </Paper>
 
         {error && (
-          <Fade in={true}>
-            <Alert
-              severity="error"
-              sx={{
-                mb: 4,
-                borderRadius: 2,
-                border: "1px solid",
-                borderColor: alpha("#ef4444", 0.3),
-              }}
-            >
-              {error}
-            </Alert>
-          </Fade>
+          <Alert
+            severity="error"
+            sx={{
+              mb: 4,
+              borderRadius: 2,
+              border: "1px solid",
+              borderColor: alpha("#ef4444", 0.3),
+            }}
+          >
+            {error}
+          </Alert>
         )}
 
         {loading ? (
-          <Box display="flex" justifyContent="center" alignItems="center" py={12}>
-            <CircularProgress sx={{ color: "#8270FF" }} size={48} />
-          </Box>
+          <>
+            {/* KPIs Skeleton */}
+            <Grid container spacing={3} mb={4}>
+              {[1, 2, 3, 4].map((index) => (
+                <Grid item xs={12} sm={6} md={3} key={index}>
+                  <Skeleton
+                    variant="rectangular"
+                    width="100%"
+                    height={140}
+                    sx={{ borderRadius: 3 }}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+
+            {/* Chart Skeletons - Simplified */}
+            {[1, 2].map((index) => (
+              <Skeleton
+                key={index}
+                variant="rectangular"
+                width="100%"
+                height={500}
+                sx={{ mb: 4, borderRadius: 3 }}
+              />
+            ))}
+          </>
         ) : (
           <>
             {/* KPIs */}
@@ -612,18 +626,17 @@ export default function InsightsPage() {
             </Grid>
 
             {/* Gráfico - Tasks por Cliente */}
-            <Grow in={true} timeout={700}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 4,
-                  mb: 4,
-                  borderRadius: 3,
-                  border: "1px solid",
-                  borderColor: "divider",
-                  background: "white",
-                }}
-              >
+            <Paper
+              elevation={0}
+              sx={{
+                p: 4,
+                mb: 4,
+                borderRadius: 3,
+                border: "1px solid",
+                borderColor: "divider",
+                background: "white",
+              }}
+            >
                 <Typography
                   variant="h6"
                   fontWeight={700}
@@ -696,22 +709,20 @@ export default function InsightsPage() {
                     </BarChart>
                   </ResponsiveContainer>
                 </Box>
-              </Paper>
-            </Grow>
+            </Paper>
 
             {/* Gráfico - Tasks por Colaborador */}
-            <Grow in={true} timeout={800}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 4,
-                  mb: 4,
-                  borderRadius: 3,
-                  border: "1px solid",
-                  borderColor: "divider",
-                  background: "white",
-                }}
-              >
+            <Paper
+              elevation={0}
+              sx={{
+                p: 4,
+                mb: 4,
+                borderRadius: 3,
+                border: "1px solid",
+                borderColor: "divider",
+                background: "white",
+              }}
+            >
                 <Typography
                   variant="h6"
                   fontWeight={700}
@@ -787,22 +798,20 @@ export default function InsightsPage() {
                     </BarChart>
                   </ResponsiveContainer>
                 </Box>
-              </Paper>
-            </Grow>
+            </Paper>
 
             {/* Gráfico - Distribuição por Status */}
-            <Grow in={true} timeout={900}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 4,
-                  mb: 4,
-                  borderRadius: 3,
-                  border: "1px solid",
-                  borderColor: "divider",
-                  background: "white",
-                }}
-              >
+            <Paper
+              elevation={0}
+              sx={{
+                p: 4,
+                mb: 4,
+                borderRadius: 3,
+                border: "1px solid",
+                borderColor: "divider",
+                background: "white",
+              }}
+            >
                 <Typography
                   variant="h6"
                   fontWeight={700}
@@ -841,22 +850,20 @@ export default function InsightsPage() {
                     </PieChart>
                   </ResponsiveContainer>
                 </Box>
-              </Paper>
-            </Grow>
+            </Paper>
 
             {/* Gráfico - Timeline */}
-            <Grow in={true} timeout={1000}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 4,
-                  mb: 4,
-                  borderRadius: 3,
-                  border: "1px solid",
-                  borderColor: "divider",
-                  background: "white",
-                }}
-              >
+            <Paper
+              elevation={0}
+              sx={{
+                p: 4,
+                mb: 4,
+                borderRadius: 3,
+                border: "1px solid",
+                borderColor: "divider",
+                background: "white",
+              }}
+            >
                 <Typography
                   variant="h6"
                   fontWeight={700}
@@ -911,21 +918,19 @@ export default function InsightsPage() {
                     </LineChart>
                   </ResponsiveContainer>
                 </Box>
-              </Paper>
-            </Grow>
+            </Paper>
 
             {/* Métricas de Produtividade */}
-            <Grow in={true} timeout={1100}>
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 4,
-                  borderRadius: 3,
-                  border: "1px solid",
-                  borderColor: "divider",
-                  background: "white",
-                }}
-              >
+            <Paper
+              elevation={0}
+              sx={{
+                p: 4,
+                borderRadius: 3,
+                border: "1px solid",
+                borderColor: "divider",
+                background: "white",
+              }}
+            >
                 <Typography
                   variant="h6"
                   fontWeight={700}
@@ -1072,8 +1077,7 @@ export default function InsightsPage() {
                     </Box>
                   </Grid>
                 </Grid>
-              </Paper>
-            </Grow>
+            </Paper>
           </>
         )}
       </Container>
