@@ -745,28 +745,62 @@ export default function InsightsPage() {
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                       <XAxis
                         dataKey="analyst_name"
-                        angle={-45}
-                        textAnchor="end"
-                        height={100}
+                        height={120}
                         interval={0}
                         tick={({ x, y, payload }) => {
-                          const maxLength = 15;
+                          const analyst = tasksByAnalyst.find(a => a.analyst_name === payload.value);
+                          const colaborador = analysts.find(a => a.id === analyst?.analyst_id);
+                          const analystIndex = tasksByAnalyst.findIndex(a => a.analyst_name === payload.value);
+                          const analystColor = COLORS[analystIndex % COLORS.length];
+
+                          const maxLength = 12;
                           const name = payload.value || "";
                           const truncatedName = name.length > maxLength
                             ? name.substring(0, maxLength) + "..."
                             : name;
+
                           return (
-                            <text
-                              x={x}
-                              y={y}
-                              fill="#475569"
-                              fontSize={11}
-                              fontWeight={500}
-                              textAnchor="end"
-                              transform={`rotate(-45, ${x}, ${y})`}
-                            >
-                              {truncatedName}
-                            </text>
+                            <g transform={`translate(${x},${y})`}>
+                              {/* Avatar */}
+                              <foreignObject x={-16} y={0} width={32} height={32}>
+                                <div style={{
+                                  width: '32px',
+                                  height: '32px',
+                                  borderRadius: '50%',
+                                  overflow: 'hidden',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  backgroundColor: (colaborador as any)?.foto_perfil_url ? 'transparent' : analystColor,
+                                  color: 'white',
+                                  fontSize: '0.7rem',
+                                  fontWeight: 600,
+                                  border: '2px solid white',
+                                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                }}>
+                                  {(colaborador as any)?.foto_perfil_url ? (
+                                    <img
+                                      src={(colaborador as any).foto_perfil_url}
+                                      alt={name}
+                                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    />
+                                  ) : (
+                                    <span>{name?.charAt(0)?.toUpperCase() || "?"}</span>
+                                  )}
+                                </div>
+                              </foreignObject>
+                              {/* Nome */}
+                              <text
+                                x={0}
+                                y={45}
+                                fill="#475569"
+                                fontSize={11}
+                                fontWeight={500}
+                                textAnchor="middle"
+                              >
+                                {truncatedName}
+                              </text>
+                            </g>
                           );
                         }}
                       />
@@ -777,6 +811,10 @@ export default function InsightsPage() {
                             const data = payload[0].payload;
                             const analystIndex = tasksByAnalyst.findIndex(a => a.analyst_id === data.analyst_id);
                             const analystColor = COLORS[analystIndex % COLORS.length];
+
+                            // Buscar colaborador para pegar foto usando analysts state
+                            const colaborador = analysts.find(a => a.id === data.analyst_id);
+
                             return (
                               <Box
                                 sx={{
@@ -787,9 +825,25 @@ export default function InsightsPage() {
                                   p: 2,
                                 }}
                               >
-                                <Typography variant="body2" fontWeight={600} mb={1}>
-                                  {data.analyst_name || "Colaborador"}
-                                </Typography>
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1 }}>
+                                  <Avatar
+                                    src={(colaborador as any)?.foto_perfil_url || ""}
+                                    alt={data.analyst_name}
+                                    sx={{
+                                      width: 32,
+                                      height: 32,
+                                      bgcolor: (colaborador as any)?.foto_perfil_url ? "transparent" : analystColor,
+                                      color: "white",
+                                      fontSize: "0.75rem",
+                                      fontWeight: 600,
+                                    }}
+                                  >
+                                    {!(colaborador as any)?.foto_perfil_url && (data.analyst_name?.charAt(0)?.toUpperCase() || "?")}
+                                  </Avatar>
+                                  <Typography variant="body2" fontWeight={600}>
+                                    {data.analyst_name || "Colaborador"}
+                                  </Typography>
+                                </Box>
                                 <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
                                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                     <Box sx={{ width: 12, height: 12, borderRadius: "50%", bgcolor: analystColor }} />
@@ -815,7 +869,6 @@ export default function InsightsPage() {
                           return null;
                         }}
                       />
-                      <Legend wrapperStyle={{ fontSize: 14, paddingTop: 10, fontWeight: 500 }} />
                       <Bar dataKey="total" radius={[8, 8, 0, 0]} name="Total de Tasks">
                         {tasksByAnalyst.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={`url(#colorAnalyst${index})`} />
