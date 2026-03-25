@@ -773,12 +773,16 @@ export default function EditarColaboradorPage() {
     setSuccess(false);
 
     try {
-      if (!colaborador.nome_completo || !colaborador.cnpj || !colaborador.empresa_id || !colaborador.celular) {
+      if (!colaborador.nome_completo || !colaborador.cpf || !colaborador.cnpj || !colaborador.empresa_id || !colaborador.celular) {
         throw new Error("Por favor, preencha todos os campos obrigatórios");
       }
 
       if (colaborador.nome_completo.trim().split(" ").length < 2) {
         throw new Error("Por favor, informe o nome completo");
+      }
+
+      if (!validateCPF(colaborador.cpf)) {
+        throw new Error("CPF inválido");
       }
 
       if (!validateCNPJ(colaborador.cnpj)) {
@@ -823,6 +827,7 @@ export default function EditarColaboradorPage() {
 
       const updateData: UpdateColaboradorRequest = {
         nome_completo: colaborador.nome_completo,
+        cpf: colaborador.cpf,
         cnpj: colaborador.cnpj,
         empresa_id: colaborador.empresa_id,
         celular: colaborador.celular,
@@ -929,6 +934,9 @@ export default function EditarColaboradorPage() {
               fontSize: "2.5rem",
               bgcolor: alpha("#8270FF", 0.1),
               color: "#8270FF",
+              "& img": {
+                objectFit: "cover",
+              },
             }}
           >
             {colaborador.nome_completo?.charAt(0)?.toUpperCase() || "U"}
@@ -1019,7 +1027,7 @@ export default function EditarColaboradorPage() {
                   </Box>
 
                   <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 3 }}>
-                    <Box sx={{ position: "relative" }}>
+                    <Box sx={{ position: "relative", width: 120, height: 120, flexShrink: 0 }}>
                       <Avatar
                         src={avatarPreview || colaborador.foto_perfil_url || ""}
                         sx={{
@@ -1031,6 +1039,11 @@ export default function EditarColaboradorPage() {
                           fontSize: "3rem",
                           bgcolor: alpha("#8270FF", 0.1),
                           color: "#8270FF",
+                          "& img": {
+                            objectFit: "cover",
+                            width: "100%",
+                            height: "100%",
+                          },
                         }}
                       >
                         {colaborador.nome_completo?.charAt(0)?.toUpperCase() || "U"}
@@ -1041,8 +1054,8 @@ export default function EditarColaboradorPage() {
                             position: "absolute",
                             top: 0,
                             left: 0,
-                            right: 0,
-                            bottom: 0,
+                            width: 120,
+                            height: 120,
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
@@ -1241,8 +1254,12 @@ export default function EditarColaboradorPage() {
                             fullWidth
                             label="CPF"
                             value={colaborador.cpf}
-                            disabled
-                            helperText="CPF não pode ser alterado"
+                            onChange={(e) => handleChange("cpf", e.target.value)}
+                            onBlur={(e) => handleBlur("cpf", e.target.value)}
+                            disabled={saving}
+                            placeholder="000.000.000-00"
+                            error={!!fieldErrors.cpf}
+                            helperText={fieldErrors.cpf}
                           />
                         </Grid>
                         <Grid item xs={12} md={6}>

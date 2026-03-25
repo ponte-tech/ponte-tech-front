@@ -733,7 +733,7 @@ export default function InsightsPage() {
                 </Typography>
                 <Box sx={{ width: "100%", height: 450 }}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={tasksByAnalyst} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                    <BarChart data={tasksByAnalyst} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                       <defs>
                         {tasksByAnalyst.map((analyst, index) => (
                           <linearGradient key={`gradient-${index}`} id={`colorAnalyst${index}`} x1="0" y1="0" x2="0" y2="1">
@@ -743,7 +743,33 @@ export default function InsightsPage() {
                         ))}
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                      <XAxis dataKey="analyst_name" tick={{ fill: "#475569", fontSize: 13, fontWeight: 500 }} />
+                      <XAxis
+                        dataKey="analyst_name"
+                        angle={-45}
+                        textAnchor="end"
+                        height={100}
+                        interval={0}
+                        tick={({ x, y, payload }) => {
+                          const maxLength = 15;
+                          const name = payload.value || "";
+                          const truncatedName = name.length > maxLength
+                            ? name.substring(0, maxLength) + "..."
+                            : name;
+                          return (
+                            <text
+                              x={x}
+                              y={y}
+                              fill="#475569"
+                              fontSize={11}
+                              fontWeight={500}
+                              textAnchor="end"
+                              transform={`rotate(-45, ${x}, ${y})`}
+                            >
+                              {truncatedName}
+                            </text>
+                          );
+                        }}
+                      />
                       <YAxis tick={{ fill: "#475569", fontSize: 13, fontWeight: 500 }} />
                       <Tooltip
                         content={({ active, payload }) => {
