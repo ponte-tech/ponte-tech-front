@@ -51,9 +51,10 @@ export default function KanbanCard({
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition: transition || "transform 200ms cubic-bezier(0.25, 0.8, 0.25, 1)",
-    opacity: isDragging ? 0.3 : 1,
-    scale: isDragging ? "1.05" : "1",
+    transition: isDragging ? "none" : (transition || "transform 120ms ease-out"),
+    opacity: isDragging ? 0.4 : 1,
+    cursor: isDragging ? "grabbing" : "grab",
+    willChange: "transform, opacity",
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
@@ -130,10 +131,13 @@ export default function KanbanCard({
         border: isDragging ? "2px solid #8270FF" : "1px solid #e0e0e0",
         borderRadius: 2,
         position: "relative",
-        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+        transition: isDragging ? "none" : "box-shadow 0.12s ease-out, border-color 0.12s ease-out",
         boxShadow: isDragging
-          ? "0 12px 24px rgba(130, 112, 255, 0.4)"
+          ? "0 8px 20px rgba(130, 112, 255, 0.35)"
           : "0 1px 3px rgba(0,0,0,0.12)",
+        transform: isDragging ? "rotate(2deg) scale(1.02)" : "none",
+        zIndex: isDragging ? 1000 : 1,
+        willChange: isDragging ? "transform" : "auto",
       }}
     >
       <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>

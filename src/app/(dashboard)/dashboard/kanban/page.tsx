@@ -44,7 +44,20 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import EventIcon from "@mui/icons-material/Event";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import PeopleIcon from "@mui/icons-material/People";
-import { DndContext, DragEndEvent, DragOverlay, closestCorners, DragStartEvent } from "@dnd-kit/core";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  closestCorners,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  MouseSensor,
+  TouchSensor
+} from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 import AddIcon from "@mui/icons-material/Add";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
@@ -81,6 +94,14 @@ function KanbanPageContent() {
   const [contratos, setContratos] = useState<Contrato[]>([]);
   const [colaboradores, setColaboradores] = useState<any[]>([]);
 
+  // Auto-scroll refs
+  const boardContainerRef = React.useRef<HTMLDivElement>(null);
+  const autoScrollIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  // Scroll arrows state
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(false);
+
   // Loading states
   const [loading, setLoading] = useState(true);
   const [loadingColumns, setLoadingColumns] = useState(false);
@@ -116,6 +137,26 @@ function KanbanPageContent() {
   // Drag state
   const [activeCard, setActiveCard] = useState<Card | null>(null);
 
+  // Drag sensors with maximum responsiveness
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 1, // Almost instant drag activation
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 50, // Minimal delay for touch
+        tolerance: 2,
+      },
+    }),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 1, // Almost instant
+      },
+    })
+  );
+
   // Snackbar
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -133,6 +174,123 @@ function KanbanPageContent() {
   const [selectedColaboradores, setSelectedColaboradores] = useState<string[]>([]);
   const [filterAnchorEl, setFilterAnchorEl] = useState<HTMLElement | null>(null);
   const [peopleAnchorEl, setPeopleAnchorEl] = useState<HTMLElement | null>(null);
+
+  // Auto-scroll handlers
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const container = boardContainerRef.current;
+    if (!container) return;
+
+    const rect = container.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left; // Mouse position relative to container
+    const containerWidth = rect.width;
+    const edgeThreshold = 150; // pixels from edge to trigger scroll
+    const scrollSpeed = 20; // pixels per interval
+
+    // Clear any existing interval
+    if (autoScrollIntervalRef.current) {
+      clearInterval(autoScrollIntervalRef.current);
+      autoScrollIntervalRef.current = null;
+    }
+
+    // Check if mouse is near right edge
+    if (mouseX > containerWidth - edgeThreshold && mouseX < containerWidth) {
+      const intensity = (mouseX - (containerWidth - edgeThreshold)) / edgeThreshold;
+      const speed = Math.max(5, scrollSpeed * intensity);
+
+      autoScrollIntervalRef.current = setInterval(() => {
+        const currentContainer = boardContainerRef.current;
+        if (!currentContainer) return;
+
+        if (currentContainer.scrollLeft < currentContainer.scrollWidth - currentContainer.clientWidth) {
+          currentContainer.scrollLeft += speed;
+        } else {
+          if (autoScrollIntervalRef.current) {
+            clearInterval(autoScrollIntervalRef.current);
+            autoScrollIntervalRef.current = null;
+          }
+        }
+      }, 30);
+    }
+    // Check if mouse is near left edge
+    else if (mouseX < edgeThreshold && mouseX > 0) {
+      const intensity = (edgeThreshold - mouseX) / edgeThreshold;
+      const speed = Math.max(5, scrollSpeed * intensity);
+
+      autoScrollIntervalRef.current = setInterval(() => {
+        const currentContainer = boardContainerRef.current;
+        if (!currentContainer) return;
+
+        if (currentContainer.scrollLeft > 0) {
+          currentContainer.scrollLeft -= speed;
+        } else {
+          if (autoScrollIntervalRef.current) {
+            clearInterval(autoScrollIntervalRef.current);
+            autoScrollIntervalRef.current = null;
+          }
+        }
+      }, 30);
+    }
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    if (autoScrollIntervalRef.current) {
+      clearInterval(autoScrollIntervalRef.current);
+      autoScrollIntervalRef.current = null;
+    }
+  }, []);
+
+  // Check scroll position to show/hide arrows
+  const checkScrollPosition = useCallback(() => {
+    const container = boardContainerRef.current;
+    if (!container) return;
+
+    const { scrollLeft, scrollWidth, clientWidth } = container;
+    setShowLeftArrow(scrollLeft > 0);
+    setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10);
+  }, []);
+
+  // Scroll by click
+  const handleScrollLeft = useCallback(() => {
+    const container = boardContainerRef.current;
+    if (!container) return;
+
+    container.scrollBy({ left: -300, behavior: 'smooth' });
+    setTimeout(checkScrollPosition, 300);
+  }, [checkScrollPosition]);
+
+  const handleScrollRight = useCallback(() => {
+    const container = boardContainerRef.current;
+    if (!container) return;
+
+    container.scrollBy({ left: 300, behavior: 'smooth' });
+    setTimeout(checkScrollPosition, 300);
+  }, [checkScrollPosition]);
+
+  // Check scroll position on scroll
+  useEffect(() => {
+    const container = boardContainerRef.current;
+    if (!container) return;
+
+    checkScrollPosition();
+
+    const handleScroll = () => {
+      checkScrollPosition();
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+    };
+  }, [checkScrollPosition, columns]);
+
+  // Cleanup auto-scroll on unmount
+  useEffect(() => {
+    return () => {
+      if (autoScrollIntervalRef.current) {
+        clearInterval(autoScrollIntervalRef.current);
+      }
+    };
+  }, []);
 
   // Check authentication
   useEffect(() => {
@@ -1354,30 +1512,90 @@ function KanbanPageContent() {
       </Box>
 
       {/* Board */}
-      <Box
-        sx={{
-          flexGrow: 1,
-          overflowX: "auto",
-          overflowY: "hidden",
-          p: 1.5,
-          bgcolor: "#fafafa",
-          height: "calc(100vh - 120px)",
-          "&::-webkit-scrollbar": {
-            height: "8px",
-          },
-          "&::-webkit-scrollbar-track": {
-            bgcolor: "transparent",
-            borderRadius: "4px",
-          },
-          "&::-webkit-scrollbar-thumb": {
-            bgcolor: "#d0d0d0",
-            borderRadius: "4px",
-            "&:hover": {
-              bgcolor: "#b0b0b0",
+      <Box sx={{ position: "relative", flexGrow: 1, height: "calc(100vh - 120px)" }}>
+        {/* Left Arrow */}
+        {showLeftArrow && (
+          <IconButton
+            onClick={handleScrollLeft}
+            sx={{
+              position: "absolute",
+              left: 8,
+              top: "50%",
+              transform: "translateY(-50%)",
+              zIndex: 10,
+              bgcolor: "rgba(255, 255, 255, 0.5)",
+              backdropFilter: "blur(4px)",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+              width: 36,
+              height: 36,
+              color: "rgba(0, 0, 0, 0.5)",
+              "&:hover": {
+                bgcolor: "rgba(130, 112, 255, 0.9)",
+                color: "#fff",
+                boxShadow: "0 4px 12px rgba(130, 112, 255, 0.3)",
+              },
+              transition: "all 0.2s",
+            }}
+          >
+            <ChevronLeftIcon fontSize="small" />
+          </IconButton>
+        )}
+
+        {/* Right Arrow */}
+        {showRightArrow && (
+          <IconButton
+            onClick={handleScrollRight}
+            sx={{
+              position: "absolute",
+              right: 8,
+              top: "50%",
+              transform: "translateY(-50%)",
+              zIndex: 10,
+              bgcolor: "rgba(255, 255, 255, 0.5)",
+              backdropFilter: "blur(4px)",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+              width: 36,
+              height: 36,
+              color: "rgba(0, 0, 0, 0.5)",
+              "&:hover": {
+                bgcolor: "rgba(130, 112, 255, 0.9)",
+                color: "#fff",
+                boxShadow: "0 4px 12px rgba(130, 112, 255, 0.3)",
+              },
+              transition: "all 0.2s",
+            }}
+          >
+            <ChevronRightIcon fontSize="small" />
+          </IconButton>
+        )}
+
+        <Box
+          ref={boardContainerRef}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          sx={{
+            flexGrow: 1,
+            overflowX: "auto",
+            overflowY: "hidden",
+            p: 1.5,
+            bgcolor: "#fafafa",
+            height: "100%",
+            "&::-webkit-scrollbar": {
+              height: "8px",
             },
-          },
-        }}
-      >
+            "&::-webkit-scrollbar-track": {
+              bgcolor: "transparent",
+              borderRadius: "4px",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              bgcolor: "#d0d0d0",
+              borderRadius: "4px",
+              "&:hover": {
+                bgcolor: "#b0b0b0",
+              },
+            },
+          }}
+        >
         {loadingColumns && !loading ? (
           <Box sx={{ display: "flex", gap: 1.5, height: "100%", flexWrap: "nowrap" }}>
             {[1, 2, 3].map((colIndex) => (
@@ -1391,7 +1609,12 @@ function KanbanPageContent() {
             ))}
           </Box>
         ) : !loadingColumns && !loading ? (
-          <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} collisionDetection={closestCorners}>
+          <DndContext
+            sensors={sensors}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            collisionDetection={closestCorners}
+          >
             <SortableContext items={columns.map((c) => c.column_id)} strategy={horizontalListSortingStrategy}>
               <Box sx={{ display: "flex", gap: 1.5, height: "100%", flexWrap: "nowrap", alignItems: "stretch" }}>
                 {columns.map((column) => (
@@ -1502,6 +1725,7 @@ function KanbanPageContent() {
             </DragOverlay>
           </DndContext>
         ) : null}
+        </Box>
       </Box>
 
       {/* Modals */}
