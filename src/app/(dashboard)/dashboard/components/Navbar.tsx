@@ -203,13 +203,14 @@ export default function Navbar({ onMenuClick, onSidebarToggle, sidebarOpen }: Na
         {/* Right Section - User Menu */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           {/* User Menu */}
-          <Box
+          <IconButton
+            onClick={handleMenuOpen}
+            disableRipple
             sx={{
               display: "flex",
               alignItems: "center",
               gap: 1.5,
               ml: 1,
-              cursor: "pointer",
               px: 1.5,
               py: 1,
               borderRadius: 3,
@@ -218,7 +219,6 @@ export default function Navbar({ onMenuClick, onSidebarToggle, sidebarOpen }: Na
                 bgcolor: alpha("#8270FF", 0.05),
               },
             }}
-            onClick={handleMenuOpen}
           >
             <Box sx={{ display: { xs: "none", sm: "block" }, textAlign: "right" }}>
               <Typography
@@ -262,11 +262,14 @@ export default function Navbar({ onMenuClick, onSidebarToggle, sidebarOpen }: Na
                 border: "2px solid white",
                 boxShadow: `0 4px 12px ${alpha(userTypeConfig.color, 0.4)}`,
                 transition: "all 0.2s ease-in-out",
+                "& img": {
+                  objectFit: "cover",
+                },
               }}
             >
               {!user?.foto_perfil_url && (user?.name ? getInitials(user.name) : "U")}
             </Avatar>
-          </Box>
+          </IconButton>
 
           {/* User Menu Dropdown */}
           <Menu

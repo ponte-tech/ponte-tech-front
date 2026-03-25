@@ -65,3 +65,19 @@ export interface BoardOption {
   id: string;
   name: string;
 }
+
+export interface StatusTimeMetrics {
+  status_name: string;
+  avg_time_hours: number;
+  avg_time_days: number;
+  task_count: number;
+}
+
+export interface AnalystTimeByStatus {
+  analyst_id: string;
+  analyst_name: string;
+  foto_perfil_url?: string;
+  total_tasks: number;
+  avg_total_time_days: number;
+  status_metrics: StatusTimeMetrics[];
+}

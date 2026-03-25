@@ -9,6 +9,7 @@ import type {
   ClientOption,
   AnalystOption,
   BoardOption,
+  AnalystTimeByStatus,
 } from "@/app/types/insights";
 
 const buildQueryString = (filters: InsightsFilters): string => {
@@ -136,5 +137,12 @@ export const insightsService = {
     } catch (error) {
       return [];
     }
+  },
+
+  async getAnalystTimeByStatus(filters: InsightsFilters = {}): Promise<AnalystTimeByStatus[]> {
+    const queryString = buildQueryString(filters);
+    const url = `/api/kanban/insights/analyst-time-by-status?${queryString}`;
+    const response = await api.get(url);
+    return response.data;
   },
 };

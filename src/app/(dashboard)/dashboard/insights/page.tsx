@@ -55,6 +55,7 @@ import type {
   TasksByAnalyst,
   TasksByStatus,
   TimelineData,
+  AnalystTimeByStatus,
 } from "@/app/types/insights";
 import { useAuth } from "@/app/hooks/useAuth";
 
@@ -76,6 +77,7 @@ export default function InsightsPage() {
   const [tasksByAnalyst, setTasksByAnalyst] = useState<TasksByAnalyst[]>([]);
   const [tasksByStatus, setTasksByStatus] = useState<TasksByStatus[]>([]);
   const [timeline, setTimeline] = useState<TimelineData[]>([]);
+  const [analystTimeByStatus, setAnalystTimeByStatus] = useState<AnalystTimeByStatus[]>([]);
 
   // Options para filtros
   const [clients, setClients] = useState<{id: string, name: string}[]>([]);
@@ -127,12 +129,13 @@ export default function InsightsPage() {
         boardId: selectedBoard !== "all" ? selectedBoard : undefined,
       };
 
-      const [insights, byClient, byAnalyst, byStatus, timelineData] = await Promise.all([
+      const [insights, byClient, byAnalyst, byStatus, timelineData, analystTimeData] = await Promise.all([
         insightsService.getInsights(filters),
         insightsService.getTasksByClient(filters),
         insightsService.getTasksByAnalyst(filters),
         insightsService.getTasksByStatus(filters),
         insightsService.getTimeline(filters),
+        insightsService.getAnalystTimeByStatus(filters),
       ]);
 
       // Extrair dados do formato {success: true, data: {...}}
@@ -141,12 +144,14 @@ export default function InsightsPage() {
       const analystData = byAnalyst?.data || byAnalyst;
       const statusData = byStatus?.data || byStatus;
       const timelineDataExtracted = timelineData?.data || timelineData;
+      const analystTimeDataExtracted = analystTimeData?.data || analystTimeData;
 
       setInsightsData(insightsData);
       setTasksByClient(Array.isArray(clientData) ? clientData : []);
       setTasksByAnalyst(Array.isArray(analystData) ? analystData : []);
       setTasksByStatus(Array.isArray(statusData) ? statusData : []);
       setTimeline(Array.isArray(timelineDataExtracted) ? timelineDataExtracted : []);
+      setAnalystTimeByStatus(Array.isArray(analystTimeDataExtracted) ? analystTimeDataExtracted : []);
     } catch (err: any) {
       setError(err.message || "Erro ao carregar insights");
       setTasksByClient([]);
@@ -877,6 +882,280 @@ export default function InsightsPage() {
                     </BarChart>
                   </ResponsiveContainer>
                 </Box>
+            </Paper>
+
+            {/* Tempo Médio por Status de Cada Analista */}
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                borderRadius: "16px",
+                border: "1px solid",
+                borderColor: "divider",
+                mb: 4,
+              }}
+            >
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{ fontSize: "1.25rem", color: "text.primary", fontWeight: 600, mb: 3 }}
+              >
+                ⏱️ Tempo Médio por Status - Performance dos Analistas
+              </Typography>
+
+              {analystTimeByStatus.length === 0 ? (
+                <Box sx={{ textAlign: "center", py: 4 }}>
+                  <Typography color="text.secondary">Nenhum dado disponível</Typography>
+                </Box>
+              ) : (
+                <Box>
+                  {/* Gráfico de Barras Horizontais Empilhadas */}
+                  <Box sx={{ width: "100%", height: 400, mb: 4 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={analystTimeByStatus}
+                        layout="vertical"
+                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
+                        <XAxis type="number" tick={{ fill: "#475569", fontSize: 12 }} label={{ value: 'Dias', position: 'insideBottom', offset: -5 }} />
+                        <YAxis
+                          type="category"
+                          dataKey="analyst_name"
+                          width={150}
+                          tick={({ x, y, payload }) => {
+                            const analyst = analystTimeByStatus.find(a => a.analyst_name === payload.value);
+                            return (
+                              <g transform={`translate(${x},${y})`}>
+                                <foreignObject x={-140} y={-20} width={130} height={40}>
+                                  <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    height: '100%'
+                                  }}>
+                                    <div style={{
+                                      width: '32px',
+                                      height: '32px',
+                                      borderRadius: '50%',
+                                      overflow: 'hidden',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      backgroundColor: analyst?.foto_perfil_url ? 'transparent' : '#8270FF',
+                                      color: 'white',
+                                      fontSize: '0.75rem',
+                                      fontWeight: 600,
+                                      flexShrink: 0
+                                    }}>
+                                      {analyst?.foto_perfil_url ? (
+                                        <img
+                                          src={analyst.foto_perfil_url}
+                                          alt={payload.value}
+                                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                        />
+                                      ) : (
+                                        <span>{payload.value?.charAt(0)?.toUpperCase() || "?"}</span>
+                                      )}
+                                    </div>
+                                    <div style={{
+                                      fontSize: '11px',
+                                      fontWeight: 500,
+                                      color: '#475569',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap'
+                                    }}>
+                                      {payload.value}
+                                    </div>
+                                  </div>
+                                </foreignObject>
+                              </g>
+                            );
+                          }}
+                        />
+                        <Tooltip
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              const analyst = payload[0].payload as any;
+                              return (
+                                <Box
+                                  sx={{
+                                    bgcolor: "white",
+                                    borderRadius: "12px",
+                                    border: "1px solid #e2e8f0",
+                                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                                    p: 2,
+                                  }}
+                                >
+                                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1.5, pb: 1.5, borderBottom: "1px solid #e2e8f0" }}>
+                                    <Avatar
+                                      src={analyst.foto_perfil_url || ""}
+                                      alt={analyst.analyst_name}
+                                      sx={{
+                                        width: 36,
+                                        height: 36,
+                                        bgcolor: analyst.foto_perfil_url ? "transparent" : "#8270FF",
+                                        color: "white",
+                                        fontSize: "0.875rem",
+                                        fontWeight: 600,
+                                      }}
+                                    >
+                                      {!analyst.foto_perfil_url && analyst.analyst_name.charAt(0).toUpperCase()}
+                                    </Avatar>
+                                    <Box>
+                                      <Typography variant="body2" fontWeight={600}>
+                                        {analyst.analyst_name}
+                                      </Typography>
+                                      <Typography variant="caption" color="text.secondary">
+                                        {analyst.total_tasks} tasks • {analyst.avg_total_time_days.toFixed(1)} dias total
+                                      </Typography>
+                                    </Box>
+                                  </Box>
+                                  <Stack spacing={1}>
+                                    {analyst.status_metrics.map((metric: any, idx: number) => (
+                                      <Box key={idx} sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
+                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                          <Box sx={{ width: 10, height: 10, borderRadius: "2px", bgcolor: COLORS[idx % COLORS.length] }} />
+                                          <Typography variant="body2" fontSize="0.8rem">
+                                            {metric.status_name}
+                                          </Typography>
+                                        </Box>
+                                        <Typography variant="body2" fontSize="0.8rem" fontWeight={600}>
+                                          {metric.avg_time_days.toFixed(1)}d
+                                        </Typography>
+                                      </Box>
+                                    ))}
+                                  </Stack>
+                                </Box>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                        {/* Barras empilhadas para cada status */}
+                        {analystTimeByStatus.length > 0 &&
+                          analystTimeByStatus[0].status_metrics.map((_, statusIdx) => {
+                            const statusName = analystTimeByStatus[0].status_metrics[statusIdx]?.status_name;
+                            return (
+                              <Bar
+                                key={statusIdx}
+                                dataKey={(data: any) => {
+                                  const metric = data.status_metrics.find((m: any) => m.status_name === statusName);
+                                  return metric ? metric.avg_time_days : 0;
+                                }}
+                                stackId="a"
+                                fill={COLORS[statusIdx % COLORS.length]}
+                                name={statusName}
+                                radius={statusIdx === 0 ? [8, 0, 0, 8] : statusIdx === analystTimeByStatus[0].status_metrics.length - 1 ? [0, 8, 8, 0] : [0, 0, 0, 0]}
+                              />
+                            );
+                          })
+                        }
+                        <Legend
+                          wrapperStyle={{ paddingTop: "20px" }}
+                          formatter={(value) => <span style={{ fontSize: "12px", color: "#475569" }}>{value}</span>}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </Box>
+
+                  {/* Cards de Detalhes */}
+                  <Grid container spacing={2}>
+                    {analystTimeByStatus.map((analyst) => (
+                      <Grid item xs={12} md={6} lg={4} key={analyst.analyst_id}>
+                        <Card
+                          elevation={0}
+                          sx={{
+                            border: "1px solid",
+                            borderColor: "divider",
+                            borderRadius: "12px",
+                            transition: "all 0.3s",
+                            "&:hover": {
+                              borderColor: "#8270FF",
+                              boxShadow: "0 4px 12px rgba(130, 112, 255, 0.15)",
+                            },
+                          }}
+                        >
+                          <CardContent>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
+                              <Avatar
+                                src={analyst.foto_perfil_url || ""}
+                                alt={analyst.analyst_name}
+                                sx={{
+                                  width: 40,
+                                  height: 40,
+                                  bgcolor: analyst.foto_perfil_url ? "transparent" : "#8270FF",
+                                  color: "white",
+                                  fontSize: "0.875rem",
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {!analyst.foto_perfil_url && analyst.analyst_name.charAt(0).toUpperCase()}
+                              </Avatar>
+                              <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Typography variant="subtitle2" fontWeight={600} noWrap>
+                                  {analyst.analyst_name}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {analyst.total_tasks} tasks
+                                </Typography>
+                              </Box>
+                            </Box>
+
+                            <Box sx={{
+                              bgcolor: alpha("#8270FF", 0.08),
+                              borderRadius: "8px",
+                              p: 1.5,
+                              mb: 2,
+                              textAlign: "center"
+                            }}>
+                              <Typography variant="h5" fontWeight={700} color="#8270FF">
+                                {analyst.avg_total_time_days.toFixed(1)}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                dias em média
+                              </Typography>
+                            </Box>
+
+                            <Stack spacing={1}>
+                              {analyst.status_metrics.slice(0, 3).map((metric, idx) => (
+                                <Box key={idx}>
+                                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0.5 }}>
+                                    <Typography variant="caption" fontSize="0.75rem">
+                                      {metric.status_name}
+                                    </Typography>
+                                    <Typography variant="caption" fontSize="0.75rem" fontWeight={600}>
+                                      {metric.avg_time_days.toFixed(1)}d
+                                    </Typography>
+                                  </Box>
+                                  <Box
+                                    sx={{
+                                      height: 4,
+                                      borderRadius: "2px",
+                                      bgcolor: alpha(COLORS[idx % COLORS.length], 0.2),
+                                      overflow: "hidden",
+                                    }}
+                                  >
+                                    <Box
+                                      sx={{
+                                        height: "100%",
+                                        width: `${(metric.avg_time_days / analyst.avg_total_time_days) * 100}%`,
+                                        bgcolor: COLORS[idx % COLORS.length],
+                                        borderRadius: "2px",
+                                      }}
+                                    />
+                                  </Box>
+                                </Box>
+                              ))}
+                            </Stack>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Box>
+              )}
             </Paper>
 
             {/* Gráfico - Distribuição por Status */}
