@@ -40,6 +40,12 @@ import {
   Delete as DeleteIcon,
   Download as DownloadIcon,
   Share as ShareIcon,
+  CheckBox as CheckBoxIcon,
+  CheckBoxOutlineBlank as CheckBoxOutlineBlankIcon,
+  Edit as EditIcon,
+  CheckCircle as CheckCircleIcon,
+  RadioButtonUnchecked as RadioButtonUncheckedIcon,
+  Close as CloseIcon,
 } from "@mui/icons-material";
 import { Card } from "@/app/types/kanban";
 import { Cliente } from "@/app/types/api";
@@ -92,6 +98,17 @@ export default function CardModal({
 
   // Share snackbar state
   const [shareSnackbarOpen, setShareSnackbarOpen] = useState(false);
+
+  // Subtask state
+  const [subtasks, setSubtasks] = useState<any[]>([]);
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
+  const [newSubtaskDescription, setNewSubtaskDescription] = useState("");
+  const [editingSubtask, setEditingSubtask] = useState<any | null>(null);
+  const [editSubtaskTitle, setEditSubtaskTitle] = useState("");
+  const [editSubtaskDescription, setEditSubtaskDescription] = useState("");
+
+  // Combined history (server + localStorage)
+  const [combinedHistory, setCombinedHistory] = useState<any[]>([]);
 
   useEffect(() => {
     if (card) {
@@ -183,6 +200,67 @@ export default function CardModal({
     loadAttachments();
   }, [card?.card_id]);
 
+  // Load subtasks when card changes
+  useEffect(() => {
+    const loadSubtasks = async () => {
+      if (card?.card_id) {
+        try {
+          const response = await kanbanService.listSubtasks(card.card_id);
+          setSubtasks(response.subtasks || []);
+        } catch (error: any) {
+          // If API is not implemented (404), try localStorage first, then card's subtasks
+          if (error?.response?.status === 404) {
+            const storageKey = `subtasks_${card.card_id}`;
+            const storedSubtasks = localStorage.getItem(storageKey);
+
+            if (storedSubtasks) {
+              try {
+                setSubtasks(JSON.parse(storedSubtasks));
+              } catch {
+                setSubtasks(card?.subtasks || []);
+              }
+            } else {
+              setSubtasks(card?.subtasks || []);
+            }
+          } else {
+            console.error("Error loading subtasks:", error);
+            setSubtasks(card?.subtasks || []);
+          }
+        }
+      } else {
+        setSubtasks([]);
+      }
+    };
+    loadSubtasks();
+  }, [card?.card_id, card?.subtasks]);
+
+  // Load and combine history (server + localStorage)
+  useEffect(() => {
+    if (card?.card_id) {
+      const serverHistory = card.history || [];
+      const storageKey = `history_${card.card_id}`;
+      const storedHistory = localStorage.getItem(storageKey);
+
+      let localHistory: any[] = [];
+      if (storedHistory) {
+        try {
+          localHistory = JSON.parse(storedHistory);
+        } catch {
+          localHistory = [];
+        }
+      }
+
+      // Combine and sort by date (newest first)
+      const combined = [...serverHistory, ...localHistory].sort((a, b) => {
+        return new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime();
+      });
+
+      setCombinedHistory(combined);
+    } else {
+      setCombinedHistory([]);
+    }
+  }, [card?.card_id, card?.history]);
+
   // Handle file upload
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -269,6 +347,29 @@ export default function CardModal({
     return colab?.nome || colab?.nome_completo || "Usuário desconhecido";
   };
 
+  // Helper to add history entry locally
+  const addLocalHistoryEntry = (fieldChanged: string, oldValue: string, newValue: string) => {
+    if (!card) return;
+
+    const historyEntry = {
+      history_id: `HISTORY#${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      changed_at: new Date().toISOString(),
+      changed_by: "current-user",
+      field_changed: fieldChanged,
+      old_value: oldValue,
+      new_value: newValue,
+    };
+
+    const storageKey = `history_${card.card_id}`;
+    const existingHistory = localStorage.getItem(storageKey);
+    const history = existingHistory ? JSON.parse(existingHistory) : [];
+    history.push(historyEntry);
+    localStorage.setItem(storageKey, JSON.stringify(history));
+
+    // Update combined history in state
+    setCombinedHistory(prev => [historyEntry, ...prev]);
+  };
+
   // Helper to format history values
   const formatHistoryValue = (fieldChanged: string, value: string) => {
     if (!value) return "-";
@@ -280,6 +381,167 @@ export default function CardModal({
     }
 
     return value;
+  };
+
+  // Subtask handlers
+  const handleCreateSubtask = async () => {
+    if (!card || !newSubtaskTitle.trim()) return;
+
+    try {
+      const newSubtask = await kanbanService.createSubtask({
+        card_id: card.card_id,
+        title: newSubtaskTitle,
+        description: newSubtaskDescription || undefined,
+      });
+
+      setSubtasks([...subtasks, newSubtask]);
+      setNewSubtaskTitle("");
+      setNewSubtaskDescription("");
+    } catch (error: any) {
+      // Fallback: store locally if API not implemented
+      if (error?.response?.status === 404) {
+        const localSubtask = {
+          subtask_id: `SUBTASK#${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          card_id: card.card_id,
+          title: newSubtaskTitle,
+          description: newSubtaskDescription || undefined,
+          completed: false,
+          created_by: "current-user",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+
+        const updatedSubtasks = [...subtasks, localSubtask];
+        setSubtasks(updatedSubtasks);
+
+        // Store in localStorage
+        const storageKey = `subtasks_${card.card_id}`;
+        localStorage.setItem(storageKey, JSON.stringify(updatedSubtasks));
+
+        // Add history entry
+        addLocalHistoryEntry("Subtarefa criada", "", `"${newSubtaskTitle}"`);
+
+        setNewSubtaskTitle("");
+        setNewSubtaskDescription("");
+      } else {
+        console.error("Error creating subtask:", error);
+        alert("Erro ao criar subtarefa");
+      }
+    }
+  };
+
+  const handleToggleSubtask = async (subtask: any) => {
+    if (!card) return;
+
+    try {
+      const updated = await kanbanService.updateSubtask(card.card_id, subtask.subtask_id, {
+        completed: !subtask.completed,
+      });
+
+      setSubtasks(subtasks.map((st) => (st.subtask_id === updated.subtask_id ? updated : st)));
+    } catch (error: any) {
+      // Fallback: update locally
+      if (error?.response?.status === 404) {
+        const updatedSubtasks = subtasks.map((st) =>
+          st.subtask_id === subtask.subtask_id
+            ? { ...st, completed: !st.completed, updated_at: new Date().toISOString() }
+            : st
+        );
+        setSubtasks(updatedSubtasks);
+
+        // Store in localStorage
+        const storageKey = `subtasks_${card.card_id}`;
+        localStorage.setItem(storageKey, JSON.stringify(updatedSubtasks));
+
+        // Add history entry
+        const statusChange = subtask.completed ? "não concluída" : "concluída";
+        addLocalHistoryEntry("Status da subtarefa", `"${subtask.title}" - ${subtask.completed ? "concluída" : "não concluída"}`, `"${subtask.title}" - ${statusChange}`);
+      } else {
+        console.error("Error toggling subtask:", error);
+        alert("Erro ao atualizar subtarefa");
+      }
+    }
+  };
+
+  const handleStartEditSubtask = (subtask: any) => {
+    setEditingSubtask(subtask);
+    setEditSubtaskTitle(subtask.title);
+    setEditSubtaskDescription(subtask.description || "");
+  };
+
+  const handleSaveEditSubtask = async () => {
+    if (!card || !editingSubtask || !editSubtaskTitle.trim()) return;
+
+    try {
+      const updated = await kanbanService.updateSubtask(card.card_id, editingSubtask.subtask_id, {
+        title: editSubtaskTitle,
+        description: editSubtaskDescription || undefined,
+      });
+
+      setSubtasks(subtasks.map((st) => (st.subtask_id === updated.subtask_id ? updated : st)));
+      setEditingSubtask(null);
+      setEditSubtaskTitle("");
+      setEditSubtaskDescription("");
+    } catch (error: any) {
+      // Fallback: update locally
+      if (error?.response?.status === 404) {
+        const updatedSubtasks = subtasks.map((st) =>
+          st.subtask_id === editingSubtask.subtask_id
+            ? { ...st, title: editSubtaskTitle, description: editSubtaskDescription, updated_at: new Date().toISOString() }
+            : st
+        );
+        setSubtasks(updatedSubtasks);
+
+        // Store in localStorage
+        const storageKey = `subtasks_${card.card_id}`;
+        localStorage.setItem(storageKey, JSON.stringify(updatedSubtasks));
+
+        // Add history entry
+        addLocalHistoryEntry("Subtarefa editada", `"${editingSubtask.title}"`, `"${editSubtaskTitle}"`);
+
+        setEditingSubtask(null);
+        setEditSubtaskTitle("");
+        setEditSubtaskDescription("");
+      } else {
+        console.error("Error updating subtask:", error);
+        alert("Erro ao atualizar subtarefa");
+      }
+    }
+  };
+
+  const handleCancelEditSubtask = () => {
+    setEditingSubtask(null);
+    setEditSubtaskTitle("");
+    setEditSubtaskDescription("");
+  };
+
+  const handleDeleteSubtask = async (subtask: any) => {
+    if (!card) return;
+
+    try {
+      await kanbanService.deleteSubtask(card.card_id, subtask.subtask_id);
+      setSubtasks(subtasks.filter((st) => st.subtask_id !== subtask.subtask_id));
+    } catch (error: any) {
+      // Fallback: delete locally
+      if (error?.response?.status === 404) {
+        const updatedSubtasks = subtasks.filter((st) => st.subtask_id !== subtask.subtask_id);
+        setSubtasks(updatedSubtasks);
+
+        // Store in localStorage
+        const storageKey = `subtasks_${card.card_id}`;
+        if (updatedSubtasks.length > 0) {
+          localStorage.setItem(storageKey, JSON.stringify(updatedSubtasks));
+        } else {
+          localStorage.removeItem(storageKey);
+        }
+
+        // Add history entry
+        addLocalHistoryEntry("Subtarefa excluída", `"${subtask.title}"`, "");
+      } else {
+        console.error("Error deleting subtask:", error);
+        alert("Erro ao excluir subtarefa");
+      }
+    }
   };
 
   // Handle share card - copy URL to clipboard
@@ -371,125 +633,216 @@ export default function CardModal({
                   }
                   required
                   size="small"
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 1.5,
-                      backgroundColor: "#fff",
-                      transition: "all 0.2s ease-in-out",
-                      "& fieldset": {
-                        borderColor: "#e0e0e0",
-                        borderWidth: "1px",
-                      },
-                      "&:hover fieldset": {
-                        borderColor: "#8270FF",
-                      },
-                      "&.Mui-focused": {
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 1.5,
+                        backgroundColor: "#fff",
+                        transition: "all 0.2s ease-in-out",
                         "& fieldset": {
+                          borderColor: "#e0e0e0",
+                          borderWidth: "1px",
+                        },
+                        "&:hover fieldset": {
                           borderColor: "#8270FF",
-                          borderWidth: "1.5px",
+                        },
+                        "&.Mui-focused": {
+                          "& fieldset": {
+                            borderColor: "#8270FF",
+                            borderWidth: "1.5px",
+                          },
                         },
                       },
-                    },
-                    "& .MuiInputLabel-root": {
-                      fontSize: "0.875rem",
-                      color: "#666",
-                      "&.Mui-focused": {
-                        color: "#8270FF",
+                      "& .MuiInputLabel-root": {
+                        fontSize: "0.875rem",
+                        color: "#666",
+                        "&.Mui-focused": {
+                          color: "#8270FF",
+                        },
                       },
-                    },
-                  }}
-                />
+                    }}
+                  />
 
-                <TextField
-                  label="Descrição"
-                  fullWidth
-                  multiline
-                  rows={4}
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 1.5,
-                      backgroundColor: "#fff",
-                      transition: "all 0.2s ease-in-out",
-                      "& fieldset": {
-                        borderColor: "#e0e0e0",
-                        borderWidth: "1px",
-                      },
-                      "&:hover fieldset": {
-                        borderColor: "#8270FF",
-                      },
-                      "&.Mui-focused": {
-                        "& fieldset": {
-                          borderColor: "#8270FF",
-                          borderWidth: "1.5px",
-                        },
-                      },
-                    },
-                    "& .MuiInputLabel-root": {
-                      fontSize: "0.875rem",
-                      color: "#666",
-                      "&.Mui-focused": {
-                        color: "#8270FF",
-                      },
-                    },
-                  }}
-                />
-
-                <FormControl
-                  fullWidth
-                  size="small"
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 1.5,
-                      backgroundColor: "#fff",
-                      transition: "all 0.2s ease-in-out",
-                      "& fieldset": {
-                        borderColor: "#e0e0e0",
-                        borderWidth: "1px",
-                      },
-                      "&:hover fieldset": {
-                        borderColor: "#8270FF",
-                      },
-                      "&.Mui-focused": {
-                        "& fieldset": {
-                          borderColor: "#8270FF",
-                          borderWidth: "1.5px",
-                        },
-                      },
-                    },
-                    "& .MuiInputLabel-root": {
-                      fontSize: "0.875rem",
-                      color: "#666",
-                      "&.Mui-focused": {
-                        color: "#8270FF",
-                      },
-                    },
-                  }}
-                >
-                  <InputLabel>Cliente</InputLabel>
-                  <Select
-                    value={formData.client_id}
-                    label="Cliente"
+                  <TextField
+                    label="Descrição"
+                    fullWidth
+                    multiline
+                    rows={3}
+                    value={formData.description}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        client_id: e.target.value,
-                      })
+                      setFormData({ ...formData, description: e.target.value })
                     }
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 1.5,
+                      backgroundColor: "#fff",
+                      transition: "all 0.2s ease-in-out",
+                      "& fieldset": {
+                        borderColor: "#e0e0e0",
+                        borderWidth: "1px",
+                      },
+                      "&:hover fieldset": {
+                        borderColor: "#8270FF",
+                      },
+                      "&.Mui-focused": {
+                        "& fieldset": {
+                          borderColor: "#8270FF",
+                          borderWidth: "1.5px",
+                        },
+                      },
+                    },
+                    "& .MuiInputLabel-root": {
+                      fontSize: "0.875rem",
+                      color: "#666",
+                      "&.Mui-focused": {
+                        color: "#8270FF",
+                      },
+                    },
+                  }}
+                />
+
+                {/* Cliente, Identificador e Data em linha */}
+                <Box sx={{ display: "flex", gap: 2 }}>
+                  <FormControl
+                    sx={{
+                      flex: 1,
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 1.5,
+                        backgroundColor: "#fff",
+                        transition: "all 0.2s ease-in-out",
+                        "& fieldset": {
+                          borderColor: "#e0e0e0",
+                          borderWidth: "1px",
+                        },
+                        "&:hover fieldset": {
+                          borderColor: "#8270FF",
+                        },
+                        "&.Mui-focused": {
+                          "& fieldset": {
+                            borderColor: "#8270FF",
+                            borderWidth: "1.5px",
+                          },
+                        },
+                      },
+                      "& .MuiInputLabel-root": {
+                        fontSize: "0.875rem",
+                        color: "#666",
+                        "&.Mui-focused": {
+                          color: "#8270FF",
+                        },
+                      },
+                    }}
+                    size="small"
                   >
-                    <MenuItem value="">
-                      <em>Nenhum</em>
-                    </MenuItem>
-                    {clientes.map((cliente) => (
-                      <MenuItem key={cliente.cliente_id} value={cliente.cliente_id}>
-                        {cliente.nome_fantasia}
+                    <InputLabel>Cliente</InputLabel>
+                    <Select
+                      value={formData.client_id}
+                      label="Cliente"
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          client_id: e.target.value,
+                        })
+                      }
+                    >
+                      <MenuItem value="">
+                        <em>Nenhum</em>
                       </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                      {clientes.map((cliente) => (
+                        <MenuItem key={cliente.cliente_id} value={cliente.cliente_id}>
+                          {cliente.nome_fantasia}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  <TextField
+                    label="ID Demanda Cliente"
+                    sx={{
+                      flex: 1,
+                      "& input::placeholder": {
+                        fontSize: "0.75rem",
+                        opacity: 0.6,
+                      },
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 1.5,
+                        backgroundColor: "#fff",
+                        transition: "all 0.2s ease-in-out",
+                        "& fieldset": {
+                          borderColor: "#e0e0e0",
+                          borderWidth: "1px",
+                        },
+                        "&:hover fieldset": {
+                          borderColor: "#8270FF",
+                        },
+                        "&.Mui-focused": {
+                          "& fieldset": {
+                            borderColor: "#8270FF",
+                            borderWidth: "1.5px",
+                          },
+                        },
+                      },
+                      "& .MuiInputLabel-root": {
+                        fontSize: "0.875rem",
+                        color: "#666",
+                        "&.Mui-focused": {
+                          color: "#8270FF",
+                        },
+                      },
+                    }}
+                    size="small"
+                    value={formData.identificador_demanda_cliente}
+                    onChange={(e) =>
+                      setFormData({ ...formData, identificador_demanda_cliente: e.target.value })
+                    }
+                    placeholder="Ex: TICKET-1234"
+                  />
+
+                  <TextField
+                    label="Data de Entrega"
+                    type="date"
+                    sx={{
+                      width: 200,
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 1.5,
+                        backgroundColor: alpha("#8270FF", 0.03),
+                        transition: "all 0.2s ease-in-out",
+                        "& fieldset": {
+                          borderColor: "#8270FF",
+                          borderWidth: "2px",
+                        },
+                        "&:hover fieldset": {
+                          borderColor: "#8270FF",
+                          borderWidth: "2.5px",
+                        },
+                        "&.Mui-focused": {
+                          backgroundColor: alpha("#8270FF", 0.05),
+                          "& fieldset": {
+                            borderColor: "#8270FF",
+                            borderWidth: "2.5px",
+                          },
+                        },
+                      },
+                      "& .MuiInputLabel-root": {
+                        fontSize: "0.875rem",
+                        color: "#8270FF",
+                        fontWeight: 600,
+                        "&.Mui-focused": {
+                          color: "#8270FF",
+                        },
+                      },
+                      "& input": {
+                        color: "#8270FF",
+                        fontWeight: 500,
+                      },
+                    }}
+                    size="small"
+                    InputLabelProps={{ shrink: true }}
+                    value={formData.delivery_date}
+                    onChange={(e) =>
+                      setFormData({ ...formData, delivery_date: e.target.value })
+                    }
+                  />
+                </Box>
 
                 <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}>
                   <Box
@@ -610,86 +963,175 @@ export default function CardModal({
                   />
                 </Box>
 
-                <TextField
-                  label="Identificador da Demanda"
-                  fullWidth
-                  size="small"
-                  value={formData.identificador_demanda_cliente}
-                  onChange={(e) =>
-                    setFormData({ ...formData, identificador_demanda_cliente: e.target.value })
-                  }
-                  placeholder="Ex: TICKET-1234"
-                  sx={{
-                    "& input::placeholder": {
-                      fontSize: "0.75rem",
-                      opacity: 0.6,
-                    },
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 1.5,
-                      backgroundColor: "#fff",
-                      transition: "all 0.2s ease-in-out",
-                      "& fieldset": {
-                        borderColor: "#e0e0e0",
-                        borderWidth: "1px",
-                      },
-                      "&:hover fieldset": {
-                        borderColor: "#8270FF",
-                      },
-                      "&.Mui-focused": {
-                        "& fieldset": {
-                          borderColor: "#8270FF",
-                          borderWidth: "1.5px",
-                        },
-                      },
-                    },
-                    "& .MuiInputLabel-root": {
-                      fontSize: "0.875rem",
-                      color: "#666",
-                      "&.Mui-focused": {
-                        color: "#8270FF",
-                      },
-                    },
-                  }}
-                />
+                {/* Subtasks Section - Compact */}
+                {card && (
+                  <Box sx={{ mt: 1 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
+                      <CheckBoxIcon sx={{ fontSize: "1.1rem", color: "#8270FF" }} />
+                      <Typography variant="body2" sx={{ fontWeight: 600, color: "#333" }}>
+                        Subtarefas
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: "#999" }}>
+                        ({subtasks.filter(st => st.completed).length}/{subtasks.length})
+                      </Typography>
+                    </Box>
 
-                <TextField
-                  label="Data de Entrega"
-                  type="date"
-                  fullWidth
-                  size="small"
-                  InputLabelProps={{ shrink: true }}
-                  value={formData.delivery_date}
-                  onChange={(e) =>
-                    setFormData({ ...formData, delivery_date: e.target.value })
-                  }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 1.5,
-                      backgroundColor: "#fff",
-                      transition: "all 0.2s ease-in-out",
-                      "& fieldset": {
-                        borderColor: "#e0e0e0",
-                        borderWidth: "1px",
-                      },
-                      "&:hover fieldset": {
-                        borderColor: "#8270FF",
-                      },
-                      "&.Mui-focused": {
-                        "& fieldset": {
-                          borderColor: "#8270FF",
-                          borderWidth: "1.5px",
-                        },
-                      },
-                    },
-                    "& .MuiInputLabel-root": {
-                      fontSize: "0.875rem",
-                      color: "#666",
-                      "&.Mui-focused": {
-                        color: "#8270FF",
-                      },
-                    },
-                  }}
-                />
+                    {/* Add Subtask - Compact */}
+                    <Box sx={{ display: "flex", gap: 1, mb: 1.5 }}>
+                      <TextField
+                        placeholder="+ Adicionar subtarefa"
+                        fullWidth
+                        size="small"
+                        value={newSubtaskTitle}
+                        onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === "Enter" && newSubtaskTitle.trim()) {
+                            handleCreateSubtask();
+                          }
+                        }}
+                        sx={{
+                          "& .MuiOutlinedInput-root": {
+                            borderRadius: 1.5,
+                            fontSize: "0.875rem",
+                            "& fieldset": { borderColor: "#e0e0e0" },
+                            "&:hover fieldset": { borderColor: "#8270FF" },
+                            "&.Mui-focused fieldset": { borderColor: "#8270FF" },
+                          },
+                        }}
+                      />
+                      {newSubtaskTitle.trim() && (
+                        <IconButton
+                          size="small"
+                          onClick={handleCreateSubtask}
+                          sx={{
+                            bgcolor: "#8270FF",
+                            color: "white",
+                            "&:hover": { bgcolor: alpha("#8270FF", 0.8) },
+                            width: 32,
+                            height: 32,
+                          }}
+                        >
+                          <AddIcon fontSize="small" />
+                        </IconButton>
+                      )}
+                    </Box>
+
+                    {/* Subtasks List - Compact */}
+                    {subtasks.length > 0 && (
+                      <Box sx={{ maxHeight: 400, overflowY: "auto" }}>
+                        {subtasks.map((subtask) => (
+                          <Box
+                            key={subtask.subtask_id}
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                              py: 0.75,
+                              px: 1,
+                              borderRadius: 1,
+                              mb: 0.5,
+                              bgcolor: subtask.completed ? alpha("#4caf50", 0.03) : "transparent",
+                              "&:hover": {
+                                bgcolor: subtask.completed ? alpha("#4caf50", 0.08) : alpha("#f5f5f5", 0.8),
+                                "& .subtask-actions": {
+                                  opacity: 1,
+                                },
+                              },
+                            }}
+                          >
+                            {editingSubtask?.subtask_id === subtask.subtask_id ? (
+                              <>
+                                <TextField
+                                  fullWidth
+                                  size="small"
+                                  value={editSubtaskTitle}
+                                  onChange={(e) => setEditSubtaskTitle(e.target.value)}
+                                  onKeyPress={(e) => {
+                                    if (e.key === "Enter") {
+                                      handleSaveEditSubtask();
+                                    }
+                                  }}
+                                  autoFocus
+                                  sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                      fontSize: "0.8125rem",
+                                      "& input": { py: 0.5 },
+                                    },
+                                  }}
+                                />
+                                <IconButton
+                                  size="small"
+                                  onClick={handleSaveEditSubtask}
+                                  sx={{ p: 0.5 }}
+                                >
+                                  <CheckCircleIcon fontSize="small" sx={{ color: "#4caf50" }} />
+                                </IconButton>
+                                <IconButton
+                                  size="small"
+                                  onClick={handleCancelEditSubtask}
+                                  sx={{ p: 0.5 }}
+                                >
+                                  <CloseIcon fontSize="small" sx={{ color: "#999" }} />
+                                </IconButton>
+                              </>
+                            ) : (
+                              <>
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handleToggleSubtask(subtask)}
+                                  sx={{ p: 0.5, color: subtask.completed ? "#4caf50" : "#999" }}
+                                >
+                                  {subtask.completed ? (
+                                    <CheckBoxIcon fontSize="small" />
+                                  ) : (
+                                    <CheckBoxOutlineBlankIcon fontSize="small" />
+                                  )}
+                                </IconButton>
+                                <Typography
+                                  variant="body2"
+                                  sx={{
+                                    flex: 1,
+                                    fontSize: "0.8125rem",
+                                    color: subtask.completed ? "#999" : "#333",
+                                    textDecoration: subtask.completed ? "line-through" : "none",
+                                    cursor: "pointer",
+                                  }}
+                                  onClick={() => handleToggleSubtask(subtask)}
+                                >
+                                  {subtask.title}
+                                </Typography>
+                                <Box
+                                  className="subtask-actions"
+                                  sx={{
+                                    display: "flex",
+                                    gap: 0.5,
+                                    opacity: 0,
+                                    transition: "opacity 0.2s",
+                                  }}
+                                >
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => handleStartEditSubtask(subtask)}
+                                    sx={{ p: 0.5, color: "#8270FF" }}
+                                  >
+                                    <EditIcon fontSize="small" />
+                                  </IconButton>
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => handleDeleteSubtask(subtask)}
+                                    sx={{ p: 0.5, color: "#d32f2f" }}
+                                  >
+                                    <DeleteIcon fontSize="small" />
+                                  </IconButton>
+                                </Box>
+                              </>
+                            )}
+                          </Box>
+                        ))}
+                      </Box>
+                    )}
+                  </Box>
+                )}
               </Box>
             )}
 
@@ -952,9 +1394,9 @@ export default function CardModal({
             {/* Histórico Tab */}
             {activeTab === 3 && card && (
               <Box>
-                {card.history && card.history.length > 0 ? (
+                {combinedHistory && combinedHistory.length > 0 ? (
                   <List sx={{ maxHeight: 500, overflow: "auto" }}>
-                    {[...card.history].reverse().map((hist) => (
+                    {combinedHistory.map((hist) => (
                       <ListItem
                         key={hist.history_id}
                         sx={{
@@ -1172,6 +1614,21 @@ export default function CardModal({
                 {formData.delivery_date
                   ? format(new Date(formData.delivery_date), "dd/MM/yyyy", { locale: ptBR })
                   : "-"}
+              </Typography>
+            </Box>
+          )}
+
+          {/* Created By */}
+          {card?.created_by && (
+            <Box sx={{ mb: 3 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                <PersonIcon sx={{ fontSize: "1rem", color: "#666" }} />
+                <Typography variant="caption" sx={{ color: "#666", fontWeight: 600, fontSize: "0.75rem" }}>
+                  Criado por
+                </Typography>
+              </Box>
+              <Typography variant="body2" sx={{ color: "#333", fontSize: "0.85rem" }}>
+                {getColaboradorNameById(card.created_by)}
               </Typography>
             </Box>
           )}

@@ -265,14 +265,14 @@ export default function KanbanColumn({
             width: "8px",
           },
           "&::-webkit-scrollbar-track": {
-            bgcolor: "#f0f0f0",
+            bgcolor: "transparent",
             borderRadius: "4px",
           },
           "&::-webkit-scrollbar-thumb": {
-            bgcolor: "#8270FF",
+            bgcolor: "#d0d0d0",
             borderRadius: "4px",
             "&:hover": {
-              bgcolor: "#6a5ce0",
+              bgcolor: "#b0b0b0",
             },
           },
         }}

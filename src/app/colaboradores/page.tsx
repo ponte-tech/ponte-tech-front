@@ -18,6 +18,7 @@ import {
   TableRow,
   TablePagination,
   Snackbar,
+  Avatar,
 } from "@mui/material";
 import { Add as AddIcon } from "@mui/icons-material";
 import { useState, useEffect } from "react";
@@ -287,9 +288,25 @@ export default function ColaboradoresPage() {
                     }}
                   >
                     <TableCell>
-                      <Typography variant="body2" fontWeight={500}>
-                        {colaborador.nome_completo}
-                      </Typography>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                        <Avatar
+                          src={colaborador.foto_perfil_url || ""}
+                          alt={colaborador.nome_completo}
+                          sx={{
+                            width: 40,
+                            height: 40,
+                            bgcolor: colaborador.foto_perfil_url ? "transparent" : "#8270FF",
+                            color: "white",
+                            fontSize: "0.875rem",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {!colaborador.foto_perfil_url && colaborador.nome_completo.charAt(0).toUpperCase()}
+                        </Avatar>
+                        <Typography variant="body2" fontWeight={500}>
+                          {colaborador.nome_completo}
+                        </Typography>
+                      </Box>
                     </TableCell>
                     <TableCell>
                       {colaborador.clientes && colaborador.clientes.length > 0 ? (

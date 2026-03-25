@@ -3,6 +3,7 @@ import {
   Board,
   Column,
   Card,
+  Subtask,
   CreateBoardRequest,
   UpdateBoardRequest,
   CreateColumnRequest,
@@ -11,12 +12,34 @@ import {
   UpdateCardRequest,
   MoveCardRequest,
   AddObservationRequest,
+  CreateSubtaskRequest,
+  UpdateSubtaskRequest,
   ListBoardsResponse,
   ListColumnsResponse,
   ListCardsResponse,
 } from "../types/kanban";
 
 class KanbanService {
+  // Track if subtasks API is available (to avoid repeated 404s)
+  private subtasksApiAvailable: boolean | null = null;
+
+  constructor() {
+    // Check localStorage for API availability status
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('subtasksApiAvailable');
+      if (stored !== null) {
+        this.subtasksApiAvailable = stored === 'true';
+      }
+    }
+  }
+
+  private setSubtasksApiAvailability(available: boolean) {
+    this.subtasksApiAvailable = available;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('subtasksApiAvailable', available.toString());
+    }
+  }
+
   // Board operations
   async listBoards(): Promise<ListBoardsResponse> {
     const response = await api.get<ListBoardsResponse>("/api/kanban/boards");
@@ -191,6 +214,108 @@ class KanbanService {
       return { valid: false, error: "O arquivo não pode ser maior que 10MB" };
     }
     return { valid: true };
+  }
+
+  // Subtask operations
+  async listSubtasks(cardId: string): Promise<{ subtasks: Subtask[] }> {
+    // Skip API call if we know it's not available
+    if (this.subtasksApiAvailable === false) {
+      throw { response: { status: 404 } };
+    }
+
+    try {
+      const response = await api.get(
+        `/api/kanban/cards/${encodeURIComponent(cardId)}/subtasks`
+      );
+      this.setSubtasksApiAvailability(true);
+      return response.data;
+    } catch (error: any) {
+      // Mark API as unavailable on first 404
+      if (error?.response?.status === 404) {
+        this.setSubtasksApiAvailability(false);
+        throw error;
+      }
+      // Log other errors
+      console.error('Error listing subtasks:', error);
+      throw error;
+    }
+  }
+
+  async createSubtask(data: CreateSubtaskRequest): Promise<Subtask> {
+    // Skip API call if we know it's not available
+    if (this.subtasksApiAvailable === false) {
+      throw { response: { status: 404 } };
+    }
+
+    try {
+      const response = await api.post<Subtask>(
+        `/api/kanban/cards/${encodeURIComponent(data.card_id)}/subtasks`,
+        data
+      );
+      this.setSubtasksApiAvailability(true);
+      return response.data;
+    } catch (error: any) {
+      // Mark API as unavailable on first 404
+      if (error?.response?.status === 404) {
+        this.setSubtasksApiAvailability(false);
+        throw error;
+      }
+      // Log other errors
+      console.error('Error creating subtask:', error);
+      throw error;
+    }
+  }
+
+  async updateSubtask(
+    cardId: string,
+    subtaskId: string,
+    data: UpdateSubtaskRequest
+  ): Promise<Subtask> {
+    // Skip API call if we know it's not available
+    if (this.subtasksApiAvailable === false) {
+      throw { response: { status: 404 } };
+    }
+
+    try {
+      const response = await api.put<Subtask>(
+        `/api/kanban/cards/${encodeURIComponent(cardId)}/subtasks/${encodeURIComponent(subtaskId)}`,
+        data
+      );
+      this.setSubtasksApiAvailability(true);
+      return response.data;
+    } catch (error: any) {
+      // Mark API as unavailable on first 404
+      if (error?.response?.status === 404) {
+        this.setSubtasksApiAvailability(false);
+        throw error;
+      }
+      // Log other errors
+      console.error('Error updating subtask:', error);
+      throw error;
+    }
+  }
+
+  async deleteSubtask(cardId: string, subtaskId: string): Promise<void> {
+    // Skip API call if we know it's not available
+    if (this.subtasksApiAvailable === false) {
+      throw { response: { status: 404 } };
+    }
+
+    try {
+      await api.delete(
+        `/api/kanban/cards/${encodeURIComponent(cardId)}/subtasks/${encodeURIComponent(subtaskId)}`
+      );
+      this.setSubtasksApiAvailability(true);
+    } catch (error: any) {
+      // Mark API as unavailable on first 404
+      if (error?.response?.status === 404) {
+        this.setSubtasksApiAvailability(false);
+        throw error;
+      }
+      // Log other errors
+      console.error('Error deleting subtask:', error);
+      throw error;
+    }
   }
 }
 

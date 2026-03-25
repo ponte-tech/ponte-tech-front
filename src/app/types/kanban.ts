@@ -26,6 +26,17 @@ export interface Observation {
   created_at: string;
 }
 
+export interface Subtask {
+  subtask_id: string;
+  card_id: string;
+  title: string;
+  description?: string;
+  completed: boolean;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Card {
   card_id: string;
   board_id: string;
@@ -41,6 +52,7 @@ export interface Card {
   created_at: string;
   updated_at: string;
   observations?: Observation[];
+  subtasks?: Subtask[];
   history?: CardHistory[];
 }
 
@@ -102,6 +114,18 @@ export interface MoveCardRequest {
 
 export interface AddObservationRequest {
   content: string;
+}
+
+export interface CreateSubtaskRequest {
+  card_id: string;
+  title: string;
+  description?: string;
+}
+
+export interface UpdateSubtaskRequest {
+  title?: string;
+  description?: string;
+  completed?: boolean;
 }
 
 // Response types

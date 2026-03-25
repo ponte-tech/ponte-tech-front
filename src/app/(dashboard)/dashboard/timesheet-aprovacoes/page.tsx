@@ -32,6 +32,7 @@ import {
   Grid,
   Checkbox,
   Badge,
+  Avatar,
 } from '@mui/material';
 import {
   CheckCircle as CheckCircleIcon,
@@ -926,9 +927,25 @@ export default function TimesheetAprovacoesPage() {
                           />
                         </TableCell>
                         <TableCell>
-                          <Typography variant="body2" fontWeight="600">
-                            {colab.nome_completo}
-                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            <Avatar
+                              src={colab.foto_perfil_url || ''}
+                              alt={colab.nome_completo}
+                              sx={{
+                                width: 40,
+                                height: 40,
+                                bgcolor: colab.foto_perfil_url ? 'transparent' : '#8270FF',
+                                color: 'white',
+                                fontSize: '0.875rem',
+                                fontWeight: 600,
+                              }}
+                            >
+                              {!colab.foto_perfil_url && colab.nome_completo.charAt(0).toUpperCase()}
+                            </Avatar>
+                            <Typography variant="body2" fontWeight="600">
+                              {colab.nome_completo}
+                            </Typography>
+                          </Box>
                         </TableCell>
 
                         <TableCell align="center">

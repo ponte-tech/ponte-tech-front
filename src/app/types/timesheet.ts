@@ -108,6 +108,7 @@ export interface ContratoTimesheetResumo {
 export interface ColaboradorTimesheetStatus {
   colaborador_id: string;
   nome_completo: string;
+  foto_perfil_url?: string;
   mes: string;
   status_mes: StatusMes;
   total_horas_lancadas: number;

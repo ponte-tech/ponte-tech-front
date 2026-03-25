@@ -325,9 +325,12 @@ export interface CreateColaboradorRequest {
 
 export interface UpdateColaboradorRequest {
   nome_completo?: string;
+  cpf?: string;
   cnpj?: string;
   empresa_id?: string;
   celular?: string;
+  nome_contato_emergencia?: string;
+  telefone_contato_emergencia?: string;
   endereco?: EnderecoColaborador;
   dados_contratuais?: DadosContratuais;
   dados_financeiros?: DadosFinanceiros;
