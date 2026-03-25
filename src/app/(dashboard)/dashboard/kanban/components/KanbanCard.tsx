@@ -58,6 +58,12 @@ export default function KanbanCard({
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
+    // Previne abrir o modal se clicar em botões de ação
+    const target = e.target as HTMLElement;
+    if (target.closest('.card-actions') || target.closest('.MuiIconButton-root')) {
+      return;
+    }
+
     // Se estiver arrastando, não abre o modal
     if (isDraggingCard) {
       return;
@@ -66,6 +72,12 @@ export default function KanbanCard({
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    // Previne drag se clicar em botões de ação
+    const target = e.target as HTMLElement;
+    if (target.closest('.card-actions') || target.closest('.MuiIconButton-root')) {
+      return;
+    }
+
     setDragStartPos({ x: e.clientX, y: e.clientY });
     setIsDraggingCard(false);
   };
@@ -74,8 +86,8 @@ export default function KanbanCard({
     if (dragStartPos) {
       const deltaX = Math.abs(e.clientX - dragStartPos.x);
       const deltaY = Math.abs(e.clientY - dragStartPos.y);
-      // Se moveu mais de 5 pixels, considera como drag
-      if (deltaX > 5 || deltaY > 5) {
+      // Se moveu mais de 3 pixels, considera como drag
+      if (deltaX > 3 || deltaY > 3) {
         setIsDraggingCard(true);
       }
     }
@@ -110,21 +122,19 @@ export default function KanbanCard({
       ref={setNodeRef}
       style={style}
       {...attributes}
+      {...listeners}
       onClick={handleCardClick}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       sx={{
         mb: 1.5,
-        cursor: "pointer",
+        cursor: isDragging ? "grabbing" : "grab",
         bgcolor: "#ffffff",
         "&:hover": {
           boxShadow: "0 4px 12px rgba(130, 112, 255, 0.2)",
           borderColor: "#8270FF",
           "& .card-actions": {
-            opacity: 1,
-          },
-          "& .drag-handle": {
             opacity: 1,
           },
         },
@@ -151,29 +161,6 @@ export default function KanbanCard({
           }}
         >
           <Box sx={{ display: "flex", alignItems: "flex-start", gap: 0.5, flex: 1 }}>
-            {/* Drag Handle */}
-            <Box
-              {...listeners}
-              className="drag-handle"
-              onClick={(e) => e.stopPropagation()}
-              sx={{
-                cursor: isDragging ? "grabbing" : "grab",
-                display: "flex",
-                alignItems: "center",
-                color: "#bdbdbd",
-                opacity: 0.3,
-                transition: "opacity 0.2s, color 0.2s",
-                "&:hover": {
-                  color: "#8270FF",
-                  opacity: 1,
-                },
-                "&:active": {
-                  cursor: "grabbing",
-                },
-              }}
-            >
-              <DragIndicatorIcon sx={{ fontSize: "1rem" }} />
-            </Box>
             <Typography
               variant="subtitle1"
               sx={{
