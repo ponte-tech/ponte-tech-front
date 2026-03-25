@@ -837,9 +837,7 @@ export default function EditarColaboradorPage() {
       await colaboradoresService.update(colaboradorId, updateData, isColaborador);
       setSuccess(true);
 
-      setTimeout(() => {
-        router.push(isAdmin ? "/colaboradores" : "/dashboard");
-      }, 1500);
+      setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
       setError(err.message || "Erro ao atualizar colaborador");
       console.error("Erro ao atualizar colaborador:", err);
@@ -968,7 +966,7 @@ export default function EditarColaboradorPage() {
       )}
       {success && (
         <Alert severity="success" sx={{ mb: 3 }} icon={<CheckCircleIcon />}>
-          Dados salvos com sucesso! Redirecionando...
+          Dados salvos com sucesso!
         </Alert>
       )}
 
