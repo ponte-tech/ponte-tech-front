@@ -132,7 +132,9 @@ export default function CalendarioHoras({
 
   // Handler de mudança de mês/visualização
   const handleDatesSet = (info: DatesSetArg) => {
-    const dataInicio = info.start;
+    // Usar info.view.currentStart para pegar a data correta do mês visualizado
+    // ao invés de info.start que pode incluir dias do mês anterior
+    const dataInicio = info.view.currentStart;
     const novoMes = `${dataInicio.getFullYear()}-${String(dataInicio.getMonth() + 1).padStart(2, '0')}`;
 
     // Só atualizar se realmente mudou o mês
@@ -321,6 +323,7 @@ export default function CalendarioHoras({
             key={calendarKey}
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
             initialView="dayGridMonth"
+            initialDate={`${mesAtual}-01`}
             headerToolbar={{
               left: 'prev,next today',
               center: 'title',
