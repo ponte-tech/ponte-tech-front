@@ -977,42 +977,64 @@ export default function CardModal({
                     </Box>
 
                     {/* Add Subtask - Compact */}
-                    <Box sx={{ display: "flex", gap: 1, mb: 1.5 }}>
-                      <TextField
-                        placeholder="+ Adicionar subtarefa"
-                        fullWidth
-                        size="small"
-                        value={newSubtaskTitle}
-                        onChange={(e) => setNewSubtaskTitle(e.target.value)}
-                        onKeyPress={(e) => {
-                          if (e.key === "Enter" && newSubtaskTitle.trim()) {
-                            handleCreateSubtask();
-                          }
-                        }}
-                        sx={{
-                          "& .MuiOutlinedInput-root": {
-                            borderRadius: 1.5,
-                            fontSize: "0.875rem",
-                            "& fieldset": { borderColor: "#e0e0e0" },
-                            "&:hover fieldset": { borderColor: "#8270FF" },
-                            "&.Mui-focused fieldset": { borderColor: "#8270FF" },
-                          },
-                        }}
-                      />
-                      {newSubtaskTitle.trim() && (
-                        <IconButton
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mb: 1.5 }}>
+                      <Box sx={{ display: "flex", gap: 1 }}>
+                        <TextField
+                          placeholder="+ Título da subtarefa"
+                          fullWidth
                           size="small"
-                          onClick={handleCreateSubtask}
-                          sx={{
-                            bgcolor: "#8270FF",
-                            color: "white",
-                            "&:hover": { bgcolor: alpha("#8270FF", 0.8) },
-                            width: 32,
-                            height: 32,
+                          value={newSubtaskTitle}
+                          onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === "Enter" && newSubtaskTitle.trim() && !e.shiftKey) {
+                              handleCreateSubtask();
+                            }
                           }}
-                        >
-                          <AddIcon fontSize="small" />
-                        </IconButton>
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              borderRadius: 1.5,
+                              fontSize: "0.875rem",
+                              "& fieldset": { borderColor: "#e0e0e0" },
+                              "&:hover fieldset": { borderColor: "#8270FF" },
+                              "&.Mui-focused fieldset": { borderColor: "#8270FF" },
+                            },
+                          }}
+                        />
+                        {newSubtaskTitle.trim() && (
+                          <IconButton
+                            size="small"
+                            onClick={handleCreateSubtask}
+                            sx={{
+                              bgcolor: "#8270FF",
+                              color: "white",
+                              "&:hover": { bgcolor: alpha("#8270FF", 0.8) },
+                              width: 32,
+                              height: 32,
+                            }}
+                          >
+                            <AddIcon fontSize="small" />
+                          </IconButton>
+                        )}
+                      </Box>
+                      {newSubtaskTitle.trim() && (
+                        <TextField
+                          placeholder="Descrição (opcional)"
+                          fullWidth
+                          size="small"
+                          multiline
+                          rows={2}
+                          value={newSubtaskDescription}
+                          onChange={(e) => setNewSubtaskDescription(e.target.value)}
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              borderRadius: 1.5,
+                              fontSize: "0.8125rem",
+                              "& fieldset": { borderColor: "#e0e0e0" },
+                              "&:hover fieldset": { borderColor: "#8270FF" },
+                              "&.Mui-focused fieldset": { borderColor: "#8270FF" },
+                            },
+                          }}
+                        />
                       )}
                     </Box>
 
@@ -1040,14 +1062,15 @@ export default function CardModal({
                             }}
                           >
                             {editingSubtask?.subtask_id === subtask.subtask_id ? (
-                              <>
+                              <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 0.5 }}>
                                 <TextField
                                   fullWidth
                                   size="small"
+                                  placeholder="Título"
                                   value={editSubtaskTitle}
                                   onChange={(e) => setEditSubtaskTitle(e.target.value)}
                                   onKeyPress={(e) => {
-                                    if (e.key === "Enter") {
+                                    if (e.key === "Enter" && !e.shiftKey) {
                                       handleSaveEditSubtask();
                                     }
                                   }}
@@ -1059,27 +1082,43 @@ export default function CardModal({
                                     },
                                   }}
                                 />
-                                <IconButton
+                                <TextField
+                                  fullWidth
                                   size="small"
-                                  onClick={handleSaveEditSubtask}
-                                  sx={{ p: 0.5 }}
-                                >
-                                  <CheckCircleIcon fontSize="small" sx={{ color: "#4caf50" }} />
-                                </IconButton>
-                                <IconButton
-                                  size="small"
-                                  onClick={handleCancelEditSubtask}
-                                  sx={{ p: 0.5 }}
-                                >
-                                  <CloseIcon fontSize="small" sx={{ color: "#999" }} />
-                                </IconButton>
-                              </>
+                                  placeholder="Descrição (opcional)"
+                                  multiline
+                                  rows={2}
+                                  value={editSubtaskDescription}
+                                  onChange={(e) => setEditSubtaskDescription(e.target.value)}
+                                  sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                      fontSize: "0.75rem",
+                                    },
+                                  }}
+                                />
+                                <Box sx={{ display: "flex", gap: 0.5, justifyContent: "flex-end" }}>
+                                  <IconButton
+                                    size="small"
+                                    onClick={handleSaveEditSubtask}
+                                    sx={{ p: 0.5 }}
+                                  >
+                                    <CheckCircleIcon fontSize="small" sx={{ color: "#4caf50" }} />
+                                  </IconButton>
+                                  <IconButton
+                                    size="small"
+                                    onClick={handleCancelEditSubtask}
+                                    sx={{ p: 0.5 }}
+                                  >
+                                    <CloseIcon fontSize="small" sx={{ color: "#999" }} />
+                                  </IconButton>
+                                </Box>
+                              </Box>
                             ) : (
                               <>
                                 <IconButton
                                   size="small"
                                   onClick={() => handleToggleSubtask(subtask)}
-                                  sx={{ p: 0.5, color: subtask.completed ? "#4caf50" : "#999" }}
+                                  sx={{ p: 0.5, color: subtask.completed ? "#4caf50" : "#999", alignSelf: "flex-start" }}
                                 >
                                   {subtask.completed ? (
                                     <CheckBoxIcon fontSize="small" />
@@ -1087,19 +1126,36 @@ export default function CardModal({
                                     <CheckBoxOutlineBlankIcon fontSize="small" />
                                   )}
                                 </IconButton>
-                                <Typography
-                                  variant="body2"
-                                  sx={{
-                                    flex: 1,
-                                    fontSize: "0.8125rem",
-                                    color: subtask.completed ? "#999" : "#333",
-                                    textDecoration: subtask.completed ? "line-through" : "none",
-                                    cursor: "pointer",
-                                  }}
+                                <Box
+                                  sx={{ flex: 1, cursor: "pointer" }}
                                   onClick={() => handleToggleSubtask(subtask)}
                                 >
-                                  {subtask.title}
-                                </Typography>
+                                  <Typography
+                                    variant="body2"
+                                    sx={{
+                                      fontSize: "0.8125rem",
+                                      color: subtask.completed ? "#999" : "#333",
+                                      textDecoration: subtask.completed ? "line-through" : "none",
+                                      fontWeight: 500,
+                                    }}
+                                  >
+                                    {subtask.title}
+                                  </Typography>
+                                  {subtask.description && (
+                                    <Typography
+                                      variant="caption"
+                                      sx={{
+                                        fontSize: "0.75rem",
+                                        color: subtask.completed ? "#bbb" : "#666",
+                                        display: "block",
+                                        mt: 0.25,
+                                        whiteSpace: "pre-wrap",
+                                      }}
+                                    >
+                                      {subtask.description}
+                                    </Typography>
+                                  )}
+                                </Box>
                                 <Box
                                   className="subtask-actions"
                                   sx={{
@@ -1107,6 +1163,7 @@ export default function CardModal({
                                     gap: 0.5,
                                     opacity: 0,
                                     transition: "opacity 0.2s",
+                                    alignSelf: "flex-start",
                                   }}
                                 >
                                   <IconButton
