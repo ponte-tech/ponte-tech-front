@@ -1199,13 +1199,14 @@ function KanbanPageContent() {
 
   return (
     <Box sx={{ height: "calc(100vh - 80px)", display: "flex", flexDirection: "column" }}>
-      {/* Header */}
+      {/* Header - Modern Minimalist Design */}
       <Box
         sx={{
-          px: 2,
-          py: 1,
+          px: 3,
+          py: 1.5,
           bgcolor: "#ffffff",
-          borderBottom: "1px solid #e0e0e0",
+          borderBottom: "1px solid rgba(0, 0, 0, 0.08)",
+          backdropFilter: "blur(8px)",
         }}
       >
         {/* Single row with Board, Filters and Actions */}
@@ -1213,32 +1214,57 @@ function KanbanPageContent() {
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: 1.5,
-            flexWrap: "wrap",
+            gap: 2,
+            flexWrap: "nowrap",
           }}
         >
-          {/* Board Selector */}
-          <FormControl variant="standard" sx={{ minWidth: 160 }}>
+          {/* Board Selector - Minimal Style */}
+          <FormControl variant="standard" sx={{ minWidth: 140 }}>
             <Select
               value={selectedBoardId}
               onChange={(e) => setSelectedBoardId(e.target.value)}
               disableUnderline
               sx={{
-                fontSize: "1rem",
-                fontWeight: 600,
-                color: "#8270FF",
+                fontSize: "1.125rem",
+                fontWeight: 700,
+                color: "#1a1a1a",
+                letterSpacing: "-0.02em",
                 "& .MuiSelect-select": {
                   py: 0,
+                  pr: "24px !important",
+                },
+                "& .MuiSelect-icon": {
+                  color: "#8270FF",
+                  fontSize: "1.2rem",
                 },
               }}
             >
               {boards.map((board, index) => (
-                <MenuItem key={board.board_id} value={board.board_id}>
+                <MenuItem
+                  key={board.board_id}
+                  value={board.board_id}
+                  sx={{
+                    fontSize: "0.938rem",
+                    fontWeight: 500,
+                    "&:hover": {
+                      bgcolor: "rgba(130, 112, 255, 0.08)",
+                    },
+                    "&.Mui-selected": {
+                      bgcolor: "rgba(130, 112, 255, 0.12)",
+                      "&:hover": {
+                        bgcolor: "rgba(130, 112, 255, 0.16)",
+                      },
+                    },
+                  }}
+                >
                   {board.is_default || index === 0 ? "Principal" : board.name}
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
+
+          {/* Divider */}
+          <Box sx={{ width: "1px", height: 24, bgcolor: "rgba(0, 0, 0, 0.08)" }} />
 
           {/* Colaboradores Filter - Avatar Style */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
@@ -1333,181 +1359,201 @@ function KanbanPageContent() {
             </Tooltip>
           </Box>
 
-          {/* Other Filters */}
+          {/* Other Filters - Minimal Modern */}
           <Badge
             badgeContent={selectedClientes.length + selectedContratos.length}
             color="primary"
             sx={{
               "& .MuiBadge-badge": {
                 bgcolor: "#8270FF",
-                fontSize: "0.65rem",
-                height: 16,
-                minWidth: 16,
+                fontSize: "0.625rem",
+                height: 18,
+                minWidth: 18,
+                fontWeight: 600,
               },
             }}
           >
             <Button
-              variant="outlined"
+              variant="text"
               size="small"
-              startIcon={<FilterListIcon sx={{ fontSize: "1rem" }} />}
+              startIcon={<FilterListIcon sx={{ fontSize: "1.125rem" }} />}
               onClick={(e) => setFilterAnchorEl(e.currentTarget)}
               sx={{
-                color: "#666",
-                borderColor: "#e0e0e0",
+                color: selectedClientes.length + selectedContratos.length > 0 ? "#8270FF" : "#64748b",
                 textTransform: "none",
                 fontWeight: 500,
-                fontSize: "0.8rem",
-                py: 0.5,
-                px: 1.5,
-                minHeight: "32px",
+                fontSize: "0.875rem",
+                py: 0.75,
+                px: 1.25,
+                borderRadius: 1.5,
+                minHeight: "36px",
+                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                 "&:hover": {
-                  borderColor: "#8270FF",
-                  bgcolor: "rgba(130, 112, 255, 0.04)",
+                  bgcolor: "rgba(130, 112, 255, 0.08)",
                   color: "#8270FF",
                 },
               }}
             >
-              Mais filtros
+              Filtros
             </Button>
           </Badge>
 
           <Box sx={{ flexGrow: 1 }} />
 
-          {/* Actions */}
-          <Tooltip title="Criação de novos boards temporariamente desabilitada" arrow>
-            <span>
+          {/* Keyboard Shortcut Hint */}
+          <Tooltip title="Atalho: C para criar card" placement="bottom">
+            <Typography
+              variant="caption"
+              sx={{
+                color: "#94a3b8",
+                fontSize: "0.75rem",
+                fontWeight: 500,
+                display: { xs: "none", md: "block" },
+                fontFamily: "monospace",
+                bgcolor: "rgba(148, 163, 184, 0.08)",
+                px: 1,
+                py: 0.375,
+                borderRadius: 0.75,
+              }}
+            >
+              C
+            </Typography>
+          </Tooltip>
+
+          {/* Actions - Modern Icon Buttons */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+            <Tooltip
+              title={
+                urgentTasksByColaborador.length > 0
+                  ? `${urgentTasksByColaborador.length} ${urgentTasksByColaborador.length === 1 ? "colaborador com tarefas urgentes" : "colaboradores com tarefas urgentes"}`
+                  : "Nenhum colaborador com tarefas urgentes"
+              }
+              arrow
+            >
               <IconButton
                 size="small"
-                disabled
+                onClick={() => setColaboradoresOverviewOpen(true)}
                 sx={{
-                  width: 28,
-                  height: 28,
-                  color: "#8270FF",
+                  width: 36,
+                  height: 36,
+                  borderRadius: 1.5,
+                  color: urgentTasksByColaborador.length > 0 ? "#8270FF" : "#64748b",
+                  transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                   "&:hover": {
                     bgcolor: "rgba(130, 112, 255, 0.08)",
+                    color: "#8270FF",
+                    transform: "scale(1.05)",
                   },
                 }}
               >
-                <AddIcon sx={{ fontSize: "1.1rem" }} />
+                <Badge
+                  badgeContent={urgentTasksByColaborador.length}
+                  color="error"
+                  sx={{
+                    "& .MuiBadge-badge": {
+                      bgcolor: urgentTasksByColaborador.length > 0 ? "#8270FF" : "transparent",
+                      color: "white",
+                      fontSize: "0.625rem",
+                      height: 18,
+                      minWidth: 18,
+                      fontWeight: 600,
+                    },
+                  }}
+                >
+                  <PeopleIcon sx={{ fontSize: "1.25rem" }} />
+                </Badge>
               </IconButton>
-            </span>
-          </Tooltip>
+            </Tooltip>
 
-          <Tooltip
-            title={
-              boards.find((b) => b.board_id === selectedBoardId)?.is_default ||
-              boards[0]?.board_id === selectedBoardId
-                ? "O board principal não pode ser excluído"
-                : "Excluir Board"
-            }
-            arrow
-          >
-            <span>
+            <Tooltip
+              title={
+                dueTodayCards.length > 0
+                  ? `${dueTodayCards.length} ${dueTodayCards.length === 1 ? "tarefa urgente" : "tarefas urgentes"}`
+                  : "Nenhuma tarefa urgente"
+              }
+              arrow
+            >
               <IconButton
                 size="small"
-                onClick={handleDeleteBoard}
-                disabled={
-                  boards.find((b) => b.board_id === selectedBoardId)?.is_default ||
-                  boards[0]?.board_id === selectedBoardId
-                }
+                onClick={() => {
+                  if (dueTodayCards.length > 0) {
+                    setDueDateAlertOpen(true);
+                  }
+                }}
                 sx={{
-                  width: 28,
-                  height: 28,
-                  color: "#999",
+                  width: 36,
+                  height: 36,
+                  borderRadius: 1.5,
+                  color: dueTodayCards.length > 0 ? "#8270FF" : "#64748b",
+                  transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                   "&:hover": {
-                    color: "#f44336",
-                    bgcolor: "rgba(244, 67, 54, 0.08)",
-                  },
-                  "&.Mui-disabled": {
-                    color: "#ccc",
-                    cursor: "not-allowed",
+                    bgcolor: "rgba(130, 112, 255, 0.08)",
+                    color: "#8270FF",
+                    transform: "scale(1.05)",
                   },
                 }}
               >
-                <DeleteIcon sx={{ fontSize: "1.1rem" }} />
+                <Badge
+                  badgeContent={dueTodayCards.length}
+                  color="error"
+                  sx={{
+                    "& .MuiBadge-badge": {
+                      bgcolor: dueTodayCards.length > 0 ? "#8270FF" : "transparent",
+                      color: "white",
+                      fontSize: "0.625rem",
+                      height: 18,
+                      minWidth: 18,
+                      fontWeight: 600,
+                    },
+                  }}
+                >
+                  <NotificationsIcon sx={{ fontSize: "1.25rem" }} />
+                </Badge>
               </IconButton>
-            </span>
-          </Tooltip>
+            </Tooltip>
 
-          <Tooltip
-            title={
-              urgentTasksByColaborador.length > 0
-                ? `${urgentTasksByColaborador.length} ${urgentTasksByColaborador.length === 1 ? "colaborador com tarefas urgentes" : "colaboradores com tarefas urgentes"}`
-                : "Nenhum colaborador com tarefas urgentes"
-            }
-            arrow
-          >
-            <IconButton
-              size="small"
-              onClick={() => setColaboradoresOverviewOpen(true)}
-              sx={{
-                width: 28,
-                height: 28,
-                color: urgentTasksByColaborador.length > 0 ? "#8270FF" : "#999",
-                "&:hover": {
-                  bgcolor: "rgba(130, 112, 255, 0.08)",
-                },
-              }}
-            >
-              <Badge
-                badgeContent={urgentTasksByColaborador.length}
-                color="error"
-                sx={{
-                  "& .MuiBadge-badge": {
-                    bgcolor: "#8270FF",
-                    color: "white",
-                    fontSize: "0.625rem",
-                    height: 16,
-                    minWidth: 16,
-                  },
-                }}
-              >
-                <PeopleIcon sx={{ fontSize: "1.1rem" }} />
-              </Badge>
-            </IconButton>
-          </Tooltip>
+            {/* Divider */}
+            <Box sx={{ width: "1px", height: 24, bgcolor: "rgba(0, 0, 0, 0.08)", mx: 0.5 }} />
 
-          <Tooltip
-            title={
-              dueTodayCards.length > 0
-                ? `${dueTodayCards.length} ${dueTodayCards.length === 1 ? "tarefa urgente" : "tarefas urgentes"}`
-                : "Nenhuma tarefa urgente"
-            }
-            arrow
-          >
-            <IconButton
-              size="small"
-              onClick={() => {
-                if (dueTodayCards.length > 0) {
-                  setDueDateAlertOpen(true);
-                }
-              }}
-              sx={{
-                width: 28,
-                height: 28,
-                color: dueTodayCards.length > 0 ? "#8270FF" : "#999",
-                "&:hover": {
-                  bgcolor: "rgba(130, 112, 255, 0.08)",
-                },
-              }}
+            <Tooltip
+              title={
+                boards.find((b) => b.board_id === selectedBoardId)?.is_default ||
+                boards[0]?.board_id === selectedBoardId
+                  ? "O board principal não pode ser excluído"
+                  : "Excluir Board"
+              }
+              arrow
             >
-              <Badge
-                badgeContent={dueTodayCards.length}
-                color="error"
-                sx={{
-                  "& .MuiBadge-badge": {
-                    bgcolor: "#8270FF",
-                    color: "white",
-                    fontSize: "0.625rem",
-                    height: 16,
-                    minWidth: 16,
-                  },
-                }}
-              >
-                <NotificationsIcon sx={{ fontSize: "1.1rem" }} />
-              </Badge>
-            </IconButton>
-          </Tooltip>
+              <span>
+                <IconButton
+                  size="small"
+                  onClick={handleDeleteBoard}
+                  disabled={
+                    boards.find((b) => b.board_id === selectedBoardId)?.is_default ||
+                    boards[0]?.board_id === selectedBoardId
+                  }
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 1.5,
+                    color: "#64748b",
+                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                    "&:hover:not(:disabled)": {
+                      color: "#ef4444",
+                      bgcolor: "rgba(239, 68, 68, 0.08)",
+                      transform: "scale(1.05)",
+                    },
+                    "&.Mui-disabled": {
+                      color: "#cbd5e1",
+                      cursor: "not-allowed",
+                    },
+                  }}
+                >
+                  <DeleteIcon sx={{ fontSize: "1.25rem" }} />
+                </IconButton>
+              </span>
+            </Tooltip>
+          </Box>
         </Box>
       </Box>
 
@@ -1577,21 +1623,27 @@ function KanbanPageContent() {
             flexGrow: 1,
             overflowX: "auto",
             overflowY: "hidden",
-            p: 1.5,
-            bgcolor: "#fafafa",
+            p: 2.5,
+            bgcolor: "#f8fafc",
             height: "100%",
+            backgroundImage: "radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.04) 1px, transparent 0)",
+            backgroundSize: "24px 24px",
             "&::-webkit-scrollbar": {
-              height: "8px",
+              height: "10px",
             },
             "&::-webkit-scrollbar-track": {
               bgcolor: "transparent",
-              borderRadius: "4px",
+              borderRadius: "5px",
+              my: 1,
             },
             "&::-webkit-scrollbar-thumb": {
-              bgcolor: "#d0d0d0",
-              borderRadius: "4px",
+              bgcolor: "rgba(148, 163, 184, 0.3)",
+              borderRadius: "5px",
+              border: "2px solid transparent",
+              backgroundClip: "content-box",
+              transition: "background-color 0.2s ease",
               "&:hover": {
-                bgcolor: "#b0b0b0",
+                bgcolor: "rgba(130, 112, 255, 0.4)",
               },
             },
           }}

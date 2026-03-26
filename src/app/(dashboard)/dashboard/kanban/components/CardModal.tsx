@@ -66,6 +66,37 @@ interface CardModalProps {
   colaboradores?: any[];
 }
 
+// Modern Input Styles - Reusable
+const modernInputSx = {
+  "& .MuiOutlinedInput-root": {
+    borderRadius: 2,
+    backgroundColor: "#fff",
+    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+    "& fieldset": {
+      borderColor: "rgba(226, 232, 240, 1)",
+      borderWidth: "1px",
+    },
+    "&:hover fieldset": {
+      borderColor: "rgba(130, 112, 255, 0.5)",
+    },
+    "&.Mui-focused": {
+      "& fieldset": {
+        borderColor: "#8270FF",
+        borderWidth: "2px",
+      },
+    },
+  },
+  "& .MuiInputLabel-root": {
+    fontSize: "0.875rem",
+    fontWeight: 500,
+    color: "#64748b",
+    "&.Mui-focused": {
+      color: "#8270FF",
+      fontWeight: 600,
+    },
+  },
+};
+
 export default function CardModal({
   open,
   onClose,
@@ -568,55 +599,129 @@ export default function CardModal({
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: 3,
-          height: "90vh",
+          borderRadius: 4,
+          height: "92vh",
+          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+          border: "1px solid rgba(226, 232, 240, 0.6)",
+        },
+      }}
+      sx={{
+        "& .MuiBackdrop-root": {
+          backdropFilter: "blur(4px)",
+          backgroundColor: "rgba(15, 23, 42, 0.4)",
         },
       }}
     >
+      {/* Modern Header - Minimal & Clean */}
       <DialogTitle
         sx={{
-          bgcolor: alpha("#8270FF", 0.05),
           display: "flex",
           alignItems: "center",
-          gap: 1,
-          borderBottom: 1,
-          borderColor: "divider",
-          py: 1.5,
+          justifyContent: "space-between",
+          gap: 2,
+          borderBottom: "1px solid rgba(226, 232, 240, 0.8)",
+          py: 2.5,
+          px: 4,
+          bgcolor: "rgba(248, 250, 252, 0.5)",
         }}
       >
-        <ArticleIcon sx={{ color: "#8270FF" }} />
-        <Box component="span" sx={{ fontWeight: 600, fontSize: "1.1rem", color: "#8270FF" }}>
-          {card ? `#${card.card_id.replace("CARD#", "").substring(0, 8)}` : "Novo Card"}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <Box
+            sx={{
+              width: 36,
+              height: 36,
+              borderRadius: 2,
+              bgcolor: "rgba(130, 112, 255, 0.1)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <ArticleIcon sx={{ color: "#8270FF", fontSize: "1.25rem" }} />
+          </Box>
+          <Box>
+            <Typography
+              sx={{
+                fontWeight: 700,
+                fontSize: "1.125rem",
+                color: "#0f172a",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              {card ? "Detalhes do Card" : "Novo Card"}
+            </Typography>
+            {card && (
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "#64748b",
+                  fontSize: "0.813rem",
+                  fontWeight: 500,
+                  fontFamily: "monospace",
+                }}
+              >
+                #{card.card_id.replace("CARD#", "").substring(0, 8)}
+              </Typography>
+            )}
+          </Box>
         </Box>
+        <IconButton
+          onClick={onClose}
+          sx={{
+            color: "#64748b",
+            transition: "all 0.15s ease",
+            "&:hover": {
+              color: "#0f172a",
+              bgcolor: "rgba(100, 116, 139, 0.08)",
+              transform: "scale(1.05)",
+            },
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
       </DialogTitle>
       <DialogContent sx={{ p: 0, display: "flex", height: "calc(90vh - 130px)" }}>
         {/* Main Content Area */}
         <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
-          {/* Tabs */}
+          {/* Modern Tabs */}
           <Tabs
             value={activeTab}
             onChange={(e, newValue) => setActiveTab(newValue)}
             sx={{
-              borderBottom: 1,
-              borderColor: "divider",
-              px: 3,
+              borderBottom: "1px solid rgba(226, 232, 240, 0.8)",
+              px: 4,
+              minHeight: 48,
               "& .MuiTab-root": {
                 textTransform: "none",
                 fontSize: "0.875rem",
-                fontWeight: 500,
+                fontWeight: 600,
+                color: "#64748b",
+                minHeight: 48,
+                px: 2,
+                py: 1.5,
+                transition: "all 0.15s ease",
+                "&:hover": {
+                  color: "#8270FF",
+                  bgcolor: "rgba(130, 112, 255, 0.04)",
+                },
+                "&.Mui-disabled": {
+                  opacity: 0.4,
+                },
               },
               "& .Mui-selected": {
                 color: "#8270FF !important",
               },
               "& .MuiTabs-indicator": {
                 backgroundColor: "#8270FF",
+                height: 3,
+                borderRadius: "3px 3px 0 0",
               },
             }}
           >
-            <Tab label="Detalhes" />
-            <Tab label="Observações" disabled={!card} />
-            <Tab label="Anexos" disabled={!card} />
-            <Tab label="Histórico" disabled={!card} />
+            <Tab label="Detalhes" icon={<ArticleIcon sx={{ fontSize: "1.125rem", mb: 0.5 }} />} iconPosition="start" />
+            <Tab label="Observações" icon={<HistoryIcon sx={{ fontSize: "1.125rem", mb: 0.5 }} />} iconPosition="start" disabled={!card} />
+            <Tab label="Anexos" icon={<AttachFileIcon sx={{ fontSize: "1.125rem", mb: 0.5 }} />} iconPosition="start" disabled={!card} />
+            <Tab label="Histórico" icon={<HistoryIcon sx={{ fontSize: "1.125rem", mb: 0.5 }} />} iconPosition="start" disabled={!card} />
           </Tabs>
 
           {/* Tab Content */}
@@ -624,224 +729,154 @@ export default function CardModal({
             {/* Detalhes Tab */}
             {activeTab === 0 && (
               <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                <TextField
-                  label="Título"
-                  fullWidth
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
-                  required
-                  size="small"
+                {/* Title Field */}
+                <Box>
+                  <Typography variant="caption" sx={{ color: "#64748b", fontWeight: 600, mb: 1, display: "block" }}>
+                    Título *
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    required
+                    placeholder="Digite o título do card..."
                     sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: 1.5,
-                        backgroundColor: "#fff",
-                        transition: "all 0.2s ease-in-out",
-                        "& fieldset": {
-                          borderColor: "#e0e0e0",
-                          borderWidth: "1px",
-                        },
-                        "&:hover fieldset": {
-                          borderColor: "#8270FF",
-                        },
-                        "&.Mui-focused": {
-                          "& fieldset": {
-                            borderColor: "#8270FF",
-                            borderWidth: "1.5px",
-                          },
-                        },
-                      },
-                      "& .MuiInputLabel-root": {
-                        fontSize: "0.875rem",
-                        color: "#666",
-                        "&.Mui-focused": {
-                          color: "#8270FF",
-                        },
+                      ...modernInputSx,
+                      "& .MuiOutlinedInput-input": {
+                        fontSize: "1rem",
+                        fontWeight: 600,
+                        color: "#0f172a",
                       },
                     }}
+                    InputProps={{
+                      sx: { height: 48 },
+                    }}
                   />
+                </Box>
 
+                {/* Description Field */}
+                <Box>
+                  <Typography variant="caption" sx={{ color: "#64748b", fontWeight: 600, mb: 1, display: "block" }}>
+                    Descrição
+                  </Typography>
                   <TextField
-                    label="Descrição"
                     fullWidth
                     multiline
-                    rows={3}
+                    rows={4}
                     value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 1.5,
-                      backgroundColor: "#fff",
-                      transition: "all 0.2s ease-in-out",
-                      "& fieldset": {
-                        borderColor: "#e0e0e0",
-                        borderWidth: "1px",
-                      },
-                      "&:hover fieldset": {
-                        borderColor: "#8270FF",
-                      },
-                      "&.Mui-focused": {
-                        "& fieldset": {
-                          borderColor: "#8270FF",
-                          borderWidth: "1.5px",
-                        },
-                      },
-                    },
-                    "& .MuiInputLabel-root": {
-                      fontSize: "0.875rem",
-                      color: "#666",
-                      "&.Mui-focused": {
-                        color: "#8270FF",
-                      },
-                    },
-                  }}
-                />
-
-                {/* Cliente, Identificador e Data em linha */}
-                <Box sx={{ display: "flex", gap: 2 }}>
-                  <FormControl
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Adicione uma descrição detalhada..."
                     sx={{
-                      flex: 1,
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: 1.5,
-                        backgroundColor: "#fff",
-                        transition: "all 0.2s ease-in-out",
-                        "& fieldset": {
-                          borderColor: "#e0e0e0",
-                          borderWidth: "1px",
-                        },
-                        "&:hover fieldset": {
-                          borderColor: "#8270FF",
-                        },
-                        "&.Mui-focused": {
-                          "& fieldset": {
-                            borderColor: "#8270FF",
-                            borderWidth: "1.5px",
-                          },
-                        },
-                      },
-                      "& .MuiInputLabel-root": {
-                        fontSize: "0.875rem",
-                        color: "#666",
-                        "&.Mui-focused": {
-                          color: "#8270FF",
-                        },
+                      ...modernInputSx,
+                      "& .MuiOutlinedInput-input": {
+                        fontSize: "0.938rem",
+                        lineHeight: 1.6,
                       },
                     }}
-                    size="small"
-                  >
-                    <InputLabel>Cliente</InputLabel>
-                    <Select
-                      value={formData.client_id}
-                      label="Cliente"
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          client_id: e.target.value,
-                        })
-                      }
-                    >
-                      <MenuItem value="">
-                        <em>Nenhum</em>
-                      </MenuItem>
-                      {clientes.map((cliente) => (
-                        <MenuItem key={cliente.cliente_id} value={cliente.cliente_id}>
-                          {cliente.nome_fantasia}
+                  />
+                </Box>
+
+                {/* Metadata Fields - Grid Layout */}
+                <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 2.5, alignItems: "start" }}>
+                  {/* Cliente */}
+                  <Box>
+                    <Typography variant="caption" sx={{ color: "#64748b", fontWeight: 600, mb: 1, display: "block" }}>
+                      Cliente
+                    </Typography>
+                    <FormControl fullWidth sx={modernInputSx}>
+                      <Select
+                        value={formData.client_id}
+                        onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
+                        displayEmpty
+                        sx={{
+                          height: 48,
+                          "& .MuiSelect-select": {
+                            fontSize: "0.938rem",
+                            fontWeight: 500,
+                          },
+                        }}
+                      >
+                        <MenuItem value="">
+                          <Typography sx={{ color: "#94a3b8", fontSize: "0.938rem" }}>Nenhum cliente</Typography>
                         </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                        {clientes.map((cliente) => (
+                          <MenuItem key={cliente.cliente_id} value={cliente.cliente_id}>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                              <BusinessIcon sx={{ fontSize: "1rem", color: "#8270FF" }} />
+                              <Typography sx={{ fontSize: "0.938rem" }}>{cliente.nome_fantasia}</Typography>
+                            </Box>
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Box>
 
-                  <TextField
-                    label="ID Demanda Cliente"
-                    sx={{
-                      flex: 1,
-                      "& input::placeholder": {
-                        fontSize: "0.75rem",
-                        opacity: 0.6,
-                      },
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: 1.5,
-                        backgroundColor: "#fff",
-                        transition: "all 0.2s ease-in-out",
-                        "& fieldset": {
-                          borderColor: "#e0e0e0",
-                          borderWidth: "1px",
+                  {/* ID Demanda */}
+                  <Box>
+                    <Typography variant="caption" sx={{ color: "#64748b", fontWeight: 600, mb: 1, display: "block" }}>
+                      ID Demanda Cliente
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      value={formData.identificador_demanda_cliente}
+                      onChange={(e) => setFormData({ ...formData, identificador_demanda_cliente: e.target.value })}
+                      placeholder="Ex: TICKET-1234"
+                      sx={{
+                        ...modernInputSx,
+                        "& .MuiOutlinedInput-input": {
+                          fontFamily: "monospace",
+                          fontSize: "0.938rem",
                         },
-                        "&:hover fieldset": {
-                          borderColor: "#8270FF",
-                        },
-                        "&.Mui-focused": {
+                      }}
+                      InputProps={{
+                        sx: { height: 48 },
+                        startAdornment: <TagIcon sx={{ fontSize: "1.125rem", color: "#94a3b8", mr: 1 }} />,
+                      }}
+                    />
+                  </Box>
+
+                  {/* Data de Entrega - Right Side */}
+                  <Box>
+                    <Typography variant="caption" sx={{ color: "#64748b", fontWeight: 600, mb: 1, display: "block" }}>
+                      Data de Entrega
+                    </Typography>
+                    <TextField
+                      type="date"
+                      sx={{
+                        width: 200,
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: 2,
+                          backgroundColor: alpha("#8270FF", 0.03),
+                          transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                          height: 48,
                           "& fieldset": {
-                            borderColor: "#8270FF",
-                            borderWidth: "1.5px",
+                            borderColor: "rgba(130, 112, 255, 0.3)",
+                            borderWidth: "1px",
+                          },
+                          "&:hover fieldset": {
+                            borderColor: "rgba(130, 112, 255, 0.5)",
+                          },
+                          "&.Mui-focused": {
+                            backgroundColor: alpha("#8270FF", 0.05),
+                            "& fieldset": {
+                              borderColor: "#8270FF",
+                              borderWidth: "2px",
+                            },
                           },
                         },
-                      },
-                      "& .MuiInputLabel-root": {
-                        fontSize: "0.875rem",
-                        color: "#666",
-                        "&.Mui-focused": {
+                        "& input": {
                           color: "#8270FF",
+                          fontWeight: 500,
+                          fontSize: "0.938rem",
                         },
-                      },
-                    }}
-                    size="small"
-                    value={formData.identificador_demanda_cliente}
-                    onChange={(e) =>
-                      setFormData({ ...formData, identificador_demanda_cliente: e.target.value })
-                    }
-                    placeholder="Ex: TICKET-1234"
-                  />
-
-                  <TextField
-                    label="Data de Entrega"
-                    type="date"
-                    sx={{
-                      width: 200,
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: 1.5,
-                        backgroundColor: alpha("#8270FF", 0.03),
-                        transition: "all 0.2s ease-in-out",
-                        "& fieldset": {
-                          borderColor: "#8270FF",
-                          borderWidth: "2px",
-                        },
-                        "&:hover fieldset": {
-                          borderColor: "#8270FF",
-                          borderWidth: "2.5px",
-                        },
-                        "&.Mui-focused": {
-                          backgroundColor: alpha("#8270FF", 0.05),
-                          "& fieldset": {
-                            borderColor: "#8270FF",
-                            borderWidth: "2.5px",
-                          },
-                        },
-                      },
-                      "& .MuiInputLabel-root": {
-                        fontSize: "0.875rem",
-                        color: "#8270FF",
-                        fontWeight: 600,
-                        "&.Mui-focused": {
-                          color: "#8270FF",
-                        },
-                      },
-                      "& input": {
-                        color: "#8270FF",
-                        fontWeight: 500,
-                      },
-                    }}
-                    size="small"
-                    InputLabelProps={{ shrink: true }}
-                    value={formData.delivery_date}
-                    onChange={(e) =>
-                      setFormData({ ...formData, delivery_date: e.target.value })
-                    }
-                  />
+                      }}
+                      InputLabelProps={{ shrink: true }}
+                      value={formData.delivery_date}
+                      onChange={(e) =>
+                        setFormData({ ...formData, delivery_date: e.target.value })
+                      }
+                    />
+                  </Box>
                 </Box>
 
                 <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}>
@@ -1715,16 +1750,33 @@ export default function CardModal({
           )}
         </Box>
       </DialogContent>
-      <DialogActions sx={{ p: 2, borderTop: 1, borderColor: "divider", justifyContent: "space-between" }}>
+
+      {/* Modern Footer with Actions */}
+      <DialogActions
+        sx={{
+          px: 4,
+          py: 2.5,
+          borderTop: "1px solid rgba(226, 232, 240, 0.8)",
+          justifyContent: "space-between",
+          bgcolor: "rgba(248, 250, 252, 0.5)",
+        }}
+      >
         <Box>
           {card && (
             <Button
               onClick={handleShareCard}
-              startIcon={<ShareIcon />}
+              startIcon={<ShareIcon sx={{ fontSize: "1.125rem" }} />}
               sx={{
-                color: "#8270FF",
+                color: "#64748b",
+                fontWeight: 600,
+                textTransform: "none",
+                px: 2,
+                py: 1,
+                borderRadius: 2,
+                transition: "all 0.15s ease",
                 "&:hover": {
-                  bgcolor: alpha("#8270FF", 0.08),
+                  color: "#8270FF",
+                  bgcolor: "rgba(130, 112, 255, 0.08)",
                 },
               }}
             >
@@ -1732,20 +1784,56 @@ export default function CardModal({
             </Button>
           )}
         </Box>
-        <Box sx={{ display: "flex", gap: 1 }}>
-          <Button onClick={onClose}>Cancelar</Button>
+        <Box sx={{ display: "flex", gap: 1.5 }}>
+          <Button
+            onClick={onClose}
+            sx={{
+              color: "#64748b",
+              fontWeight: 600,
+              textTransform: "none",
+              px: 3,
+              py: 1.25,
+              borderRadius: 2,
+              border: "1px solid rgba(226, 232, 240, 1)",
+              transition: "all 0.15s ease",
+              "&:hover": {
+                borderColor: "#94a3b8",
+                bgcolor: "rgba(100, 116, 139, 0.04)",
+              },
+            }}
+          >
+            Cancelar
+          </Button>
           <Button
             onClick={handleSubmit}
             variant="contained"
+            disabled={!formData.title.trim()}
             sx={{
               bgcolor: "#8270FF",
+              color: "#fff",
+              fontWeight: 600,
+              textTransform: "none",
+              px: 4,
+              py: 1.25,
+              borderRadius: 2,
+              boxShadow: "0 2px 8px rgba(130, 112, 255, 0.3)",
+              transition: "all 0.15s ease",
               "&:hover": {
-                bgcolor: alpha("#8270FF", 0.8),
+                bgcolor: "#6b5ce0",
+                boxShadow: "0 4px 12px rgba(130, 112, 255, 0.4)",
+                transform: "translateY(-1px)",
+              },
+              "&:active": {
+                transform: "translateY(0)",
+              },
+              "&.Mui-disabled": {
+                bgcolor: "#e2e8f0",
+                color: "#94a3b8",
+                boxShadow: "none",
               },
             }}
-            disabled={!formData.title.trim()}
           >
-            {card ? "Salvar" : "Criar"}
+            {card ? "Salvar Alterações" : "Criar Card"}
           </Button>
         </Box>
       </DialogActions>

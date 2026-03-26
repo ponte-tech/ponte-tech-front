@@ -128,59 +128,83 @@ export default function KanbanCard({
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       sx={{
-        mb: 1.5,
-        cursor: isDragging ? "grabbing" : "grab",
+        mb: 1.25,
+        cursor: isDragging ? "grabbing" : "pointer",
         bgcolor: "#ffffff",
+        backgroundImage: isDragging ? "linear-gradient(135deg, rgba(130, 112, 255, 0.02) 0%, rgba(227, 99, 235, 0.02) 100%)" : "none",
         "&:hover": {
-          boxShadow: "0 4px 12px rgba(130, 112, 255, 0.2)",
-          borderColor: "#8270FF",
+          boxShadow: "0 8px 16px rgba(100, 116, 139, 0.12), 0 0 0 1px rgba(130, 112, 255, 0.1)",
+          borderColor: "rgba(130, 112, 255, 0.3)",
+          transform: "translateY(-2px)",
           "& .card-actions": {
             opacity: 1,
           },
+          "& .card-drag-handle": {
+            opacity: 0.6,
+          },
         },
-        border: isDragging ? "2px solid #8270FF" : "1px solid #e0e0e0",
-        borderRadius: 2,
+        border: isDragging ? "1.5px solid #8270FF" : "1px solid rgba(226, 232, 240, 0.8)",
+        borderRadius: 2.5,
         position: "relative",
-        transition: isDragging ? "none" : "box-shadow 0.12s ease-out, border-color 0.12s ease-out",
+        transition: isDragging
+          ? "none"
+          : "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
         boxShadow: isDragging
-          ? "0 8px 20px rgba(130, 112, 255, 0.35)"
-          : "0 1px 3px rgba(0,0,0,0.12)",
-        transform: isDragging ? "rotate(2deg) scale(1.02)" : "none",
+          ? "0 12px 24px rgba(130, 112, 255, 0.25), 0 0 0 1px rgba(130, 112, 255, 0.5)"
+          : "0 1px 3px rgba(100, 116, 139, 0.08)",
+        transform: isDragging ? "rotate(1.5deg) scale(1.03)" : "none",
         zIndex: isDragging ? 1000 : 1,
         willChange: isDragging ? "transform" : "auto",
+        backdropFilter: isDragging ? "blur(4px)" : "none",
       }}
     >
-      <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
+      <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
+        {/* Drag Handle */}
+        <Box
+          className="card-drag-handle"
+          sx={{
+            position: "absolute",
+            top: 8,
+            left: 8,
+            opacity: 0,
+            transition: "opacity 0.2s ease",
+            pointerEvents: "none",
+          }}
+        >
+          <DragIndicatorIcon sx={{ fontSize: "1rem", color: "#94a3b8" }} />
+        </Box>
+
         {/* Header with Actions */}
         <Box
           sx={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "flex-start",
-            mb: 1,
+            mb: 1.25,
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "flex-start", gap: 0.5, flex: 1 }}>
-            <Typography
-              variant="subtitle1"
-              sx={{
-                fontWeight: 600,
-                color: "#1a1a1a",
-                fontSize: "0.875rem",
-                flex: 1,
-                lineHeight: 1.4,
-              }}
-            >
-              {card.title}
-            </Typography>
-          </Box>
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 600,
+              color: "#0f172a",
+              fontSize: "0.938rem",
+              flex: 1,
+              lineHeight: 1.5,
+              letterSpacing: "-0.01em",
+              pr: 1,
+            }}
+          >
+            {card.title}
+          </Typography>
           <Box
             className="card-actions"
             sx={{
-              opacity: 0.4,
-              transition: "opacity 0.2s",
+              opacity: 0,
+              transition: "opacity 0.2s ease",
               display: "flex",
               gap: 0.25,
+              ml: "auto",
             }}
           >
             <IconButton
@@ -190,12 +214,18 @@ export default function KanbanCard({
                 onEdit(card);
               }}
               sx={{
-                width: 24,
-                height: 24,
-                color: "#8270FF",
+                width: 26,
+                height: 26,
+                borderRadius: 1,
+                color: "#64748b",
+                transition: "all 0.15s ease",
+                "&:hover": {
+                  color: "#8270FF",
+                  bgcolor: "rgba(130, 112, 255, 0.1)",
+                },
               }}
             >
-              <EditIcon sx={{ fontSize: "1rem" }} />
+              <EditIcon sx={{ fontSize: "1.063rem" }} />
             </IconButton>
             <IconButton
               size="small"
@@ -204,174 +234,241 @@ export default function KanbanCard({
                 onDelete(card.card_id);
               }}
               sx={{
-                width: 24,
-                height: 24,
-                color: "#f44336",
+                width: 26,
+                height: 26,
+                borderRadius: 1,
+                color: "#64748b",
+                transition: "all 0.15s ease",
+                "&:hover": {
+                  color: "#ef4444",
+                  bgcolor: "rgba(239, 68, 68, 0.1)",
+                },
               }}
             >
-              <DeleteIcon sx={{ fontSize: "1rem" }} />
+              <DeleteIcon sx={{ fontSize: "1.063rem" }} />
             </IconButton>
           </Box>
         </Box>
 
-        {/* Client Name */}
-        {clientName && (
-          <Box sx={{ mb: 0.75, display: "flex", alignItems: "center", gap: 0.5 }}>
-            <PersonIcon sx={{ fontSize: 14, color: "#8270FF" }} />
-            <Typography
-              variant="body2"
+        {/* Metadata Pills */}
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mb: 1.25 }}>
+          {/* Client Name */}
+          {clientName && (
+            <Chip
+              icon={<PersonIcon sx={{ fontSize: "0.875rem !important", color: "#8270FF !important" }} />}
+              label={clientName}
+              size="small"
               sx={{
-                color: "#8270FF",
+                height: 24,
                 fontSize: "0.75rem",
                 fontWeight: 600,
+                bgcolor: "rgba(130, 112, 255, 0.08)",
+                color: "#8270FF",
+                border: "none",
+                "& .MuiChip-label": {
+                  px: 0.75,
+                },
+                "& .MuiChip-icon": {
+                  ml: 0.75,
+                },
               }}
-            >
-              {clientName}
-            </Typography>
-          </Box>
-        )}
+            />
+          )}
 
-        {/* Identificador Demanda */}
-        {card.identificador_demanda_cliente && (
-          <Chip
-            label={card.identificador_demanda_cliente}
-            size="small"
-            sx={{
-              height: 20,
-              fontSize: "0.7rem",
-              fontWeight: 500,
-              bgcolor: "#F3F0FF",
-              color: "#8270FF",
-              border: "1px solid #E0D7FF",
-              mb: 1,
-              "& .MuiChip-label": {
-                px: 1,
-              },
-            }}
-          />
-        )}
+          {/* Identificador Demanda */}
+          {card.identificador_demanda_cliente && (
+            <Chip
+              label={card.identificador_demanda_cliente}
+              size="small"
+              sx={{
+                height: 24,
+                fontSize: "0.75rem",
+                fontWeight: 600,
+                fontFamily: "monospace",
+                bgcolor: "rgba(241, 245, 249, 1)",
+                color: "#64748b",
+                border: "1px solid rgba(226, 232, 240, 1)",
+                "& .MuiChip-label": {
+                  px: 1,
+                },
+              }}
+            />
+          )}
+        </Box>
 
-        {/* Footer with Card ID */}
+        {/* Footer */}
         <Box
           sx={{
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            pt: 0.75,
-            mt: 0.5,
-            borderTop: "1px solid #f0f0f0",
+            pt: 1,
+            mt: "auto",
+            borderTop: "1px solid rgba(226, 232, 240, 0.6)",
+            gap: 1,
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-            <CheckBoxOutlineBlankIcon sx={{ fontSize: 14, color: "#9e9e9e" }} />
-            <Typography
-              variant="caption"
-              sx={{
-                color: "#757575",
-                fontSize: "0.7rem",
-                fontWeight: 500,
-              }}
-            >
-              {card.card_id.replace("CARD#", "").substring(0, 8)}
-            </Typography>
-          </Box>
+          {/* Card ID - Left Side */}
+          <Tooltip title="ID do Card">
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.625 }}>
+              <CheckBoxOutlineBlankIcon sx={{ fontSize: "0.875rem", color: "#94a3b8" }} />
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "#94a3b8",
+                  fontSize: "0.688rem",
+                  fontWeight: 500,
+                  fontFamily: "monospace",
+                  letterSpacing: "0.02em",
+                }}
+              >
+                {card.card_id.replace("CARD#", "").substring(0, 8)}
+              </Typography>
+            </Box>
+          </Tooltip>
 
-          {/* Additional Icons */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+          {/* Metadata Icons - Right Side */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.875, ml: "auto" }}>
+            {/* Delivery Date */}
             {card.delivery_date && (
-              <CalendarTodayIcon sx={{ fontSize: 14, color: "#f97316" }} />
-            )}
-            {card.observations && card.observations.length > 0 && (
-              <AssignmentIcon sx={{ fontSize: 14, color: "#8270FF" }} />
+              <Tooltip title={`Entrega: ${format(new Date(card.delivery_date), "dd/MM/yyyy", { locale: ptBR })}`}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.375,
+                    px: 0.75,
+                    py: 0.375,
+                    borderRadius: 1,
+                    bgcolor: "rgba(249, 115, 22, 0.08)",
+                    transition: "all 0.15s ease",
+                    "&:hover": {
+                      bgcolor: "rgba(249, 115, 22, 0.12)",
+                    },
+                  }}
+                >
+                  <CalendarTodayIcon sx={{ fontSize: "0.813rem", color: "#f97316" }} />
+                </Box>
+              </Tooltip>
             )}
 
-            {/* Responsáveis Avatars */}
+            {/* Observations */}
+            {card.observations && card.observations.length > 0 && (
+              <Tooltip title={`${card.observations.length} observação(ões)`}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.375,
+                    px: 0.75,
+                    py: 0.375,
+                    borderRadius: 1,
+                    bgcolor: "rgba(130, 112, 255, 0.08)",
+                    transition: "all 0.15s ease",
+                    "&:hover": {
+                      bgcolor: "rgba(130, 112, 255, 0.12)",
+                    },
+                  }}
+                >
+                  <AssignmentIcon sx={{ fontSize: "0.813rem", color: "#8270FF" }} />
+                </Box>
+              </Tooltip>
+            )}
+
+            {/* Responsáveis Avatars - Modern Stack */}
             {onAssignCard && (
               card.assigned_to && card.assigned_to.length > 0 ? (
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
-                    {card.assigned_to.slice(0, 2).map((colaboradorId, index) => {
+                <Tooltip
+                  title={
+                    card.assigned_to.length === 1
+                      ? (getColaboradorName ? getColaboradorName(card.assigned_to[0]) : "")
+                      : `${card.assigned_to.length} responsáveis`
+                  }
+                >
+                  <Box
+                    onClick={handleAssignClick}
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      cursor: "pointer",
+                      transition: "transform 0.15s ease",
+                      "&:hover": {
+                        transform: "scale(1.05)",
+                      },
+                    }}
+                  >
+                    {card.assigned_to.slice(0, 3).map((colaboradorId, index) => {
                       const colaboradorName = getColaboradorName ? getColaboradorName(colaboradorId) : colaboradorId;
                       const colaboradorFoto = getColaboradorFoto ? getColaboradorFoto(colaboradorId) : undefined;
                       return (
-                        <Tooltip key={colaboradorId} title={colaboradorName}>
-                          <Avatar
-                            src={colaboradorFoto || ""}
-                            onClick={handleAssignClick}
-                            sx={{
-                              width: 20,
-                              height: 20,
-                              fontSize: "0.65rem",
-                              bgcolor: colaboradorFoto ? "transparent" : "#8270FF",
-                              cursor: "pointer",
-                              border: "1.5px solid white",
-                              marginLeft: index > 0 ? "-6px" : 0,
-                              "&:hover": {
-                                bgcolor: colaboradorFoto ? "transparent" : "#6a5ce0",
-                                zIndex: 1,
-                              },
-                            }}
-                          >
-                            {!colaboradorFoto && colaboradorName.substring(0, 2).toUpperCase()}
-                          </Avatar>
-                        </Tooltip>
-                      );
-                    })}
-                    {card.assigned_to.length > 2 && (
-                      <Tooltip title={`+${card.assigned_to.length - 2} responsáveis`}>
                         <Avatar
-                          onClick={handleAssignClick}
+                          key={colaboradorId}
+                          src={colaboradorFoto || ""}
                           sx={{
-                            width: 20,
-                            height: 20,
-                            fontSize: "0.6rem",
-                            bgcolor: "#bdbdbd",
-                            cursor: "pointer",
-                            border: "1.5px solid white",
-                            marginLeft: "-6px",
+                            width: 24,
+                            height: 24,
+                            fontSize: "0.625rem",
+                            fontWeight: 600,
+                            bgcolor: colaboradorFoto ? "transparent" : "#8270FF",
+                            border: "2px solid white",
+                            marginLeft: index > 0 ? "-10px" : 0,
+                            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                            transition: "all 0.15s ease",
+                            zIndex: 3 - index,
                             "&:hover": {
-                              bgcolor: "#9e9e9e",
-                              zIndex: 1,
+                              zIndex: 10,
+                              transform: "translateY(-2px)",
                             },
                           }}
                         >
-                          +{card.assigned_to.length - 2}
+                          {!colaboradorFoto && colaboradorName.substring(0, 2).toUpperCase()}
                         </Avatar>
-                      </Tooltip>
+                      );
+                    })}
+                    {card.assigned_to.length > 3 && (
+                      <Avatar
+                        sx={{
+                          width: 24,
+                          height: 24,
+                          fontSize: "0.625rem",
+                          fontWeight: 600,
+                          bgcolor: "#64748b",
+                          border: "2px solid white",
+                          marginLeft: "-10px",
+                          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                          transition: "all 0.15s ease",
+                          "&:hover": {
+                            zIndex: 10,
+                            transform: "translateY(-2px)",
+                          },
+                        }}
+                      >
+                        +{card.assigned_to.length - 3}
+                      </Avatar>
                     )}
                   </Box>
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      color: "#757575",
-                      fontSize: "0.65rem",
-                      fontWeight: 500,
-                      maxWidth: "80px",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {getColaboradorName ? getColaboradorName(card.assigned_to[0]) : ""}
-                  </Typography>
-                </Box>
+                </Tooltip>
               ) : (
                 <Tooltip title="Atribuir responsável">
                   <IconButton
                     size="small"
                     onClick={handleAssignClick}
                     sx={{
-                      width: 20,
-                      height: 20,
+                      width: 24,
+                      height: 24,
                       padding: 0,
-                      color: "#bdbdbd",
+                      borderRadius: "50%",
+                      border: "2px dashed rgba(148, 163, 184, 0.3)",
+                      color: "#94a3b8",
+                      transition: "all 0.15s ease",
                       "&:hover": {
                         color: "#8270FF",
+                        borderColor: "#8270FF",
                         bgcolor: "rgba(130, 112, 255, 0.08)",
                       },
                     }}
                   >
-                    <PersonAddIcon sx={{ fontSize: 14 }} />
+                    <PersonAddIcon sx={{ fontSize: "0.875rem" }} />
                   </IconButton>
                 </Tooltip>
               )

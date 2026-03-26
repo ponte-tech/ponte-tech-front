@@ -132,42 +132,45 @@ export default function KanbanColumn({
       ref={setRefs}
       style={style}
       {...attributes}
-      elevation={isOver ? 8 : 2}
+      elevation={0}
       sx={{
-        minWidth: 320,
-        maxWidth: 320,
+        minWidth: 340,
+        maxWidth: 340,
         height: "100%",
-        bgcolor: isOver ? "#F3F0FF" : isDraggingCard ? "#FAFAFA" : "#f5f5f5",
-        borderRadius: 2,
+        bgcolor: isOver
+          ? "rgba(130, 112, 255, 0.04)"
+          : "rgba(255, 255, 255, 0.6)",
+        backdropFilter: "blur(8px)",
+        borderRadius: 3,
         display: "flex",
         flexDirection: "column",
         border: isOver
-          ? "2px solid #8270FF"
+          ? "2px solid rgba(130, 112, 255, 0.4)"
           : isDraggingCard
-            ? "2px dashed #8270FF"
-            : "2px solid transparent",
-        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-        transform: isOver ? "scale(1.02)" : "scale(1)",
+            ? "2px dashed rgba(130, 112, 255, 0.3)"
+            : "1px solid rgba(226, 232, 240, 0.8)",
+        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+        transform: isOver ? "scale(1.015)" : "scale(1)",
         boxShadow: isOver
-          ? "0 8px 24px rgba(130, 112, 255, 0.3)"
-          : undefined,
+          ? "0 8px 24px rgba(130, 112, 255, 0.12)"
+          : "0 1px 3px rgba(100, 116, 139, 0.06)",
       }}
     >
-      {/* Column Header */}
+      {/* Column Header - Modern Minimal */}
       <Box
         sx={{
-          px: 1.5,
-          py: 1,
-          borderBottom: "1px solid #e0e0e0",
+          px: 2,
+          py: 1.5,
+          borderBottom: "1px solid rgba(226, 232, 240, 0.6)",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          bgcolor: "#ffffff",
-          borderTopLeftRadius: 8,
-          borderTopRightRadius: 8,
+          bgcolor: "transparent",
+          borderTopLeftRadius: 12,
+          borderTopRightRadius: 12,
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, flex: 1 }}>
           {/* Drag Handle */}
           <Box
             {...listeners}
@@ -175,7 +178,8 @@ export default function KanbanColumn({
               cursor: "grab",
               display: "flex",
               alignItems: "center",
-              color: "#bdbdbd",
+              color: "rgba(148, 163, 184, 0.4)",
+              transition: "color 0.15s ease",
               "&:hover": {
                 color: "#8270FF",
               },
@@ -184,69 +188,88 @@ export default function KanbanColumn({
               },
             }}
           >
-            <DragIndicatorIcon sx={{ fontSize: "1.2rem" }} />
+            <DragIndicatorIcon sx={{ fontSize: "1.125rem" }} />
           </Box>
           <Typography
             variant="h6"
             sx={{
-              fontWeight: 600,
-              color: "#333",
-              fontSize: "0.9rem",
+              fontWeight: 700,
+              color: "#0f172a",
+              fontSize: "0.938rem",
+              letterSpacing: "-0.01em",
+              flex: 1,
             }}
           >
             {column.name}
           </Typography>
-          <Box sx={{ ml: 1 }}>
-            <Badge
-              badgeContent={cards.length}
-              color="primary"
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minWidth: 28,
+              height: 22,
+              px: 0.875,
+              borderRadius: 1.25,
+              bgcolor: "rgba(148, 163, 184, 0.12)",
+              transition: "all 0.15s ease",
+            }}
+          >
+            <Typography
+              variant="caption"
               sx={{
-                "& .MuiBadge-badge": {
-                  bgcolor: "#8270FF",
-                  fontSize: "0.65rem",
-                  height: 16,
-                  minWidth: 16,
-                },
+                color: "#64748b",
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                lineHeight: 1,
               }}
-            />
+            >
+              {cards.length}
+            </Typography>
           </Box>
         </Box>
-        <Box sx={{ display: "flex", gap: 0.25 }}>
+        <Box sx={{ display: "flex", gap: 0.375, opacity: 0.6, transition: "opacity 0.15s ease", "&:hover": { opacity: 1 } }}>
           <IconButton
             size="small"
             onClick={() => onAddCard(column.column_id)}
             sx={{
-              width: 24,
-              height: 24,
-              color: "#999",
-              "&:hover": { color: "#8270FF", bgcolor: "rgba(130, 112, 255, 0.08)" },
+              width: 28,
+              height: 28,
+              borderRadius: 1.25,
+              color: "#64748b",
+              transition: "all 0.15s ease",
+              "&:hover": { color: "#8270FF", bgcolor: "rgba(130, 112, 255, 0.1)" },
             }}
           >
-            <AddIcon sx={{ fontSize: "1rem" }} />
+            <AddIcon sx={{ fontSize: "1.125rem" }} />
           </IconButton>
           <IconButton
             size="small"
             onClick={() => onEditColumn(column)}
             sx={{
-              width: 24,
-              height: 24,
-              color: "#999",
-              "&:hover": { color: "#8270FF" },
+              width: 28,
+              height: 28,
+              borderRadius: 1.25,
+              color: "#64748b",
+              transition: "all 0.15s ease",
+              "&:hover": { color: "#8270FF", bgcolor: "rgba(130, 112, 255, 0.1)" },
             }}
           >
-            <EditIcon sx={{ fontSize: "1rem" }} />
+            <EditIcon sx={{ fontSize: "1.063rem" }} />
           </IconButton>
           <IconButton
             size="small"
             onClick={() => onDeleteColumn(column.column_id)}
             sx={{
-              width: 24,
-              height: 24,
-              color: "#999",
-              "&:hover": { color: "#f44336" },
+              width: 28,
+              height: 28,
+              borderRadius: 1.25,
+              color: "#64748b",
+              transition: "all 0.15s ease",
+              "&:hover": { color: "#ef4444", bgcolor: "rgba(239, 68, 68, 0.1)" },
             }}
           >
-            <DeleteIcon sx={{ fontSize: "1rem" }} />
+            <DeleteIcon sx={{ fontSize: "1.063rem" }} />
           </IconButton>
         </Box>
       </Box>
