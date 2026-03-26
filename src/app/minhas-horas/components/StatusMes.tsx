@@ -101,20 +101,25 @@ export default function StatusMes({
       sx={{
         mb: 3,
         borderRadius: 3,
-        background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
-        border: '2px solid',
-        borderColor: alpha('#8270FF', 0.15),
+        background: '#ffffff',
+        border: '1px solid',
+        borderColor: 'rgba(226, 232, 240, 0.8)',
         overflow: 'hidden',
         position: 'relative',
+        boxShadow: '0 1px 3px rgba(100, 116, 139, 0.06)',
+        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+        '&:hover': {
+          boxShadow: '0 4px 12px rgba(100, 116, 139, 0.12)',
+          borderColor: 'rgba(130, 112, 255, 0.2)',
+        },
         '&::before': {
           content: '""',
           position: 'absolute',
           left: 0,
           top: 0,
           bottom: 0,
-          width: '6px',
+          width: '4px',
           background: getGradientByStatus(statusMes),
-          boxShadow: '2px 0 12px rgba(0, 0, 0, 0.1)',
         },
       }}
     >
@@ -130,12 +135,15 @@ export default function StatusMes({
                 sx={{
                   background: getGradientByStatus(statusMes),
                   color: '#FFFFFF',
-                  fontWeight: 700,
-                  fontSize: '0.9rem',
-                  px: 1,
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  height: 36,
+                  px: 1.5,
+                  borderRadius: 2,
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12)',
                   '& .MuiChip-icon': {
                     color: '#FFFFFF',
+                    fontSize: '1.125rem',
                   },
                 }}
               />
@@ -144,21 +152,25 @@ export default function StatusMes({
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 1,
-                    px: 2,
-                    py: 0.75,
+                    gap: 1.5,
+                    px: 2.5,
+                    py: 1,
                     borderRadius: 2,
-                    background: alpha('#8270FF', 0.08),
+                    background: 'rgba(130, 112, 255, 0.06)',
+                    border: '1px solid rgba(130, 112, 255, 0.15)',
                   }}
                 >
-                  <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                    Total de horas lançadas:
+                  <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500, fontSize: '0.875rem' }}>
+                    Total de horas:
                   </Typography>
-                  <Typography variant="h6" fontWeight={700} sx={{
-                    background: 'linear-gradient(135deg, #8270FF 0%, #a78bfa 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                  }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: '1.125rem',
+                      color: '#8270FF',
+                    }}
+                  >
                     {totalHoras.toFixed(2)}h
                   </Typography>
                 </Box>
@@ -168,21 +180,25 @@ export default function StatusMes({
                     sx={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 1,
-                      px: 2,
-                      py: 0.75,
+                      gap: 1.5,
+                      px: 2.5,
+                      py: 1,
                       borderRadius: 2,
-                      background: alpha('#10b981', 0.08),
+                      background: 'rgba(16, 185, 129, 0.06)',
+                      border: '1px solid rgba(16, 185, 129, 0.15)',
                     }}
                   >
-                    <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                      Total valor aprovado:
+                    <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500, fontSize: '0.875rem' }}>
+                      Valor aprovado:
                     </Typography>
-                    <Typography variant="h6" fontWeight={700} sx={{
-                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                    }}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontWeight: 700,
+                        fontSize: '1.125rem',
+                        color: '#10b981',
+                      }}
+                    >
                       {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorAprovado)}
                     </Typography>
                   </Box>
@@ -190,7 +206,7 @@ export default function StatusMes({
               </Stack>
             </Box>
 
-            <Stack direction="row" spacing={2}>
+            <Stack direction="row" spacing={1.5}>
               {statusMes !== 'APROVADO' && totalHoras > 0 && onDeletarTodosLancamentos && (
                 <Button
                   variant="outlined"
@@ -199,20 +215,22 @@ export default function StatusMes({
                     borderRadius: 2,
                     textTransform: 'none',
                     fontWeight: 600,
-                    px: 3,
-                    borderWidth: 2,
-                    transition: 'all 0.3s ease',
+                    fontSize: '0.875rem',
+                    px: 2.5,
+                    height: 40,
+                    borderWidth: '1.5px',
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                     '&:hover': {
-                      borderWidth: 2,
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
+                      borderWidth: '1.5px',
+                      transform: 'translateY(-1px)',
+                      boxShadow: '0 4px 12px rgba(239, 68, 68, 0.25)',
                     },
                   }}
-                  startIcon={<DeleteSweepIcon />}
+                  startIcon={<DeleteSweepIcon sx={{ fontSize: '1.125rem' }} />}
                   onClick={onDeletarTodosLancamentos}
                   disabled={loading}
                 >
-                  Excluir Todos os Lançamentos
+                  Excluir Todos
                 </Button>
               )}
 
@@ -220,23 +238,25 @@ export default function StatusMes({
                 <Button
                   variant="contained"
                   sx={{
-                    background: 'linear-gradient(135deg, #8270FF 0%, #a78bfa 100%)',
-                    boxShadow: '0 4px 12px rgba(130, 112, 255, 0.3)',
+                    background: 'linear-gradient(135deg, #8270FF 0%, #6b5ce0 100%)',
+                    boxShadow: '0 2px 8px rgba(130, 112, 255, 0.25)',
                     borderRadius: 2,
                     textTransform: 'none',
                     fontWeight: 600,
-                    px: 3,
-                    transition: 'all 0.3s ease',
+                    fontSize: '0.875rem',
+                    px: 2.5,
+                    height: 40,
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                     '&:hover': {
-                      background: 'linear-gradient(135deg, #7059e5 0%, #9575e6 100%)',
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 6px 20px rgba(130, 112, 255, 0.4)',
+                      background: 'linear-gradient(135deg, #6b5ce0 0%, #5a4dcc 100%)',
+                      transform: 'translateY(-1px)',
+                      boxShadow: '0 4px 12px rgba(130, 112, 255, 0.35)',
                     },
                     '&:disabled': {
-                      background: alpha('#8270FF', 0.3),
+                      background: 'rgba(130, 112, 255, 0.3)',
                     },
                   }}
-                  startIcon={<SendIcon />}
+                  startIcon={<SendIcon sx={{ fontSize: '1.125rem' }} />}
                   onClick={onEnviarParaAprovacao}
                   disabled={loading}
                 >

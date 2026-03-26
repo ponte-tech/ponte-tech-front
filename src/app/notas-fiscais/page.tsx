@@ -137,7 +137,7 @@ export default function NotasFiscaisPage() {
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
-      {/* Header */}
+      {/* Header - Modern Invoice Management Style */}
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         justifyContent="space-between"
@@ -146,10 +146,28 @@ export default function NotasFiscaisPage() {
         mb={4}
       >
         <Box>
-          <Typography variant="h4" fontWeight="bold" gutterBottom>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 800,
+              fontSize: { xs: '1.75rem', md: '2.125rem' },
+              background: 'linear-gradient(135deg, #0f172a 0%, #334155 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              letterSpacing: '-0.02em',
+              mb: 0.5,
+            }}
+          >
             Notas Fiscais
           </Typography>
-          <Typography variant="body1" color="text.secondary">
+          <Typography
+            variant="body1"
+            sx={{
+              color: '#64748b',
+              fontSize: '0.938rem',
+              fontWeight: 500,
+            }}
+          >
             Gerencie suas notas fiscais enviadas
           </Typography>
         </Box>
@@ -157,7 +175,25 @@ export default function NotasFiscaisPage() {
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setUploadModalOpen(true)}
-          sx={{ minWidth: 200 }}
+          sx={{
+            minWidth: 200,
+            height: 48,
+            background: 'linear-gradient(135deg, #8270FF 0%, #6b5ce0 100%)',
+            borderRadius: 2.5,
+            fontWeight: 600,
+            fontSize: '0.938rem',
+            textTransform: 'none',
+            boxShadow: '0 4px 12px rgba(130, 112, 255, 0.3)',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover': {
+              background: 'linear-gradient(135deg, #6b5ce0 0%, #5a4dcc 100%)',
+              transform: 'translateY(-2px)',
+              boxShadow: '0 6px 16px rgba(130, 112, 255, 0.4)',
+            },
+            '&:active': {
+              transform: 'translateY(0)',
+            },
+          }}
         >
           Enviar Nota Fiscal
         </Button>

@@ -167,9 +167,44 @@ export default function FormularioLancamento({
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ptBR}>
-      <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-        <DialogTitle>Novo Lançamento de Horas</DialogTitle>
-        <DialogContent>
+      <Dialog
+        open={open}
+        onClose={onClose}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 4,
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
+          },
+        }}
+        sx={{
+          '& .MuiBackdrop-root': {
+            backdropFilter: 'blur(4px)',
+            backgroundColor: 'rgba(15, 23, 42, 0.5)',
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            borderBottom: '1px solid rgba(226, 232, 240, 0.8)',
+            py: 2.5,
+            px: 3,
+            background: 'rgba(248, 250, 252, 0.5)',
+          }}
+        >
+          <Typography
+            sx={{
+              fontWeight: 700,
+              fontSize: '1.25rem',
+              color: '#0f172a',
+              letterSpacing: '-0.01em',
+            }}
+          >
+            Novo Lançamento de Horas
+          </Typography>
+        </DialogTitle>
+        <DialogContent sx={{ px: 3, py: 3 }}>
           <Stack spacing={3} sx={{ mt: 1 }}>
             {error && <Alert severity="error">{error}</Alert>}
 
@@ -189,9 +224,17 @@ export default function FormularioLancamento({
               </Select>
             </FormControl>
 
-            {/* Tipo de Lançamento */}
+            {/* Tipo de Lançamento - Modern */}
             <Box>
-              <Typography variant="body2" gutterBottom>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: '#64748b',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  mb: 1.5,
+                }}
+              >
                 Tipo de Lançamento
               </Typography>
               <ToggleButtonGroup
@@ -199,6 +242,30 @@ export default function FormularioLancamento({
                 exclusive
                 onChange={(_, value) => value && setTipoLancamento(value)}
                 fullWidth
+                sx={{
+                  '& .MuiToggleButton-root': {
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    fontSize: '0.875rem',
+                    py: 1.25,
+                    borderRadius: 2,
+                    border: '1.5px solid rgba(226, 232, 240, 0.8)',
+                    color: '#64748b',
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&.Mui-selected': {
+                      background: 'linear-gradient(135deg, #8270FF 0%, #6b5ce0 100%)',
+                      color: '#FFFFFF',
+                      borderColor: '#8270FF',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #6b5ce0 0%, #5a4dcc 100%)',
+                      },
+                    },
+                    '&:hover': {
+                      backgroundColor: 'rgba(130, 112, 255, 0.04)',
+                      borderColor: '#8270FF',
+                    },
+                  },
+                }}
               >
                 <ToggleButton value="unico">Dia Único</ToggleButton>
                 <ToggleButton value="multiplo">Múltiplos Dias</ToggleButton>
@@ -279,14 +346,60 @@ export default function FormularioLancamento({
             />
           </Stack>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={onClose} disabled={loading}>
+        <DialogActions
+          sx={{
+            px: 3,
+            py: 2.5,
+            borderTop: '1px solid rgba(226, 232, 240, 0.8)',
+            justifyContent: 'space-between',
+            background: 'rgba(248, 250, 252, 0.5)',
+          }}
+        >
+          <Button
+            onClick={onClose}
+            disabled={loading}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: '0.938rem',
+              color: '#64748b',
+              px: 3,
+              py: 1.25,
+              borderRadius: 2,
+              '&:hover': {
+                backgroundColor: 'rgba(100, 116, 139, 0.08)',
+              },
+            }}
+          >
             Cancelar
           </Button>
           <Button
             onClick={handleSubmit}
             variant="contained"
             disabled={loading || contratosAtivos.length === 0}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: '0.938rem',
+              px: 4,
+              py: 1.25,
+              borderRadius: 2,
+              background: 'linear-gradient(135deg, #8270FF 0%, #6b5ce0 100%)',
+              boxShadow: '0 2px 8px rgba(130, 112, 255, 0.3)',
+              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #6b5ce0 0%, #5a4dcc 100%)',
+                transform: 'translateY(-1px)',
+                boxShadow: '0 4px 12px rgba(130, 112, 255, 0.4)',
+              },
+              '&:active': {
+                transform: 'translateY(0)',
+              },
+              '&:disabled': {
+                background: 'rgba(130, 112, 255, 0.3)',
+                color: 'rgba(255, 255, 255, 0.6)',
+              },
+            }}
           >
             {loading ? 'Salvando...' : 'Salvar Lançamento'}
           </Button>

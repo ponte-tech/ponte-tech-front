@@ -30,10 +30,40 @@ export default function FiltrosNotas({
   totalNotas,
 }: FiltrosNotasProps) {
   return (
-    <Paper sx={{ p: 2, mb: 3 }}>
+    <Paper
+      elevation={0}
+      sx={{
+        p: 2.5,
+        mb: 3,
+        borderRadius: 3,
+        background: '#ffffff',
+        border: '1px solid',
+        borderColor: 'rgba(226, 232, 240, 0.8)',
+        boxShadow: '0 1px 3px rgba(100, 116, 139, 0.06)',
+      }}
+    >
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
-        <FormControl size="small" sx={{ minWidth: 200 }}>
-          <InputLabel>Status</InputLabel>
+        <FormControl
+          size="small"
+          sx={{
+            minWidth: 200,
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 2,
+              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+              '& fieldset': {
+                borderColor: 'rgba(226, 232, 240, 0.8)',
+              },
+              '&:hover fieldset': {
+                borderColor: 'rgba(130, 112, 255, 0.5)',
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: '#8270FF',
+                borderWidth: '2px',
+              },
+            },
+          }}
+        >
+          <InputLabel sx={{ fontWeight: 500, fontSize: '0.875rem' }}>Status</InputLabel>
           <Select
             value={statusFiltro}
             onChange={(e) => onStatusChange(e.target.value as StatusNotaFiscal | 'TODOS')}
@@ -53,15 +83,42 @@ export default function FiltrosNotas({
           value={mesFiltro}
           onChange={(e) => onMesChange(e.target.value)}
           InputLabelProps={{ shrink: true }}
-          sx={{ minWidth: 200 }}
+          sx={{
+            minWidth: 200,
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 2,
+              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+              '& fieldset': {
+                borderColor: 'rgba(226, 232, 240, 0.8)',
+              },
+              '&:hover fieldset': {
+                borderColor: 'rgba(130, 112, 255, 0.5)',
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: '#8270FF',
+                borderWidth: '2px',
+              },
+            },
+            '& .MuiInputLabel-root': {
+              fontWeight: 500,
+              fontSize: '0.875rem',
+            },
+          }}
         />
 
         <Box flex={1} />
 
         <Chip
           label={`${totalNotas} nota${totalNotas !== 1 ? 's' : ''}`}
-          color="primary"
-          variant="outlined"
+          sx={{
+            height: 32,
+            fontWeight: 600,
+            fontSize: '0.8125rem',
+            borderRadius: 2,
+            background: 'rgba(130, 112, 255, 0.08)',
+            color: '#8270FF',
+            border: '1px solid rgba(130, 112, 255, 0.2)',
+          }}
         />
       </Stack>
     </Paper>

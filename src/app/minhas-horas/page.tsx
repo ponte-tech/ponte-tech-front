@@ -314,7 +314,7 @@ export default function MinhasHorasPage() {
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
-      {/* Header */}
+      {/* Header - Modern 2025 Style */}
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         justifyContent="space-between"
@@ -323,10 +323,28 @@ export default function MinhasHorasPage() {
         mb={4}
       >
         <Box>
-          <Typography variant="h4" fontWeight="bold" gutterBottom>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 800,
+              fontSize: { xs: '1.75rem', md: '2.125rem' },
+              background: 'linear-gradient(135deg, #0f172a 0%, #334155 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              letterSpacing: '-0.02em',
+              mb: 0.5,
+            }}
+          >
             Minhas Horas
           </Typography>
-          <Typography variant="body1" color="text.secondary">
+          <Typography
+            variant="body1"
+            sx={{
+              color: '#64748b',
+              fontSize: '0.938rem',
+              fontWeight: 500,
+            }}
+          >
             Gerencie seus lançamentos de horas e acompanhe o progresso
           </Typography>
         </Box>
@@ -335,7 +353,29 @@ export default function MinhasHorasPage() {
           startIcon={<AddIcon />}
           onClick={handleNovoLancamento}
           disabled={contratos.length === 0}
-          sx={{ minWidth: 200 }}
+          sx={{
+            minWidth: 200,
+            height: 48,
+            background: 'linear-gradient(135deg, #8270FF 0%, #6b5ce0 100%)',
+            borderRadius: 2.5,
+            fontWeight: 600,
+            fontSize: '0.938rem',
+            textTransform: 'none',
+            boxShadow: '0 4px 12px rgba(130, 112, 255, 0.3)',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover': {
+              background: 'linear-gradient(135deg, #6b5ce0 0%, #5a4dcc 100%)',
+              transform: 'translateY(-2px)',
+              boxShadow: '0 6px 16px rgba(130, 112, 255, 0.4)',
+            },
+            '&:active': {
+              transform: 'translateY(0)',
+            },
+            '&:disabled': {
+              background: 'rgba(130, 112, 255, 0.3)',
+              color: 'rgba(255, 255, 255, 0.6)',
+            },
+          }}
         >
           Novo Lançamento
         </Button>
@@ -377,15 +417,64 @@ export default function MinhasHorasPage() {
         />
       )}
 
-      {/* Abas de Navegação */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+      {/* Abas de Navegação - Modern Tabs */}
+      <Box
+        sx={{
+          borderBottom: '2px solid',
+          borderColor: 'rgba(226, 232, 240, 0.8)',
+          mb: 3,
+        }}
+      >
         <Tabs
           value={abaAtiva}
           onChange={(_, newValue) => setAbaAtiva(newValue)}
           aria-label="abas de navegação"
+          sx={{
+            '& .MuiTabs-indicator': {
+              height: 3,
+              borderRadius: '3px 3px 0 0',
+              background: 'linear-gradient(135deg, #8270FF 0%, #6b5ce0 100%)',
+            },
+          }}
         >
-          <Tab label="Calendário" />
-          <Tab label="Resumo" />
+          <Tab
+            label="Calendário"
+            sx={{
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: '0.938rem',
+              color: '#64748b',
+              minHeight: 48,
+              transition: 'all 0.2s ease',
+              '&.Mui-selected': {
+                color: '#8270FF',
+                fontWeight: 700,
+              },
+              '&:hover': {
+                color: '#8270FF',
+                backgroundColor: 'rgba(130, 112, 255, 0.04)',
+              },
+            }}
+          />
+          <Tab
+            label="Resumo"
+            sx={{
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: '0.938rem',
+              color: '#64748b',
+              minHeight: 48,
+              transition: 'all 0.2s ease',
+              '&.Mui-selected': {
+                color: '#8270FF',
+                fontWeight: 700,
+              },
+              '&:hover': {
+                color: '#8270FF',
+                backgroundColor: 'rgba(130, 112, 255, 0.04)',
+              },
+            }}
+          />
         </Tabs>
       </Box>
 
