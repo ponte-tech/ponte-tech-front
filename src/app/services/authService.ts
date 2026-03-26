@@ -126,6 +126,40 @@ class AuthService {
       throw new Error(response.data.message || "Erro ao resetar senha");
     }
   }
+
+  /**
+   * Solicita código de recuperação via WhatsApp
+   */
+  async requestResetCode(email: string): Promise<{ message: string; phoneLastFour: string }> {
+    const response: AxiosResponse<ApiResponse<{ message: string; phoneLastFour: string }>> = await api.post(
+      "/api/auth/forgot-password/request-code",
+      { email }
+    );
+
+    if (!response.data.success || !response.data.data) {
+      throw new Error(response.data.message || "Erro ao solicitar código");
+    }
+
+    return response.data.data;
+  }
+
+  /**
+   * Verifica código e reseta a senha
+   */
+  async verifyAndReset(email: string, code: string, newPassword: string): Promise<void> {
+    const response: AxiosResponse<ApiResponse<void>> = await api.post(
+      "/api/auth/forgot-password/verify-and-reset",
+      {
+        email,
+        code,
+        newPassword,
+      }
+    );
+
+    if (!response.data.success) {
+      throw new Error(response.data.message || "Erro ao verificar código e resetar senha");
+    }
+  }
 }
 
 // Exportar instância única (singleton)

@@ -11,19 +11,15 @@ import {
   Alert,
   IconButton,
   InputAdornment,
-  Fade,
   CircularProgress,
-  Container,
-  Paper,
-  Divider,
-  alpha,
+  Stack,
+  Collapse,
 } from "@mui/material";
 import {
-  Email as EmailIcon,
-  Lock as LockIcon,
   Visibility,
   VisibilityOff,
-  LoginOutlined,
+  ArrowForward,
+  ErrorOutline,
 } from "@mui/icons-material";
 import Image from "next/image";
 
@@ -41,31 +37,8 @@ export default function LoginPage() {
     try {
       await login(email, password);
     } catch (err) {
-      setError("Email ou senha incorretos. Tente novamente.");
+      setError("Credenciais inválidas. Tente novamente.");
     }
-  };
-
-  // Cores calculadas uma vez para evitar erros de hidratação
-  const colors = {
-    bgGradient1: alpha('#8270FF', 0.05),
-    bgGradient2: alpha('#FFFFFF', 1),
-    bgGradient3: alpha('#E363EB', 0.05),
-    circle1: alpha('#8270FF', 0.1),
-    circle2: alpha('#E363EB', 0.06),
-    border: alpha('#e5e7eb', 0.8),
-    shadow1: alpha('#8270FF', 0.08),
-    shadow2: alpha('#000000', 0.04),
-    hoverShadow1: alpha('#8270FF', 0.12),
-    hoverShadow2: alpha('#000000', 0.06),
-    errorBorder: alpha('#ef4444', 0.2),
-    errorBg: alpha('#fef2f2', 0.8),
-    inputBg: alpha("#f9fafb", 0.8),
-    inputBorder: alpha("#d1d5db", 0.8),
-    focusShadow: alpha("#8270FF", 0.1),
-    buttonShadow: alpha("#8270FF", 0.3),
-    buttonHoverShadow: alpha("#411EFE", 0.4),
-    buttonDisabled: alpha("#8270FF", 0.4),
-    dividerColor: alpha("#d1d5db", 0.6),
   };
 
   return (
@@ -75,236 +48,288 @@ export default function LoginPage() {
         display: "flex",
         position: "relative",
         overflow: "hidden",
-        background: `
-          linear-gradient(135deg,
-            ${colors.bgGradient1} 0%,
-            ${colors.bgGradient2} 50%,
-            ${colors.bgGradient3} 100%
-          )
-        `,
       }}
     >
-      {/* Decorative circles */}
+      {/* Left Side - Brand & Visuals (Desktop only) */}
       <Box
         sx={{
-          position: "absolute",
-          top: "-10%",
-          right: "-5%",
-          width: { xs: 300, md: 500 },
-          height: { xs: 300, md: 500 },
-          borderRadius: "50%",
-          background: `radial-gradient(circle, ${colors.circle1} 0%, transparent 70%)`,
-          pointerEvents: "none",
+          display: { xs: "none", lg: "flex" },
+          flex: 1,
+          position: "relative",
+          background: "linear-gradient(135deg, #8270FF 0%, #411EFE 50%, #E363EB 100%)",
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "hidden",
         }}
-      />
-      <Box
-        sx={{
-          position: "absolute",
-          bottom: "-15%",
-          left: "-10%",
-          width: { xs: 400, md: 600 },
-          height: { xs: 400, md: 600 },
-          borderRadius: "50%",
-          background: `radial-gradient(circle, ${colors.circle2} 0%, transparent 70%)`,
-          pointerEvents: "none",
-        }}
-      />
+      >
+        {/* Animated gradient orbs */}
+        <Box
+          sx={{
+            position: "absolute",
+            top: "10%",
+            right: "10%",
+            width: 400,
+            height: 400,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(227, 99, 235, 0.4) 0%, transparent 70%)",
+            filter: "blur(60px)",
+            animation: "float 8s ease-in-out infinite",
+            "@keyframes float": {
+              "0%, 100%": { transform: "translate(0, 0)" },
+              "50%": { transform: "translate(30px, -30px)" },
+            },
+          }}
+        />
+        <Box
+          sx={{
+            position: "absolute",
+            bottom: "20%",
+            left: "15%",
+            width: 350,
+            height: 350,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(65, 30, 254, 0.4) 0%, transparent 70%)",
+            filter: "blur(60px)",
+            animation: "float 6s ease-in-out infinite reverse",
+          }}
+        />
 
-      {/* Main content */}
-      <Container
-        maxWidth="sm"
+        {/* Content */}
+        <Box
+          sx={{
+            position: "relative",
+            zIndex: 1,
+            textAlign: "center",
+            px: 8,
+          }}
+        >
+          <Box
+            sx={{
+              width: 200,
+              height: 70,
+              position: "relative",
+              mx: "auto",
+              mb: 6,
+              filter: "brightness(0) invert(1)",
+            }}
+          >
+            <Image
+              src="/logo-login.svg"
+              alt="Ponte Tech"
+              fill
+              style={{ objectFit: "contain" }}
+              priority
+            />
+          </Box>
+
+          <Typography
+            variant="h3"
+            sx={{
+              color: "#FFFFFF",
+              fontWeight: 700,
+              mb: 2,
+              fontSize: { xs: "2rem", lg: "2.5rem" },
+              lineHeight: 1.2,
+            }}
+          >
+            Conectando pessoas,
+            <br />
+            transformando negócios
+          </Typography>
+          <Typography
+            variant="h6"
+            sx={{
+              color: "rgba(255, 255, 255, 0.8)",
+              fontWeight: 400,
+              fontSize: "1.125rem",
+              maxWidth: 500,
+              mx: "auto",
+            }}
+          >
+            Gestão inteligente de projetos e equipes
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* Right Side - Login Form */}
+      <Box
         sx={{
+          flex: 1,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          py: { xs: 8, sm: 4 },
+          background: "#FFFFFF",
+          px: { xs: 3, sm: 6, lg: 8 },
+          py: 4,
           position: "relative",
-          zIndex: 1,
         }}
       >
-        <Fade in timeout={500}>
-          <Paper
-            elevation={0}
-            sx={{
-              width: "100%",
-              maxWidth: 480,
-              p: { xs: 4, sm: 6 },
-              borderRadius: 4,
-              backgroundColor: "#FFFFFF",
-              border: `1px solid ${colors.border}`,
-              boxShadow: `
-                0 10px 40px ${colors.shadow1},
-                0 2px 8px ${colors.shadow2}
-              `,
-              transition: "all 0.3s ease",
-              "&:hover": {
-                boxShadow: `
-                  0 20px 60px ${colors.hoverShadow1},
-                  0 4px 12px ${colors.hoverShadow2}
-                `,
-              },
-            }}
-          >
-            {/* Logo */}
-            <Box
+        {/* Mobile Logo */}
+        <Box
+          sx={{
+            display: { xs: "block", lg: "none" },
+            position: "absolute",
+            top: 32,
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: 140,
+            height: 50,
+          }}
+        >
+          <Image
+            src="/logo-login.svg"
+            alt="Ponte Tech"
+            fill
+            style={{ objectFit: "contain" }}
+            priority
+          />
+        </Box>
+
+        <Box
+          sx={{
+            width: "100%",
+            maxWidth: 440,
+            pt: { xs: 12, lg: 0 },
+          }}
+        >
+          {/* Header */}
+          <Box sx={{ mb: 6 }}>
+            <Typography
+              variant="h4"
               sx={{
-                display: "flex",
-                justifyContent: "center",
-                mb: 4,
+                fontWeight: 700,
+                color: "#0F172A",
+                mb: 1.5,
+                fontSize: { xs: "1.75rem", sm: "2rem" },
               }}
             >
-              <Box
-                sx={{
-                  width: { xs: 140, sm: 160 },
-                  height: { xs: 50, sm: 58 },
-                  position: "relative",
-                }}
-              >
-                <Image
-                  src="/logo-login.svg"
-                  alt="Ponte Tech"
-                  fill
-                  style={{ objectFit: "contain" }}
-                  priority
-                />
-              </Box>
-            </Box>
+              Entrar na sua conta
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{
+                color: "#64748B",
+                fontSize: "1rem",
+              }}
+            >
+              Bem-vindo de volta! Entre com suas credenciais
+            </Typography>
+          </Box>
 
-            {/* Title */}
-            <Box sx={{ mb: 4, textAlign: "center" }}>
-              <Typography
-                variant="h4"
-                sx={{
-                  fontWeight: 700,
-                  color: "#1f2937",
-                  mb: 1,
-                  fontSize: { xs: "1.75rem", sm: "2rem" },
-                }}
-              >
-                Bem-vindo de volta
-              </Typography>
-              <Typography
-                variant="body1"
-                sx={{
-                  color: "#6b7280",
-                  fontSize: "0.9375rem",
-                }}
-              >
-                Entre com suas credenciais para continuar
-              </Typography>
-            </Box>
+          {/* Error Alert */}
+          <Collapse in={!!error}>
+            <Alert
+              severity="error"
+              icon={<ErrorOutline />}
+              onClose={() => setError("")}
+              sx={{
+                mb: 4,
+                borderRadius: 2,
+                border: "1px solid #FEE2E2",
+                backgroundColor: "#FEF2F2",
+                "& .MuiAlert-message": {
+                  color: "#991B1B",
+                  fontWeight: 500,
+                },
+              }}
+            >
+              {error}
+            </Alert>
+          </Collapse>
 
-            {/* Error alert */}
-            {error && (
-              <Fade in>
-                <Alert
-                  severity="error"
-                  onClose={() => setError("")}
-                  sx={{
-                    mb: 3,
-                    borderRadius: 2,
-                    border: `1px solid ${colors.errorBorder}`,
-                    backgroundColor: colors.errorBg,
-                  }}
-                >
-                  {error}
-                </Alert>
-              </Fade>
-            )}
-
-            {/* Form */}
-            <form onSubmit={handleSubmit}>
-              <Box sx={{ mb: 3 }}>
+          {/* Form */}
+          <form onSubmit={handleSubmit}>
+            <Stack spacing={3}>
+              {/* Email */}
+              <Box>
                 <Typography
-                  variant="body2"
+                  component="label"
+                  htmlFor="email"
                   sx={{
-                    fontWeight: 600,
-                    color: "#374151",
+                    display: "block",
                     mb: 1,
                     fontSize: "0.875rem",
+                    fontWeight: 600,
+                    color: "#0F172A",
                   }}
                 >
                   Email
                 </Typography>
                 <TextField
+                  id="email"
                   fullWidth
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  autoComplete="off"
-                  autoFocus
+                  autoComplete="email"
                   placeholder="seu@email.com"
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <EmailIcon
-                          sx={{
-                            color: "#9ca3af",
-                            fontSize: 20,
-                          }}
-                        />
-                      </InputAdornment>
-                    ),
-                  }}
                   sx={{
                     "& .MuiOutlinedInput-root": {
                       borderRadius: 2,
-                      backgroundColor: colors.inputBg,
-                      transition: "all 0.2s ease",
+                      backgroundColor: "#F8FAFC",
+                      transition: "all 0.2s",
                       "& fieldset": {
-                        borderColor: colors.inputBorder,
+                        borderColor: "#E2E8F0",
                       },
-                      "&:hover": {
-                        backgroundColor: "#FFFFFF",
-                        "& fieldset": {
-                          borderColor: "#8270FF",
-                        },
+                      "&:hover fieldset": {
+                        borderColor: "#CBD5E1",
                       },
                       "&.Mui-focused": {
                         backgroundColor: "#FFFFFF",
-                        boxShadow: `0 0 0 3px ${colors.focusShadow}`,
                         "& fieldset": {
                           borderColor: "#8270FF",
                           borderWidth: 2,
                         },
                       },
                     },
+                    "& .MuiOutlinedInput-input": {
+                      py: 1.5,
+                      fontSize: "0.9375rem",
+                    },
                   }}
                 />
               </Box>
 
-              <Box sx={{ mb: 2 }}>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    fontWeight: 600,
-                    color: "#374151",
-                    mb: 1,
-                    fontSize: "0.875rem",
-                  }}
-                >
-                  Senha
-                </Typography>
+              {/* Password */}
+              <Box>
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+                  <Typography
+                    component="label"
+                    htmlFor="password"
+                    sx={{
+                      fontSize: "0.875rem",
+                      fontWeight: 600,
+                      color: "#0F172A",
+                    }}
+                  >
+                    Senha
+                  </Typography>
+                  <Link
+                    href="/forgot-password"
+                    underline="none"
+                    sx={{
+                      fontSize: "0.875rem",
+                      fontWeight: 600,
+                      color: "#8270FF",
+                      "&:hover": {
+                        color: "#411EFE",
+                      },
+                    }}
+                  >
+                    Esqueceu?
+                  </Link>
+                </Box>
                 <TextField
+                  id="password"
                   fullWidth
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  autoComplete="off"
+                  autoComplete="current-password"
                   placeholder="••••••••"
                   InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <LockIcon
-                          sx={{
-                            color: "#9ca3af",
-                            fontSize: 20,
-                          }}
-                        />
-                      </InputAdornment>
-                    ),
                     endAdornment: (
                       <InputAdornment position="end">
                         <IconButton
@@ -312,13 +337,13 @@ export default function LoginPage() {
                           edge="end"
                           size="small"
                           sx={{
-                            color: "#9ca3af",
+                            color: "#94A3B8",
                             "&:hover": {
                               color: "#8270FF",
                             },
                           }}
                         >
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                          {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
                         </IconButton>
                       </InputAdornment>
                     ),
@@ -326,76 +351,58 @@ export default function LoginPage() {
                   sx={{
                     "& .MuiOutlinedInput-root": {
                       borderRadius: 2,
-                      backgroundColor: colors.inputBg,
-                      transition: "all 0.2s ease",
+                      backgroundColor: "#F8FAFC",
+                      transition: "all 0.2s",
                       "& fieldset": {
-                        borderColor: colors.inputBorder,
+                        borderColor: "#E2E8F0",
                       },
-                      "&:hover": {
-                        backgroundColor: "#FFFFFF",
-                        "& fieldset": {
-                          borderColor: "#8270FF",
-                        },
+                      "&:hover fieldset": {
+                        borderColor: "#CBD5E1",
                       },
                       "&.Mui-focused": {
                         backgroundColor: "#FFFFFF",
-                        boxShadow: `0 0 0 3px ${colors.focusShadow}`,
                         "& fieldset": {
                           borderColor: "#8270FF",
                           borderWidth: 2,
                         },
                       },
                     },
+                    "& .MuiOutlinedInput-input": {
+                      py: 1.5,
+                      fontSize: "0.9375rem",
+                    },
                   }}
                 />
               </Box>
 
-              {/* Forgot password link */}
-              <Box sx={{ textAlign: "right", mb: 4 }}>
-                <Link
-                  href="/forgot-password"
-                  underline="none"
-                  sx={{
-                    color: "#8270FF",
-                    fontSize: "0.875rem",
-                    fontWeight: 600,
-                    transition: "all 0.2s ease",
-                    "&:hover": {
-                      color: "#411EFE",
-                    },
-                  }}
-                >
-                  Esqueceu sua senha?
-                </Link>
-              </Box>
-
-              {/* Submit button */}
+              {/* Submit Button */}
               <Button
                 type="submit"
                 fullWidth
                 variant="contained"
                 size="large"
                 disabled={isLoading}
-                startIcon={!isLoading && <LoginOutlined />}
+                endIcon={!isLoading && <ArrowForward />}
                 sx={{
                   py: 1.75,
+                  mt: 2,
                   borderRadius: 2,
                   textTransform: "none",
                   fontSize: "1rem",
                   fontWeight: 600,
                   background: "linear-gradient(135deg, #8270FF 0%, #411EFE 100%)",
-                  boxShadow: `0 4px 12px ${colors.buttonShadow}`,
-                  transition: "all 0.3s ease",
+                  boxShadow: "0 4px 12px rgba(130, 112, 255, 0.25)",
+                  transition: "all 0.2s",
                   "&:hover": {
-                    background: "linear-gradient(135deg, #411EFE 0%, #8270FF 100%)",
-                    boxShadow: `0 8px 20px ${colors.buttonHoverShadow}`,
-                    transform: "translateY(-2px)",
+                    background: "linear-gradient(135deg, #7059e5 0%, #3513e8 100%)",
+                    boxShadow: "0 6px 20px rgba(130, 112, 255, 0.35)",
+                    transform: "translateY(-1px)",
                   },
                   "&:active": {
                     transform: "translateY(0)",
                   },
                   "&:disabled": {
-                    background: colors.buttonDisabled,
+                    background: "linear-gradient(135deg, rgba(130, 112, 255, 0.5) 0%, rgba(65, 30, 254, 0.5) 100%)",
                     color: "#FFFFFF",
                   },
                 }}
@@ -406,57 +413,43 @@ export default function LoginPage() {
                   "Entrar"
                 )}
               </Button>
-            </form>
+            </Stack>
+          </form>
 
-            {/* Divider */}
-            <Divider
+          {/* Footer */}
+          <Box
+            sx={{
+              mt: 6,
+              pt: 4,
+              borderTop: "1px solid #F1F5F9",
+              textAlign: "center",
+            }}
+          >
+            <Typography
+              variant="body2"
               sx={{
-                my: 4,
-                "&::before, &::after": {
-                  borderColor: colors.dividerColor,
-                },
+                color: "#64748B",
+                fontSize: "0.875rem",
               }}
             >
-              <Typography
-                variant="body2"
+              Precisa de ajuda?{" "}
+              <Link
+                href="mailto:suporte@pontetech.com.br"
                 sx={{
-                  color: "#9ca3af",
-                  fontSize: "0.8125rem",
-                  px: 2,
+                  color: "#8270FF",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  "&:hover": {
+                    textDecoration: "underline",
+                  },
                 }}
               >
-                Precisa de ajuda?
-              </Typography>
-            </Divider>
-
-            {/* Help text */}
-            <Box sx={{ textAlign: "center" }}>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: "#6b7280",
-                  fontSize: "0.875rem",
-                }}
-              >
-                Entre em contato com o suporte em{" "}
-                <Link
-                  href="mailto:suporte@pontetech.com.br"
-                  sx={{
-                    color: "#8270FF",
-                    fontWeight: 600,
-                    textDecoration: "none",
-                    "&:hover": {
-                      textDecoration: "underline",
-                    },
-                  }}
-                >
-                  suporte@pontetech.com.br
-                </Link>
-              </Typography>
-            </Box>
-          </Paper>
-        </Fade>
-      </Container>
+                Contate o suporte
+              </Link>
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
     </Box>
   );
 }
