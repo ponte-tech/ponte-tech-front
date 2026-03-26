@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { setCookie, getCookie, deleteCookie } from "@/app/lib/cookies";
 import authService from "@/app/services/authService";
 import { User as ApiUser, UserProfile } from "@/app/types/api";
+import WelcomeScreen from "@/app/components/WelcomeScreen";
 
 type UserType = "aluno" | "vendedor" | "professor" | "admin" | "colaborador" | "contador";
 
@@ -36,6 +37,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [redirectPath, setRedirectPath] = useState<string>("/dashboard");
   const router = useRouter();
 
   useEffect(() => {
@@ -110,16 +113,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("user", JSON.stringify(localUser));
       setUser(localUser);
 
-      // Se usuário tem múltiplos perfis, redirecionar para seleção
+      // Se usuário tem múltiplos perfis, redirecionar para seleção (sem welcome)
       if (response.user.perfis && response.user.perfis.length > 1) {
         router.push("/select-profile");
       } else {
-        // Redirecionar baseado no perfil do usuário
-        if (perfilAtivo === "colaborador") {
-          router.push("/minhas-horas");
-        } else {
-          router.push("/dashboard");
-        }
+        // Determinar rota de redirecionamento baseado no perfil
+        const targetPath = perfilAtivo === "colaborador" ? "/minhas-horas" : "/dashboard";
+
+        // Exibir tela de boas-vindas antes de redirecionar
+        setRedirectPath(targetPath);
+        setShowWelcome(true);
       }
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || "Erro ao fazer login";
@@ -153,12 +156,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(updatedUser);
       }
 
-      // Redirecionar baseado no perfil selecionado
-      if (perfil === "colaborador") {
-        router.push("/minhas-horas");
-      } else {
-        router.push("/dashboard");
-      }
+      // Determinar rota de redirecionamento baseado no perfil
+      const targetPath = perfil === "colaborador" ? "/minhas-horas" : "/dashboard";
+
+      // Exibir tela de boas-vindas antes de redirecionar
+      setRedirectPath(targetPath);
+      setShowWelcome(true);
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || "Erro ao selecionar perfil";
       setError(errorMessage);
@@ -209,6 +212,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push("/login");
   };
 
+  const handleWelcomeComplete = () => {
+    setShowWelcome(false);
+    router.push(redirectPath);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -223,6 +231,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
+      {showWelcome && user && (
+        <WelcomeScreen
+          userName={user.name}
+          userPhoto={user.foto_perfil_url}
+          onComplete={handleWelcomeComplete}
+        />
+      )}
     </AuthContext.Provider>
   );
 }
