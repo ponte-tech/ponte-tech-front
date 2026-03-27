@@ -47,6 +47,7 @@ import {
   RadioButtonUnchecked as RadioButtonUncheckedIcon,
   Close as CloseIcon,
 } from "@mui/icons-material";
+import ConfirmDialog from "@/app/shared/components/ConfirmDialog";
 import { Card } from "@/app/types/kanban";
 import { Cliente } from "@/app/types/api";
 import { format } from "date-fns";
@@ -64,6 +65,7 @@ interface CardModalProps {
   clientes: Cliente[];
   columns?: any[];
   colaboradores?: any[];
+  currentUserId?: string;
 }
 
 // Modern Input Styles - Reusable
@@ -108,6 +110,7 @@ export default function CardModal({
   onSave,
   onAddObservation,
   onChangeColumn,
+  currentUserId,
 }: CardModalProps) {
   const [formData, setFormData] = useState({
     title: "",
@@ -129,6 +132,11 @@ export default function CardModal({
 
   // Share snackbar state
   const [shareSnackbarOpen, setShareSnackbarOpen] = useState(false);
+
+  // Attachment delete confirmation
+  const [attachmentDeleteDialogOpen, setAttachmentDeleteDialogOpen] = useState(false);
+  const [attachmentToDelete, setAttachmentToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [deletingAttachment, setDeletingAttachment] = useState(false);
 
   // Subtask state
   const [subtasks, setSubtasks] = useState<any[]>([]);
@@ -159,20 +167,23 @@ export default function CardModal({
         setLastCardId(card.card_id);
       }
     } else {
+      // Ao criar novo card, atribuir automaticamente ao usuário logado
+      const defaultAssignedTo = currentUserId ? [currentUserId] : [];
+
       setFormData({
         title: "",
         description: "",
         client_id: "",
         identificador_demanda_cliente: "",
         delivery_date: "",
-        assigned_to: [],
+        assigned_to: defaultAssignedTo,
       });
       setSelectedColumnId(columnId);
       setActiveTab(0);
       setLastCardId(null);
     }
     setObservation("");
-  }, [card, open, columnId, lastCardId]);
+  }, [card, open, columnId, lastCardId, currentUserId]);
 
   const handleSubmit = () => {
     if (card) {
@@ -350,23 +361,35 @@ export default function CardModal({
   };
 
   // Handle file deletion
-  const handleFileDelete = async (attachmentId: string) => {
-    if (!card) return;
+  const handleFileDelete = (attachmentId: string, fileName: string) => {
+    setAttachmentToDelete({ id: attachmentId, name: fileName });
+    setAttachmentDeleteDialogOpen(true);
+  };
 
-    if (!confirm("Tem certeza que deseja excluir este anexo?")) {
-      return;
-    }
+  const confirmDeleteAttachment = async () => {
+    if (!card || !attachmentToDelete) return;
 
     try {
-      await kanbanService.deleteAttachment(card.card_id, attachmentId);
+      setDeletingAttachment(true);
+      await kanbanService.deleteAttachment(card.card_id, attachmentToDelete.id);
 
       // Reload attachments
       const response = await kanbanService.listAttachments(card.card_id);
       setAttachments(response.attachments || []);
+
+      setAttachmentDeleteDialogOpen(false);
+      setAttachmentToDelete(null);
     } catch (error) {
       console.error("Error deleting file:", error);
       alert("Erro ao excluir arquivo");
+    } finally {
+      setDeletingAttachment(false);
     }
+  };
+
+  const cancelDeleteAttachment = () => {
+    setAttachmentDeleteDialogOpen(false);
+    setAttachmentToDelete(null);
   };
 
   // Get column name
@@ -1431,7 +1454,7 @@ export default function CardModal({
                             <IconButton
                               edge="end"
                               size="small"
-                              onClick={() => handleFileDelete(attachment.attachment_id)}
+                              onClick={() => handleFileDelete(attachment.attachment_id, attachment.nome_arquivo)}
                               sx={{
                                 color: "#d32f2f",
                                 "&:hover": {
@@ -1853,6 +1876,18 @@ export default function CardModal({
           Link copiado para a área de transferência!
         </Alert>
       </Snackbar>
+
+      {/* Attachment Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={attachmentDeleteDialogOpen}
+        onClose={cancelDeleteAttachment}
+        onConfirm={confirmDeleteAttachment}
+        title="Excluir Anexo?"
+        description={`Tem certeza que deseja excluir o arquivo "${attachmentToDelete?.name}"?`}
+        confirmText="Excluir Anexo"
+        variant="danger"
+        loading={deletingAttachment}
+      />
     </Dialog>
   );
 }

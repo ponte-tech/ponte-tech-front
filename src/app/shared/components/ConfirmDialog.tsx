@@ -2,6 +2,7 @@
 
 import {
   Dialog,
+  DialogTitle,
   DialogContent,
   DialogActions,
   Button,
@@ -10,32 +11,79 @@ import {
   IconButton,
   CircularProgress,
   alpha,
-  Alert,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 
-interface DeleteDialogProps {
+type ConfirmVariant = "danger" | "warning" | "info" | "success";
+
+interface ConfirmDialogProps {
   open: boolean;
-  title?: string;
-  itemName: string;
-  itemType: string;
-  error?: string | null;
+  onClose: () => void;
   onConfirm: () => void;
-  onCancel: () => void;
+  title: string;
+  description: string;
+  confirmText?: string;
+  cancelText?: string;
+  variant?: ConfirmVariant;
   loading?: boolean;
+  showIcon?: boolean;
+  requireConfirmation?: boolean; // Para ações críticas, pode exigir digitar algo
 }
 
-export default function DeleteDialog({
+const variantConfig = {
+  danger: {
+    icon: ErrorOutlineRoundedIcon,
+    iconColor: "#ef4444",
+    iconBg: "rgba(239, 68, 68, 0.1)",
+    confirmBg: "#ef4444",
+    confirmHover: "#dc2626",
+    confirmText: "Excluir",
+  },
+  warning: {
+    icon: WarningAmberRoundedIcon,
+    iconColor: "#f59e0b",
+    iconBg: "rgba(245, 158, 11, 0.1)",
+    confirmBg: "#f59e0b",
+    confirmHover: "#d97706",
+    confirmText: "Confirmar",
+  },
+  info: {
+    icon: InfoOutlinedIcon,
+    iconColor: "#3b82f6",
+    iconBg: "rgba(59, 130, 246, 0.1)",
+    confirmBg: "#3b82f6",
+    confirmHover: "#2563eb",
+    confirmText: "Continuar",
+  },
+  success: {
+    icon: CheckCircleOutlineRoundedIcon,
+    iconColor: "#10b981",
+    iconBg: "rgba(16, 185, 129, 0.1)",
+    confirmBg: "#10b981",
+    confirmHover: "#059669",
+    confirmText: "Confirmar",
+  },
+};
+
+export default function ConfirmDialog({
   open,
-  title,
-  itemName,
-  itemType,
-  error,
+  onClose,
   onConfirm,
-  onCancel,
+  title,
+  description,
+  confirmText,
+  cancelText = "Cancelar",
+  variant = "danger",
   loading = false,
-}: DeleteDialogProps) {
+  showIcon = true,
+}: ConfirmDialogProps) {
+  const config = variantConfig[variant];
+  const Icon = config.icon;
+
   const handleConfirm = () => {
     if (!loading) {
       onConfirm();
@@ -44,7 +92,7 @@ export default function DeleteDialog({
 
   const handleCancel = () => {
     if (!loading) {
-      onCancel();
+      onClose();
     }
   };
 
@@ -109,21 +157,23 @@ export default function DeleteDialog({
             gap: 2,
           }}
         >
-          {/* Icon de perigo */}
-          <Box
-            sx={{
-              width: 64,
-              height: 64,
-              borderRadius: "50%",
-              bgcolor: "rgba(239, 68, 68, 0.1)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              mb: 1,
-            }}
-          >
-            <ErrorOutlineRoundedIcon sx={{ fontSize: "2rem", color: "#ef4444" }} />
-          </Box>
+          {/* Icon */}
+          {showIcon && (
+            <Box
+              sx={{
+                width: 64,
+                height: 64,
+                borderRadius: "50%",
+                bgcolor: config.iconBg,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                mb: 1,
+              }}
+            >
+              <Icon sx={{ fontSize: "2rem", color: config.iconColor }} />
+            </Box>
+          )}
 
           {/* Title */}
           <Typography
@@ -135,7 +185,7 @@ export default function DeleteDialog({
               lineHeight: 1.3,
             }}
           >
-            {title || "Confirmar Exclusão"}
+            {title}
           </Typography>
 
           {/* Description */}
@@ -147,43 +197,8 @@ export default function DeleteDialog({
               maxWidth: "90%",
             }}
           >
-            Tem certeza que deseja excluir {itemType}{" "}
-            <Box component="span" sx={{ fontWeight: 600, color: "#0f172a" }}>
-              {itemName}
-            </Box>
-            ?
+            {description}
           </Typography>
-
-          {/* Aviso de ação irreversível */}
-          <Box
-            sx={{
-              mt: 1,
-              px: 2.5,
-              py: 1.5,
-              borderRadius: 2,
-              bgcolor: "rgba(239, 68, 68, 0.05)",
-              border: "1px solid rgba(239, 68, 68, 0.2)",
-              width: "100%",
-            }}
-          >
-            <Typography
-              sx={{
-                fontSize: "0.813rem",
-                color: "#ef4444",
-                fontWeight: 500,
-                lineHeight: 1.5,
-              }}
-            >
-              ⚠️ Esta ação não pode ser desfeita
-            </Typography>
-          </Box>
-
-          {/* Error message */}
-          {error && (
-            <Alert severity="error" sx={{ width: "100%", mt: 1 }}>
-              {error}
-            </Alert>
-          )}
         </Box>
       </DialogContent>
 
@@ -223,7 +238,7 @@ export default function DeleteDialog({
             },
           }}
         >
-          Cancelar
+          {cancelText}
         </Button>
 
         <Button
@@ -238,13 +253,13 @@ export default function DeleteDialog({
             textTransform: "none",
             fontSize: "0.938rem",
             fontWeight: 600,
-            bgcolor: "#ef4444",
+            bgcolor: config.confirmBg,
             color: "#fff",
-            boxShadow: `0 4px 12px ${alpha("#ef4444", 0.3)}`,
+            boxShadow: `0 4px 12px ${alpha(config.confirmBg, 0.3)}`,
             transition: "all 0.2s",
             "&:hover": {
-              bgcolor: "#dc2626",
-              boxShadow: `0 6px 16px ${alpha("#ef4444", 0.4)}`,
+              bgcolor: config.confirmHover,
+              boxShadow: `0 6px 16px ${alpha(config.confirmBg, 0.4)}`,
               transform: "translateY(-1px)",
             },
             "&:active": {
@@ -260,10 +275,10 @@ export default function DeleteDialog({
           {loading ? (
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
               <CircularProgress size={18} sx={{ color: "#fff" }} />
-              <span>Excluindo...</span>
+              <span>Processando...</span>
             </Box>
           ) : (
-            "Excluir"
+            confirmText || config.confirmText
           )}
         </Button>
       </DialogActions>

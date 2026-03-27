@@ -76,6 +76,7 @@ import ColumnModal from "./components/ColumnModal";
 import BoardModal from "./components/BoardModal";
 import FilterPopover from "./components/FilterPopover";
 import DeleteDialog from "@/app/shared/components/DeleteDialog";
+import ConfirmDialog from "@/app/shared/components/ConfirmDialog";
 import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
@@ -119,6 +120,15 @@ function KanbanPageContent() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [cardToDelete, setCardToDelete] = useState<{ id: string; title: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Column delete confirmation
+  const [columnDeleteDialogOpen, setColumnDeleteDialogOpen] = useState(false);
+  const [columnToDelete, setColumnToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [deletingColumn, setDeletingColumn] = useState(false);
+
+  // Board delete confirmation
+  const [boardDeleteDialogOpen, setBoardDeleteDialogOpen] = useState(false);
+  const [deletingBoard, setDeletingBoard] = useState(false);
 
   // Due date alert states
   const [dueDateAlertOpen, setDueDateAlertOpen] = useState(false);
@@ -718,13 +728,24 @@ function KanbanPageContent() {
     setColumnModalOpen(true);
   };
 
-  const handleDeleteColumn = async (columnId: string) => {
-    if (!confirm("Tem certeza que deseja excluir esta coluna?")) return;
+  const handleDeleteColumn = (columnId: string) => {
+    const column = columns.find((c) => c.column_id === columnId);
+    if (column) {
+      setColumnToDelete({ id: columnId, name: column.name });
+      setColumnDeleteDialogOpen(true);
+    }
+  };
+
+  const confirmDeleteColumn = async () => {
+    if (!columnToDelete) return;
 
     try {
-      await kanbanService.deleteColumn(columnId);
-      setColumns((prev) => prev.filter((c) => c.column_id !== columnId));
-      setCards((prev) => prev.filter((c) => c.column_id !== columnId));
+      setDeletingColumn(true);
+      await kanbanService.deleteColumn(columnToDelete.id);
+      setColumns((prev) => prev.filter((c) => c.column_id !== columnToDelete.id));
+      setCards((prev) => prev.filter((c) => c.column_id !== columnToDelete.id));
+      setColumnDeleteDialogOpen(false);
+      setColumnToDelete(null);
       setSnackbar({
         open: true,
         message: "Coluna excluída com sucesso",
@@ -736,7 +757,14 @@ function KanbanPageContent() {
         message: error.message || "Erro ao excluir coluna",
         severity: "error",
       });
+    } finally {
+      setDeletingColumn(false);
     }
+  };
+
+  const cancelDeleteColumn = () => {
+    setColumnDeleteDialogOpen(false);
+    setColumnToDelete(null);
   };
 
   const handleSaveColumn = async (data: any) => {
@@ -830,11 +858,16 @@ function KanbanPageContent() {
     try {
       const cardsInColumn = cards.filter((c) => c.column_id === columnId);
 
+      // Buscar o colaborador_id do usuário logado
+      const loggedColaborador = colaboradores.find((c: any) => c.id === user?.id);
+
       const cardData: any = {
         board_id: selectedBoardId,
         column_id: columnId,
         title,
         position: cardsInColumn.length,
+        // Atribuir automaticamente ao colaborador que está criando
+        assigned_to: loggedColaborador ? [loggedColaborador.id] : [],
       };
 
       const response = await kanbanService.createCard(cardData);
@@ -872,10 +905,19 @@ function KanbanPageContent() {
         // Create - need board_id and position
         const cardsInColumn = cards.filter((c) => c.column_id === data.column_id);
 
+        // Buscar o colaborador_id do usuário logado
+        const loggedColaborador = colaboradores.find((c: any) => c.id === user?.id);
+
+        // Se o usuário não selecionou responsáveis, atribuir automaticamente ao criador
+        const assignedTo = data.assigned_to && data.assigned_to.length > 0
+          ? data.assigned_to
+          : (loggedColaborador ? [loggedColaborador.id] : []);
+
         const response = await kanbanService.createCard({
           ...data,
           board_id: selectedBoardId,
           position: cardsInColumn.length,
+          assigned_to: assignedTo,
         });
         const newCard = (response as any).data || response;
         setCards((prev) => [...prev, newCard]);
@@ -1112,7 +1154,7 @@ function KanbanPageContent() {
     }
   };
 
-  const handleDeleteBoard = async () => {
+  const handleDeleteBoard = () => {
     if (!selectedBoardId) return;
 
     // Check if it's the default board (first board)
@@ -1126,9 +1168,14 @@ function KanbanPageContent() {
       return;
     }
 
-    if (!confirm("Tem certeza que deseja excluir este board? Todas as colunas e cards serão perdidos.")) return;
+    setBoardDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteBoard = async () => {
+    if (!selectedBoardId) return;
 
     try {
+      setDeletingBoard(true);
       await kanbanService.deleteBoard(selectedBoardId);
       const remainingBoards = boards.filter((b) => b.board_id !== selectedBoardId);
       setBoards(remainingBoards);
@@ -1147,6 +1194,7 @@ function KanbanPageContent() {
         setSelectedBoardId(newBoard.board_id);
       }
 
+      setBoardDeleteDialogOpen(false);
       setSnackbar({
         open: true,
         message: "Board excluído com sucesso",
@@ -1158,7 +1206,13 @@ function KanbanPageContent() {
         message: error.message || "Erro ao excluir board",
         severity: "error",
       });
+    } finally {
+      setDeletingBoard(false);
     }
+  };
+
+  const cancelDeleteBoard = () => {
+    setBoardDeleteDialogOpen(false);
   };
 
   if (!isAuthenticated || !user || (user.userType !== "admin" && user.userType !== "colaborador")) {
@@ -1275,25 +1329,40 @@ function KanbanPageContent() {
                   <Badge
                     badgeContent={
                       <CloseIcon
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleColaborador(colabId);
+                        }}
                         sx={{
-                          fontSize: "0.75rem",
-                          color: "#fff",
+                          fontSize: "0.45rem",
+                          color: "rgba(0, 0, 0, 0.3)",
                         }}
                       />
                     }
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleColaborador(colabId);
+                    }}
                     sx={{
                       "& .MuiBadge-badge": {
-                        bgcolor: "#f44336",
-                        width: 16,
-                        height: 16,
-                        minWidth: 16,
+                        bgcolor: "rgba(158, 158, 158, 0.2)",
+                        width: 12,
+                        height: 12,
+                        minWidth: 12,
                         borderRadius: "50%",
+                        border: "1px solid rgba(0, 0, 0, 0.08)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         cursor: "pointer",
+                        boxShadow: "none",
+                        transition: "background-color 0.2s, border-color 0.2s",
                         "&:hover": {
-                          bgcolor: "#d32f2f",
+                          bgcolor: "rgba(120, 120, 120, 0.4)",
+                          borderColor: "rgba(0, 0, 0, 0.2)",
+                          "& svg": {
+                            color: "rgba(0, 0, 0, 0.6)",
+                          },
                         },
                       },
                     }}
@@ -1792,6 +1861,7 @@ function KanbanPageContent() {
         clientes={clientes}
         columns={columns}
         colaboradores={colaboradores.map((c: any) => ({ colaborador_id: c.id, id: c.id, nome: c.nome_completo, nome_completo: c.nome_completo, status: c.status, foto_perfil_url: c.foto_perfil_url }))}
+        currentUserId={user?.id}
       />
 
       <ColumnModal
@@ -1945,6 +2015,30 @@ function KanbanPageContent() {
         onConfirm={confirmDeleteCard}
         onCancel={cancelDeleteCard}
         loading={deleting}
+      />
+
+      {/* Column Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={columnDeleteDialogOpen}
+        onClose={cancelDeleteColumn}
+        onConfirm={confirmDeleteColumn}
+        title="Excluir Coluna?"
+        description={`Tem certeza que deseja excluir a coluna "${columnToDelete?.name}"? Todos os cards desta coluna também serão excluídos.`}
+        confirmText="Excluir Coluna"
+        variant="danger"
+        loading={deletingColumn}
+      />
+
+      {/* Board Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={boardDeleteDialogOpen}
+        onClose={cancelDeleteBoard}
+        onConfirm={confirmDeleteBoard}
+        title="Excluir Board?"
+        description="Tem certeza que deseja excluir este board? Todas as colunas e cards serão perdidos permanentemente."
+        confirmText="Excluir Board"
+        variant="danger"
+        loading={deletingBoard}
       />
 
       {/* Due Date Alert Dialog */}

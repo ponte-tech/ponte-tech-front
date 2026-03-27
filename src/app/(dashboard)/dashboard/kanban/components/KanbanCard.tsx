@@ -101,6 +101,7 @@ export default function KanbanCard({
 
   const handleAssignClick = (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
+    e.preventDefault();
     setAssignMenuAnchor(e.currentTarget);
   };
 
@@ -108,7 +109,11 @@ export default function KanbanCard({
     setAssignMenuAnchor(null);
   };
 
-  const handleAssign = (colaboradorId: string | null) => {
+  const handleAssign = (colaboradorId: string | null, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
     if (onAssignCard) {
       onAssignCard(card.card_id, colaboradorId);
     }
@@ -500,7 +505,7 @@ export default function KanbanCard({
           }}
         >
           {assignedColaboradores.length > 0 && (
-            <MenuItem onClick={() => handleAssign(null)}>
+            <MenuItem onClick={(e) => handleAssign(null, e)}>
               <ListItemIcon>
                 <ClearIcon fontSize="small" sx={{ color: "#f44336" }} />
               </ListItemIcon>
@@ -513,7 +518,7 @@ export default function KanbanCard({
             return (
               <MenuItem
                 key={colab.id}
-                onClick={() => handleAssign(colab.id)}
+                onClick={(e) => handleAssign(colab.id, e)}
                 selected={isAssigned}
               >
                 <ListItemIcon>
