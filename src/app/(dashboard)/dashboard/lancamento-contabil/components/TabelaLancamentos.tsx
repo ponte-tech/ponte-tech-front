@@ -272,27 +272,35 @@ export default function TabelaLancamentos({
                 </TableCell>
 
                 <TableCell align="center">
-                  <Tooltip title="Upload de Nota Fiscal">
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      onClick={() => onUploadClick(lancamento)}
-                    >
-                      <UploadIcon />
-                    </IconButton>
-                  </Tooltip>
-                  {temNotaFiscal && (
-                    <Chip
-                      label="OK"
-                      size="small"
-                      color="success"
-                      sx={{ ml: 1 }}
-                    />
+                  {lancamento.emitir_nota_fiscal ? (
+                    <>
+                      <Tooltip title="Upload de Nota Fiscal">
+                        <IconButton
+                          size="small"
+                          color="primary"
+                          onClick={() => onUploadClick(lancamento)}
+                        >
+                          <UploadIcon />
+                        </IconButton>
+                      </Tooltip>
+                      {temNotaFiscal && (
+                        <Chip
+                          label="OK"
+                          size="small"
+                          color="success"
+                          sx={{ ml: 1 }}
+                        />
+                      )}
+                    </>
+                  ) : (
+                    <Typography variant="caption" color="text.secondary">
+                      -
+                    </Typography>
                   )}
                 </TableCell>
 
                 <TableCell align="center">
-                  {temNotaFiscal ? (
+                  {lancamento.emitir_nota_fiscal && temNotaFiscal ? (
                     <Tooltip title="Download de Nota Fiscal">
                       <IconButton
                         size="small"
