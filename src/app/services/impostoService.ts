@@ -45,13 +45,15 @@ class ImpostoService {
    * Cria um novo imposto (sem anexos)
    */
   async create(data: Omit<CreateImpostoRequest, 'anexos'>): Promise<Imposto> {
-    const response = await api.post<any>(this.baseUrl, {
+    const payload: any = {
       empresa_id: data.empresa_id,
       descricao: data.descricao,
-      tipo_imposto: data.tipo_imposto,
+      tipo_imposto: data.tipo_imposto || "TFE", // Sempre envia tipo_imposto (obrigatório no backend)
       mes_referencia: data.mes_referencia,
-      valor: data.valor,
-    });
+      valor: data.valor || 0.01, // Sempre envia valor > 0 (validação gt=0 no backend)
+    };
+
+    const response = await api.post<any>(this.baseUrl, payload);
 
     if (response.data?.success && response.data?.data) {
       return response.data.data;

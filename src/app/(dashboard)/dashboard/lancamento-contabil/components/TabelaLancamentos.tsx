@@ -152,6 +152,9 @@ export default function TabelaLancamentos({
               Valor NF
             </TableCell>
             <TableCell sx={{ fontWeight: 600 }} align="center">
+              Emitir NF?
+            </TableCell>
+            <TableCell sx={{ fontWeight: 600 }} align="center">
               Upload NF
             </TableCell>
             <TableCell sx={{ fontWeight: 600 }} align="center">
@@ -254,6 +257,18 @@ export default function TabelaLancamentos({
                       {formatValor(lancamento.valor_nota_fiscal)}
                     </Typography>
                   )}
+                </TableCell>
+
+                <TableCell align="center">
+                  <Chip
+                    label={lancamento.emitir_nota_fiscal ? "Sim" : "Não"}
+                    size="small"
+                    color={lancamento.emitir_nota_fiscal ? "success" : "default"}
+                    sx={{
+                      fontWeight: 600,
+                      minWidth: 60,
+                    }}
+                  />
                 </TableCell>
 
                 <TableCell align="center">

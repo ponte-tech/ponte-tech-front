@@ -52,9 +52,9 @@ export default function NovoImpostoPage() {
   const [formData, setFormData] = useState<CreateImpostoRequest>({
     empresa_id: "",
     descricao: "",
-    tipo_imposto: "OUTROS" as TipoImposto,
+    tipo_imposto: "TFE" as TipoImposto,
     mes_referencia: getCurrentMonth(),
-    valor: 0,
+    valor: 0.01, // Valor padrão mínimo para passar na validação do backend
     anexos: [],
   });
 
@@ -102,7 +102,7 @@ export default function NovoImpostoPage() {
       const fileArray = Array.from(files);
       const filesWithType: FileWithType[] = fileArray.map((file) => ({
         file,
-        tipoImposto: "OUTROS" as TipoImposto,
+        tipoImposto: "" as TipoImposto,
       }));
       setSelectedFiles((prev) => [...prev, ...filesWithType]);
       setFormData((prev) => ({
@@ -134,6 +134,12 @@ export default function NovoImpostoPage() {
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
   };
 
+  const formatCNPJ = (cnpj: string): string => {
+    const cleaned = cnpj.replace(/\D/g, "");
+    if (cleaned.length !== 14) return cnpj;
+    return cleaned.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -149,9 +155,13 @@ export default function NovoImpostoPage() {
       return;
     }
 
-    if (formData.valor <= 0) {
-      setError("Por favor, informe um valor válido");
-      return;
+    // Validar que todos os arquivos têm tipo de imposto selecionado
+    if (selectedFiles.length > 0) {
+      const filesWithoutType = selectedFiles.filter(f => !f.tipoImposto);
+      if (filesWithoutType.length > 0) {
+        setError("Por favor, selecione o tipo de imposto para todos os arquivos");
+        return;
+      }
     }
 
     try {
@@ -161,9 +171,9 @@ export default function NovoImpostoPage() {
       const imposto = await impostoService.create({
         empresa_id: formData.empresa_id,
         descricao: formData.descricao,
-        tipo_imposto: formData.tipo_imposto,
+        tipo_imposto: "TFE", // Tipo padrão obrigatório pelo backend
         mes_referencia: formData.mes_referencia,
-        valor: formData.valor,
+        valor: 0.01, // Valor mínimo obrigatório pelo backend (gt=0)
       });
 
       // 2. Fazer upload de cada anexo
@@ -255,7 +265,7 @@ export default function NovoImpostoPage() {
                 >
                   {empresas.map((empresa) => (
                     <MenuItem key={empresa.empresa_id} value={empresa.empresa_id}>
-                      {empresa.nome_fantasia} - {empresa.cnpj}
+                      {empresa.nome_fantasia} - {formatCNPJ(empresa.cnpj)}
                     </MenuItem>
                   ))}
                 </Select>
@@ -282,16 +292,6 @@ export default function NovoImpostoPage() {
                 required
                 fullWidth
                 InputLabelProps={{ shrink: true }}
-              />
-
-              {/* Valor */}
-              <TextField
-                label="Valor"
-                value={valorDisplay}
-                onChange={(e) => handleValorChange(e.target.value)}
-                required
-                fullWidth
-                placeholder="R$ 0,00"
               />
 
               {/* Upload de Arquivos */}

@@ -20,38 +20,26 @@ export interface Imposto {
 }
 
 export type TipoImposto =
-  | 'IRPJ' // Imposto de Renda Pessoa Jurídica
-  | 'CSLL' // Contribuição Social sobre o Lucro Líquido
-  | 'PIS' // Programa de Integração Social
-  | 'COFINS' // Contribuição para o Financiamento da Seguridade Social
-  | 'ISS' // Imposto Sobre Serviços
-  | 'ICMS' // Imposto sobre Circulação de Mercadorias e Serviços
-  | 'IPI' // Imposto sobre Produtos Industrializados
+  | 'TFE' // TFE
+  | 'RECIBO_PROLABORE' // Recibo Prolabore
+  | 'FOLHA' // Folha
   | 'INSS' // Instituto Nacional do Seguro Social
-  | 'FGTS' // Fundo de Garantia do Tempo de Serviço
   | 'SIMPLES_NACIONAL' // Simples Nacional
-  | 'HONORARIOS_CONTABEIS' // Honorários Contábeis
-  | 'OUTROS'; // Outros impostos
+  | 'HONORARIOS_CONTABEIS'; // Honorários Contábeis
 
 export const TIPOS_IMPOSTO: { value: TipoImposto; label: string }[] = [
-  { value: 'IRPJ', label: 'IRPJ - Imposto de Renda Pessoa Jurídica' },
-  { value: 'CSLL', label: 'CSLL - Contribuição Social sobre o Lucro Líquido' },
-  { value: 'PIS', label: 'PIS - Programa de Integração Social' },
-  { value: 'COFINS', label: 'COFINS - Financiamento da Seguridade Social' },
-  { value: 'ISS', label: 'ISS - Imposto Sobre Serviços' },
-  { value: 'ICMS', label: 'ICMS - Imposto sobre Circulação de Mercadorias' },
-  { value: 'IPI', label: 'IPI - Imposto sobre Produtos Industrializados' },
-  { value: 'INSS', label: 'INSS - Instituto Nacional do Seguro Social' },
-  { value: 'FGTS', label: 'FGTS - Fundo de Garantia do Tempo de Serviço' },
+  { value: 'TFE', label: 'TFE' },
+  { value: 'RECIBO_PROLABORE', label: 'Recibo Prolabore' },
+  { value: 'FOLHA', label: 'Folha' },
+  { value: 'INSS', label: 'INSS' },
   { value: 'SIMPLES_NACIONAL', label: 'Simples Nacional' },
   { value: 'HONORARIOS_CONTABEIS', label: 'Honorários Contábeis' },
-  { value: 'OUTROS', label: 'Outros' },
 ];
 
 export interface CreateImpostoRequest {
   empresa_id: string;
   descricao: string;
-  tipo_imposto: TipoImposto;
+  tipo_imposto?: TipoImposto;
   mes_referencia: string;
   valor: number;
   anexos?: File[]; // Arquivos a serem enviados

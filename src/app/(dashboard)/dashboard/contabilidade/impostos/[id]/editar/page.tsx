@@ -53,7 +53,7 @@ function EditarImpostoContent() {
 
   const [formData, setFormData] = useState<UpdateImpostoRequest>({
     descricao: "",
-    tipo_imposto: "OUTROS" as TipoImposto,
+    tipo_imposto: "TFE" as TipoImposto,
     mes_referencia: "",
     valor: 0,
     anexos: [],

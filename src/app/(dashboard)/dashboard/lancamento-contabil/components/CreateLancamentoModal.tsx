@@ -11,6 +11,8 @@ import {
   CircularProgress,
   Alert,
   alpha,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
 import {
   CalendarMonth as CalendarIcon,
@@ -38,6 +40,7 @@ export default function CreateLancamentoModal({
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
   const [mesReferencia, setMesReferencia] = useState(defaultMesReferencia || "");
   const [valorNotaFiscal, setValorNotaFiscal] = useState("R$ 0,00");
+  const [emitirNotaFiscal, setEmitirNotaFiscal] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -49,6 +52,7 @@ export default function CreateLancamentoModal({
       setSelectedCliente(null);
       setMesReferencia(defaultMesReferencia || "");
       setValorNotaFiscal("R$ 0,00");
+      setEmitirNotaFiscal(true);
       setError(null);
     }
   }, [open, defaultMesReferencia]);
@@ -92,6 +96,7 @@ export default function CreateLancamentoModal({
         cliente_id: selectedCliente.cliente_id,
         mes_referencia: mesReferencia,
         valor_nota_fiscal: valor,
+        emitir_nota_fiscal: emitirNotaFiscal,
       };
 
       // Import dynamically to avoid circular dependency
@@ -221,6 +226,31 @@ export default function CreateLancamentoModal({
                 },
                 "& .MuiInputLabel-root.Mui-focused": {
                   color: "#8270FF",
+                },
+              }}
+            />
+
+            {/* Emitir Nota Fiscal */}
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={emitirNotaFiscal}
+                  onChange={(e) => setEmitirNotaFiscal(e.target.checked)}
+                  sx={{
+                    "& .MuiSwitch-switchBase.Mui-checked": {
+                      color: "#8270FF",
+                    },
+                    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                      backgroundColor: "#8270FF",
+                    },
+                  }}
+                />
+              }
+              label="Emitir Nota Fiscal?"
+              sx={{
+                "& .MuiFormControlLabel-label": {
+                  fontWeight: 500,
+                  color: "#0f172a",
                 },
               }}
             />
