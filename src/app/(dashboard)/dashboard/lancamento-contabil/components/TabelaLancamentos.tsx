@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -14,6 +14,7 @@ import {
   Chip,
   Box,
   Tooltip,
+  TableFooter,
 } from "@mui/material";
 import {
   CloudUpload as UploadIcon,
@@ -106,6 +107,13 @@ export default function TabelaLancamentos({
   const isAllSelected =
     lancamentos.length > 0 && selectedIds.length === lancamentos.length;
   const isSomeSelected = selectedIds.length > 0 && !isAllSelected;
+
+  // Calcular o valor total de todos os lançamentos
+  const valorTotal = useMemo(() => {
+    return lancamentos.reduce((acc, lancamento) => {
+      return acc + (lancamento.valor_nota_fiscal || 0);
+    }, 0);
+  }, [lancamentos]);
 
   if (loading) {
     return (
@@ -334,6 +342,17 @@ export default function TabelaLancamentos({
             );
           })}
         </TableBody>
+        <TableFooter>
+          <TableRow>
+            <TableCell colSpan={5} sx={{ fontWeight: 600, bgcolor: "#f8f9fa" }}>
+              Total
+            </TableCell>
+            <TableCell align="right" sx={{ fontWeight: 700, bgcolor: "#f8f9fa", color: "#8270FF", fontSize: "1rem" }}>
+              {formatValor(valorTotal)}
+            </TableCell>
+            <TableCell colSpan={readOnly ? 3 : 4} sx={{ bgcolor: "#f8f9fa" }} />
+          </TableRow>
+        </TableFooter>
       </Table>
     </TableContainer>
   );
