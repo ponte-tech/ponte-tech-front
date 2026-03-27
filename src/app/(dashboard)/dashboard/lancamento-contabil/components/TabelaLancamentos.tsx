@@ -344,9 +344,9 @@ export default function TabelaLancamentos({
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={readOnly ? 9 : 10} sx={{ bgcolor: "#fafafa", borderTop: "1px solid #e0e0e0" }} />
+            <TableCell colSpan={5} sx={{ bgcolor: "#fafafa", borderTop: "1px solid #e0e0e0" }} />
             <TableCell
-              align="center"
+              align="right"
               sx={{
                 bgcolor: "#fafafa",
                 borderTop: "1px solid #e0e0e0",
@@ -355,8 +355,9 @@ export default function TabelaLancamentos({
                 fontSize: "0.875rem"
               }}
             >
-              Total: {formatValor(valorTotal)}
+              {formatValor(valorTotal)}
             </TableCell>
+            <TableCell colSpan={readOnly ? 3 : 4} sx={{ bgcolor: "#fafafa", borderTop: "1px solid #e0e0e0" }} />
           </TableRow>
         </TableFooter>
       </Table>

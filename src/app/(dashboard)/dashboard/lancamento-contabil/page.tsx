@@ -17,8 +17,10 @@ import JSZip from "jszip";
 import { PageHeader, DeleteDialog } from "@/app/shared/components";
 import { Add as AddIcon } from "@mui/icons-material";
 import lancamentoContabilService from "@/app/services/lancamentoContabilService";
+import empresaService from "@/app/services/empresaService";
 import type { LancamentoContabil } from "@/app/types/lancamentoContabil";
-import FiltroMesAno from "./components/FiltroMesAno";
+import type { Empresa } from "@/app/types/empresa";
+import FiltroLancamentos from "./components/FiltroLancamentos";
 import TabelaLancamentos from "./components/TabelaLancamentos";
 import UploadNotaModal from "./components/UploadNotaModal";
 import CreateLancamentoModal from "./components/CreateLancamentoModal";
@@ -39,6 +41,10 @@ export default function LancamentoContabilPage() {
     currentDate.getMonth() + 1
   ).padStart(2, "0")}`;
   const [mesReferencia, setMesReferencia] = useState(currentMonth);
+
+  // Filtro de empresa
+  const [empresas, setEmpresas] = useState<Empresa[]>([]);
+  const [empresaSelecionada, setEmpresaSelecionada] = useState<string>("");
 
   // Seleção múltipla
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -72,6 +78,11 @@ export default function LancamentoContabilPage() {
   // Download em lote
   const [downloadingBatch, setDownloadingBatch] = useState(false);
 
+  // Carregar empresas ao montar o componente
+  useEffect(() => {
+    loadEmpresas();
+  }, []);
+
   // Carregar lançamentos ao mudar o mês
   useEffect(() => {
     loadLancamentos();
@@ -93,6 +104,19 @@ export default function LancamentoContabilPage() {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadEmpresas = async () => {
+    try {
+      const response = await empresaService.list();
+      setEmpresas(response.empresas || []);
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      showSnackbar(
+        error.response?.data?.message || "Erro ao carregar empresas",
+        "error"
+      );
     }
   };
 
