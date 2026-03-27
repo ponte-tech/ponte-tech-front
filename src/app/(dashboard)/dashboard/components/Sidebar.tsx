@@ -94,7 +94,7 @@ const menuItems: MenuItem[] = [
     subItems: [
       { text: "Lançamento Contábil", path: "/dashboard/lancamento-contabil" },
       { text: "Lançamento Impostos", path: "/dashboard/contabilidade/impostos" },
-      { text: "NF Colaboradores", path: "/dashboard/contabilidade/notas-fiscais" },
+      { text: "NF Despesas", path: "/dashboard/contabilidade/notas-fiscais" },
     ]
   },
   {
