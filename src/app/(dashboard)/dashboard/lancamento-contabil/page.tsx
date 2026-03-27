@@ -8,10 +8,18 @@ import {
   Alert,
   Button,
   Typography,
+  Grid,
+  Chip,
+  Stack,
+  alpha,
 } from "@mui/material";
 import {
   Download as DownloadIcon,
   CloudDownload as CloudDownloadIcon,
+  Receipt as ReceiptIcon,
+  TrendingUp as TrendingUpIcon,
+  CheckCircle as CheckCircleIcon,
+  Schedule as ScheduleIcon,
 } from "@mui/icons-material";
 import JSZip from "jszip";
 import { PageHeader, DeleteDialog } from "@/app/shared/components";
@@ -25,6 +33,102 @@ import TabelaLancamentos from "./components/TabelaLancamentos";
 import UploadNotaModal from "./components/UploadNotaModal";
 import CreateLancamentoModal from "./components/CreateLancamentoModal";
 import { useAuth } from "@/app/hooks/useAuth";
+
+// Componente de KPI Card moderno
+function KPICard({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  color = "#8270FF",
+  trend
+}: {
+  title: string;
+  value: string | number;
+  subtitle?: string;
+  icon: any;
+  color?: string;
+  trend?: { value: string; positive: boolean };
+}) {
+  return (
+    <Card
+      sx={{
+        p: 2.5,
+        height: "100%",
+        background: `linear-gradient(135deg, ${alpha(color, 0.05)} 0%, ${alpha(color, 0.02)} 100%)`,
+        border: `1px solid ${alpha(color, 0.1)}`,
+        borderRadius: 3,
+        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        "&:hover": {
+          transform: "translateY(-4px)",
+          boxShadow: `0 12px 24px ${alpha(color, 0.15)}`,
+          borderColor: alpha(color, 0.3),
+        },
+      }}
+    >
+      <Stack spacing={1.5}>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
+              fontSize: "0.75rem",
+            }}
+          >
+            {title}
+          </Typography>
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: 2,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              bgcolor: alpha(color, 0.1),
+              color: color,
+            }}
+          >
+            <Icon sx={{ fontSize: 20 }} />
+          </Box>
+        </Box>
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: 700,
+            color: "text.primary",
+            fontSize: "2rem",
+          }}
+        >
+          {value}
+        </Typography>
+        {subtitle && (
+          <Typography variant="body2" color="text.secondary">
+            {subtitle}
+          </Typography>
+        )}
+        {trend && (
+          <Chip
+            label={trend.value}
+            size="small"
+            sx={{
+              height: 24,
+              fontSize: "0.75rem",
+              fontWeight: 600,
+              bgcolor: trend.positive ? alpha("#10b981", 0.1) : alpha("#ef4444", 0.1),
+              color: trend.positive ? "#10b981" : "#ef4444",
+              border: "none",
+              "& .MuiChip-label": { px: 1 },
+            }}
+          />
+        )}
+      </Stack>
+    </Card>
+  );
+}
 
 export default function LancamentoContabilPage() {
   const { user } = useAuth();
@@ -299,49 +403,158 @@ export default function LancamentoContabilPage() {
     ? lancamentos.filter((l) => l.empresa_razao_social === empresaSelecionada)
     : lancamentos;
 
+  // Calcular métricas (KPIs)
+  const totalLancamentos = lancamentosFiltrados.length;
+  const lancamentosComNota = lancamentosFiltrados.filter(l => l.nota_fiscal_id).length;
+  const lancamentosPendentes = lancamentosFiltrados.filter(l => !l.nota_fiscal_id).length;
+  const valorTotal = lancamentosFiltrados.reduce((sum, l) => sum + (l.valor_nota_fiscal || 0), 0);
+
   return (
     <Box>
-      {/* Header */}
-      <PageHeader
-        title="Lançamento Contábil"
-        description="Gerencie as notas fiscais dos clientes por mês/ano"
-        actionButton={{
-          label: "Novo Lançamento",
-          icon: <AddIcon />,
-          onClick: () => setCreateModalOpen(true),
-          visible: !isContabilUser, // Ocultar botão para usuário contábil
-        }}
-      />
+      {/* Header Moderno */}
+      <Box sx={{ mb: 4 }}>
+        <PageHeader
+          title="Lançamento Contábil"
+          description="Gerencie as notas fiscais dos clientes por mês/ano"
+          actionButton={{
+            label: "Novo Lançamento",
+            icon: <AddIcon />,
+            onClick: () => setCreateModalOpen(true),
+            visible: !isContabilUser,
+          }}
+        />
+      </Box>
 
-      {/* Filtro de Mês/Ano e Empresa */}
-      <FiltroLancamentos
-        mesReferencia={mesReferencia}
-        onMesReferenciaChange={setMesReferencia}
-        empresaSelecionada={empresaSelecionada}
-        onEmpresaChange={setEmpresaSelecionada}
-        empresas={empresas.map(e => ({ nome: e.nome_fantasia }))}
-      />
-
-      {/* Botão de Download em Lote */}
-      {selectedIds.length > 0 && (
-        <Box sx={{ mb: 2 }}>
-          <Button
-            variant="contained"
-            startIcon={
-              downloadingBatch ? <CloudDownloadIcon /> : <DownloadIcon />
+      {/* KPI Cards - Estilo Xero/QuickBooks */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <KPICard
+            title="Total de Lançamentos"
+            value={totalLancamentos}
+            subtitle={`Período: ${mesReferencia}`}
+            icon={ReceiptIcon}
+            color="#8270FF"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <KPICard
+            title="Com Nota Fiscal"
+            value={lancamentosComNota}
+            subtitle={`${totalLancamentos > 0 ? Math.round((lancamentosComNota / totalLancamentos) * 100) : 0}% do total`}
+            icon={CheckCircleIcon}
+            color="#10b981"
+            trend={
+              lancamentosComNota === totalLancamentos
+                ? { value: "Completo", positive: true }
+                : undefined
             }
-            onClick={handleBatchDownload}
-            disabled={downloadingBatch}
-          >
-            {downloadingBatch
-              ? "Baixando..."
-              : `Baixar ${selectedIds.length} Selecionada(s)`}
-          </Button>
-        </Box>
-      )}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <KPICard
+            title="Pendentes"
+            value={lancamentosPendentes}
+            subtitle={lancamentosPendentes > 0 ? "Aguardando upload" : "Tudo em dia!"}
+            icon={ScheduleIcon}
+            color={lancamentosPendentes > 0 ? "#f59e0b" : "#10b981"}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <KPICard
+            title="Valor Total"
+            value={new Intl.NumberFormat("pt-BR", {
+              style: "currency",
+              currency: "BRL",
+              minimumFractionDigits: 0,
+            }).format(valorTotal)}
+            subtitle="Somatório do período"
+            icon={TrendingUpIcon}
+            color="#8270FF"
+          />
+        </Grid>
+      </Grid>
 
-      {/* Tabela */}
-      <Card sx={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+      {/* Filtros e Ações */}
+      <Card
+        sx={{
+          mb: 3,
+          borderRadius: 3,
+          boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
+          border: "1px solid rgba(0,0,0,0.06)",
+        }}
+      >
+        <Box sx={{ p: 3 }}>
+          <Stack spacing={2}>
+            <FiltroLancamentos
+              mesReferencia={mesReferencia}
+              onMesReferenciaChange={setMesReferencia}
+              empresaSelecionada={empresaSelecionada}
+              onEmpresaChange={setEmpresaSelecionada}
+              empresas={empresas.map(e => ({ nome: e.nome_fantasia }))}
+            />
+
+            {/* Botão de Download em Lote - Novo Design */}
+            {selectedIds.length > 0 && (
+              <Box
+                sx={{
+                  p: 2,
+                  bgcolor: alpha("#8270FF", 0.05),
+                  borderRadius: 2,
+                  border: `1px dashed ${alpha("#8270FF", 0.3)}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Chip
+                    label={`${selectedIds.length} selecionado(s)`}
+                    size="small"
+                    sx={{
+                      bgcolor: "#8270FF",
+                      color: "white",
+                      fontWeight: 600,
+                    }}
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    Lançamentos prontos para download
+                  </Typography>
+                </Box>
+                <Button
+                  variant="contained"
+                  startIcon={
+                    downloadingBatch ? <CloudDownloadIcon /> : <DownloadIcon />
+                  }
+                  onClick={handleBatchDownload}
+                  disabled={downloadingBatch}
+                  sx={{
+                    bgcolor: "#8270FF",
+                    borderRadius: 2,
+                    textTransform: "none",
+                    fontWeight: 600,
+                    px: 3,
+                    "&:hover": {
+                      bgcolor: "#6C5CE7",
+                    },
+                  }}
+                >
+                  {downloadingBatch ? "Baixando..." : "Baixar Selecionadas"}
+                </Button>
+              </Box>
+            )}
+          </Stack>
+        </Box>
+      </Card>
+
+      {/* Tabela Modernizada */}
+      <Card
+        sx={{
+          borderRadius: 3,
+          boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
+          border: "1px solid rgba(0,0,0,0.06)",
+          overflow: "hidden",
+        }}
+      >
         <TabelaLancamentos
           lancamentos={lancamentosFiltrados}
           loading={loading}
@@ -349,9 +562,9 @@ export default function LancamentoContabilPage() {
           onSelectionChange={setSelectedIds}
           onUploadClick={handleUploadClick}
           onDownloadClick={handleDownloadClick}
-          onDeleteClick={isContabilUser ? undefined : handleDeleteClick} // Remover delete para contábil
-          onValorChange={isContabilUser ? undefined : handleValorChange} // Remover edição de valor para contábil
-          readOnly={isContabilUser} // Passar flag de somente leitura
+          onDeleteClick={isContabilUser ? undefined : handleDeleteClick}
+          onValorChange={isContabilUser ? undefined : handleValorChange}
+          readOnly={isContabilUser}
         />
       </Card>
 
@@ -385,7 +598,7 @@ export default function LancamentoContabilPage() {
         loading={deleting}
       />
 
-      {/* Snackbar */}
+      {/* Snackbar Modernizado */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
@@ -395,7 +608,11 @@ export default function LancamentoContabilPage() {
         <Alert
           onClose={handleCloseSnackbar}
           severity={snackbar.severity}
-          sx={{ width: "100%" }}
+          variant="filled"
+          sx={{
+            borderRadius: 2,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+          }}
         >
           {snackbar.message}
         </Alert>

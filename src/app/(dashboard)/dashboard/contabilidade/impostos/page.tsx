@@ -19,8 +19,20 @@ import {
   FormControl,
   InputLabel,
   Chip,
+  Grid,
+  Stack,
+  alpha,
+  Paper,
 } from "@mui/material";
-import { Add as AddIcon, AttachFile as AttachFileIcon, CloudDownload as CloudDownloadIcon } from "@mui/icons-material";
+import {
+  Add as AddIcon,
+  AttachFile as AttachFileIcon,
+  CloudDownload as CloudDownloadIcon,
+  Assessment as AssessmentIcon,
+  Paid as PaidIcon,
+  CalendarMonth as CalendarIcon,
+  Description as DescriptionIcon,
+} from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import JSZip from "jszip";
 import impostoService from "@/app/services/impostoService";
@@ -28,6 +40,85 @@ import type { Imposto } from "@/app/types/imposto";
 import { TIPOS_IMPOSTO } from "@/app/types/imposto";
 import { PageHeader, FilterSearch, TableActionButtons, TableAction, AccessDenied, DeleteDialog } from "@/app/shared/components";
 import { useAuth } from "@/app/hooks/useAuth";
+
+// Componente KPI Card reutilizável
+function KPICard({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  color = "#8270FF",
+}: {
+  title: string;
+  value: string | number;
+  subtitle?: string;
+  icon: any;
+  color?: string;
+}) {
+  return (
+    <Card
+      sx={{
+        p: 2.5,
+        height: "100%",
+        background: `linear-gradient(135deg, ${alpha(color, 0.05)} 0%, ${alpha(color, 0.02)} 100%)`,
+        border: `1px solid ${alpha(color, 0.1)}`,
+        borderRadius: 3,
+        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        "&:hover": {
+          transform: "translateY(-4px)",
+          boxShadow: `0 12px 24px ${alpha(color, 0.15)}`,
+          borderColor: alpha(color, 0.3),
+        },
+      }}
+    >
+      <Stack spacing={1.5}>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
+              fontSize: "0.75rem",
+            }}
+          >
+            {title}
+          </Typography>
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: 2,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              bgcolor: alpha(color, 0.1),
+              color: color,
+            }}
+          >
+            <Icon sx={{ fontSize: 20 }} />
+          </Box>
+        </Box>
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: 700,
+            color: "text.primary",
+            fontSize: "2rem",
+          }}
+        >
+          {value}
+        </Typography>
+        {subtitle && (
+          <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.875rem" }}>
+            {subtitle}
+          </Typography>
+        )}
+      </Stack>
+    </Card>
+  );
+}
 
 export default function ImpostosPage() {
   const router = useRouter();
@@ -274,6 +365,12 @@ export default function ImpostosPage() {
     return options;
   };
 
+  // Calcular métricas (KPIs)
+  const totalImpostos = filteredImpostos.length;
+  const valorTotal = filteredImpostos.reduce((sum, i) => sum + i.valor, 0);
+  const totalAnexos = filteredImpostos.reduce((sum, i) => sum + (i.anexos?.length || 0), 0);
+  const tiposUnicos = new Set(filteredImpostos.map(i => i.tipo_imposto)).size;
+
   // Bloquear acesso para colaboradores
   if (isColaborador) {
     return <AccessDenied />;
@@ -281,57 +378,130 @@ export default function ImpostosPage() {
 
   return (
     <Box>
-      {/* Header */}
-      <PageHeader
-        title="Lançamento de Impostos"
-        description="Gerencie os impostos cadastrados por empresa e período"
-        actionButton={{
-          label: "Cadastrar Imposto",
-          icon: <AddIcon />,
-          onClick: () => router.push("/dashboard/contabilidade/impostos/novo"),
-          visible: true,
-        }}
-      />
-
-      {/* Filters */}
-      <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
-        <FormControl sx={{ minWidth: 250 }}>
-          <InputLabel>Mês de Referência</InputLabel>
-          <Select
-            value={mesReferencia}
-            label="Mês de Referência"
-            onChange={(e) => setMesReferencia(e.target.value)}
-          >
-            {generateMonthOptions().map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        <Box sx={{ flex: 1 }}>
-          <FilterSearch
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            placeholder="Pesquisar por descrição ou tipo de imposto..."
-          />
-        </Box>
+      {/* Header Moderno */}
+      <Box sx={{ mb: 4 }}>
+        <PageHeader
+          title="Lançamento de Impostos"
+          description="Gerencie os impostos cadastrados por empresa e período"
+          actionButton={{
+            label: "Cadastrar Imposto",
+            icon: <AddIcon />,
+            onClick: () => router.push("/dashboard/contabilidade/impostos/novo"),
+            visible: true,
+          }}
+        />
       </Box>
 
-      {/* Table */}
-      <Card sx={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-        <TableContainer>
+      {/* KPI Cards - Estilo Xero/QuickBooks */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <KPICard
+            title="Total de Impostos"
+            value={totalImpostos}
+            subtitle={`Período: ${formatMesReferencia(mesReferencia)}`}
+            icon={AssessmentIcon}
+            color="#8270FF"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <KPICard
+            title="Valor Total"
+            value={formatCurrency(valorTotal)}
+            subtitle="Somatório do período"
+            icon={PaidIcon}
+            color="#10b981"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <KPICard
+            title="Tipos Cadastrados"
+            value={tiposUnicos}
+            subtitle="Categorias diferentes"
+            icon={CalendarIcon}
+            color="#f59e0b"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <KPICard
+            title="Anexos"
+            value={totalAnexos}
+            subtitle="Documentos disponíveis"
+            icon={DescriptionIcon}
+            color="#8270FF"
+          />
+        </Grid>
+      </Grid>
+
+      {/* Filtros */}
+      <Card
+        sx={{
+          mb: 3,
+          borderRadius: 3,
+          boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
+          border: "1px solid rgba(0,0,0,0.06)",
+        }}
+      >
+        <Box sx={{ p: 3 }}>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+            <FormControl sx={{ minWidth: 250 }}>
+              <InputLabel>Mês de Referência</InputLabel>
+              <Select
+                value={mesReferencia}
+                label="Mês de Referência"
+                onChange={(e) => setMesReferencia(e.target.value)}
+                sx={{
+                  borderRadius: 2,
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "rgba(0,0,0,0.12)",
+                  },
+                }}
+              >
+                {generateMonthOptions().map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <Box sx={{ flex: 1 }}>
+              <FilterSearch
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                placeholder="Pesquisar por descrição ou tipo de imposto..."
+              />
+            </Box>
+          </Stack>
+        </Box>
+      </Card>
+
+      {/* Table Modernizada */}
+      <Card
+        sx={{
+          borderRadius: 3,
+          boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
+          border: "1px solid rgba(0,0,0,0.06)",
+          overflow: "hidden",
+        }}
+      >
+        <TableContainer component={Paper} elevation={0}>
           <Table>
             <TableHead>
-              <TableRow sx={{ bgcolor: "#f8f9fa" }}>
-                <TableCell sx={{ fontWeight: 600 }}>Descrição</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Tipo de Imposto</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Mês Referência</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Valor</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Anexos</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Data Cadastro</TableCell>
-                <TableCell sx={{ fontWeight: 600 }} align="center">
+              <TableRow
+                sx={{
+                  bgcolor: alpha("#8270FF", 0.04),
+                  "& th": {
+                    borderBottom: `2px solid ${alpha("#8270FF", 0.1)}`,
+                  },
+                }}
+              >
+                <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem" }}>Descrição</TableCell>
+                <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem" }}>Tipo de Imposto</TableCell>
+                <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem" }}>Mês Referência</TableCell>
+                <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem" }}>Valor</TableCell>
+                <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem" }}>Anexos</TableCell>
+                <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem" }}>Data Cadastro</TableCell>
+                <TableCell sx={{ fontWeight: 700, fontSize: "0.875rem" }} align="center">
                   Ações
                 </TableCell>
               </TableRow>
@@ -340,23 +510,44 @@ export default function ImpostosPage() {
               {loading ? (
                 <TableRow>
                   <TableCell colSpan={7} align="center" sx={{ py: 8 }}>
-                    <CircularProgress />
+                    <CircularProgress sx={{ color: "#8270FF" }} />
                   </TableCell>
                 </TableRow>
               ) : filteredImpostos.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} align="center" sx={{ py: 8 }}>
-                    <Typography variant="body1" color="text.secondary" gutterBottom>
-                      Nenhum imposto encontrado para este período
-                    </Typography>
-                    <Button
-                      variant="outlined"
-                      startIcon={<AddIcon />}
-                      onClick={() => router.push("/dashboard/contabilidade/impostos/novo")}
-                      sx={{ mt: 2, textTransform: "none" }}
-                    >
-                      Cadastrar Primeiro Imposto
-                    </Button>
+                    <Box sx={{ textAlign: "center" }}>
+                      <AssessmentIcon
+                        sx={{
+                          fontSize: 80,
+                          color: alpha("#8270FF", 0.2),
+                          mb: 2,
+                        }}
+                      />
+                      <Typography variant="h6" color="text.secondary" gutterBottom>
+                        Nenhum imposto encontrado
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                        Comece cadastrando seu primeiro imposto
+                      </Typography>
+                      <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => router.push("/dashboard/contabilidade/impostos/novo")}
+                        sx={{
+                          bgcolor: "#8270FF",
+                          borderRadius: 2,
+                          textTransform: "none",
+                          fontWeight: 600,
+                          px: 3,
+                          "&:hover": {
+                            bgcolor: "#6C5CE7",
+                          },
+                        }}
+                      >
+                        Cadastrar Primeiro Imposto
+                      </Button>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ) : (
@@ -365,12 +556,16 @@ export default function ImpostosPage() {
                     key={imposto.imposto_id}
                     onClick={() => router.push(`/dashboard/contabilidade/impostos/${imposto.imposto_id}?empresa_id=${imposto.empresa_id}`)}
                     sx={{
-                      "&:hover": { bgcolor: "#f8f9fa", cursor: "pointer" },
-                      transition: "background-color 0.2s",
+                      "&:hover": {
+                        bgcolor: alpha("#8270FF", 0.04),
+                        cursor: "pointer",
+                      },
+                      transition: "all 0.2s",
+                      borderBottom: "1px solid rgba(0,0,0,0.05)",
                     }}
                   >
                     <TableCell>
-                      <Typography variant="body2" fontWeight={500}>
+                      <Typography variant="body2" fontWeight={600}>
                         {imposto.descricao}
                       </Typography>
                     </TableCell>
@@ -379,6 +574,10 @@ export default function ImpostosPage() {
                         label={getTipoImpostoLabel(imposto.tipo_imposto)}
                         color={getColorForTipo(imposto.tipo_imposto)}
                         size="small"
+                        sx={{
+                          fontWeight: 600,
+                          borderRadius: 1.5,
+                        }}
                       />
                     </TableCell>
                     <TableCell>
@@ -387,14 +586,14 @@ export default function ImpostosPage() {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2" fontWeight={600}>
+                      <Typography variant="body2" fontWeight={700} color="#10b981">
                         {formatCurrency(imposto.valor)}
                       </Typography>
                     </TableCell>
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       {imposto.anexos && imposto.anexos.length > 0 ? (
                         <Chip
-                          icon={downloadingImpostoId === imposto.imposto_id ? <CircularProgress size={16} /> : <CloudDownloadIcon />}
+                          icon={downloadingImpostoId === imposto.imposto_id ? <CircularProgress size={14} sx={{ color: "#8270FF" }} /> : <CloudDownloadIcon />}
                           label={`${imposto.anexos.length} arquivo(s)`}
                           size="small"
                           variant="outlined"
@@ -402,9 +601,13 @@ export default function ImpostosPage() {
                           disabled={downloadingImpostoId === imposto.imposto_id}
                           sx={{
                             cursor: "pointer",
+                            borderColor: alpha("#8270FF", 0.3),
+                            color: "#8270FF",
+                            fontWeight: 600,
+                            borderRadius: 1.5,
                             "&:hover": {
-                              bgcolor: "primary.50",
-                              borderColor: "primary.main",
+                              bgcolor: alpha("#8270FF", 0.08),
+                              borderColor: "#8270FF",
                             },
                           }}
                         />
@@ -415,7 +618,7 @@ export default function ImpostosPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2">
+                      <Typography variant="body2" color="text.secondary">
                         {formatDate(imposto.data_cadastro)}
                       </Typography>
                     </TableCell>
