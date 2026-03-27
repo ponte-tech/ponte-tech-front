@@ -20,6 +20,9 @@ import {
   ListItem,
   ListItemText,
   ListItemSecondaryAction,
+  LinearProgress,
+  Tooltip,
+  alpha,
 } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
@@ -27,10 +30,14 @@ import {
   AttachFile as AttachFileIcon,
   Delete as DeleteIcon,
   CloudUpload as CloudUploadIcon,
+  AutoAwesome as AutoAwesomeIcon,
+  CheckCircle as CheckCircleIcon,
+  Error as ErrorIcon,
 } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import impostoService from "@/app/services/impostoService";
 import empresaService from "@/app/services/empresaService";
+import documentExtractionService from "@/app/services/documentExtractionService";
 import type { CreateImpostoRequest, TipoImposto } from "@/app/types/imposto";
 import { TIPOS_IMPOSTO } from "@/app/types/imposto";
 import type { Empresa } from "@/app/types/empresa";
@@ -40,6 +47,10 @@ import { applyCurrencyMask, removeCurrencyMask } from "@/app/utils/currencyMask"
 interface FileWithType {
   file: File;
   tipoImposto: TipoImposto;
+  extractedValue?: number | null;
+  extractionConfidence?: number;
+  extractionError?: string;
+  extracting?: boolean;
 }
 
 export default function NovoImpostoPage() {
@@ -96,19 +107,65 @@ export default function NovoImpostoPage() {
     setFormData((prev) => ({ ...prev, valor: numeric }));
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files) {
       const fileArray = Array.from(files);
       const filesWithType: FileWithType[] = fileArray.map((file) => ({
         file,
         tipoImposto: "" as TipoImposto,
+        extracting: true,
       }));
+
       setSelectedFiles((prev) => [...prev, ...filesWithType]);
       setFormData((prev) => ({
         ...prev,
         anexos: [...(prev.anexos || []), ...fileArray],
       }));
+
+      // Extrair valores automaticamente com IA
+      if (documentExtractionService.isConfigured()) {
+        fileArray.forEach(async (file, index) => {
+          const baseIndex = selectedFiles.length + index;
+
+          try {
+            const result = await documentExtractionService.extractValueFromDocument(file);
+
+            setSelectedFiles((prev) =>
+              prev.map((item, i) =>
+                i === baseIndex
+                  ? {
+                      ...item,
+                      extracting: false,
+                      extractedValue: result.valor,
+                      extractionConfidence: result.confidence,
+                      extractionError: result.error,
+                    }
+                  : item
+              )
+            );
+
+            // Se foi extraído um valor com confiança alta, sugerir ao usuário
+            if (result.valor && result.confidence > 70) {
+              // Opcional: atualizar o valor total automaticamente
+              // setFormData((prev) => ({ ...prev, valor: result.valor }));
+            }
+          } catch (error: any) {
+            console.error('Erro na extração:', error);
+            setSelectedFiles((prev) =>
+              prev.map((item, i) =>
+                i === baseIndex
+                  ? {
+                      ...item,
+                      extracting: false,
+                      extractionError: 'Erro ao extrair valor',
+                    }
+                  : item
+              )
+            );
+          }
+        });
+      }
     }
   };
 
@@ -332,10 +389,69 @@ export default function NovoImpostoPage() {
                         >
                           <Box sx={{ display: "flex", alignItems: "center", width: "100%", mb: 2 }}>
                             <AttachFileIcon sx={{ mr: 2, color: "text.secondary" }} />
-                            <ListItemText
-                              primary={fileWithType.file.name}
-                              secondary={formatFileSize(fileWithType.file.size)}
-                            />
+                            <Box sx={{ flex: 1 }}>
+                              <ListItemText
+                                primary={fileWithType.file.name}
+                                secondary={formatFileSize(fileWithType.file.size)}
+                              />
+                              {/* Valor extraído por IA */}
+                              {fileWithType.extracting && (
+                                <Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 1 }}>
+                                  <AutoAwesomeIcon sx={{ fontSize: 16, color: "#8270FF" }} />
+                                  <Typography variant="caption" color="text.secondary">
+                                    Extraindo valor com IA...
+                                  </Typography>
+                                  <LinearProgress sx={{ flex: 1, maxWidth: 100, ml: 1 }} />
+                                </Box>
+                              )}
+                              {!fileWithType.extracting && fileWithType.extractedValue !== undefined && (
+                                <Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 1 }}>
+                                  {fileWithType.extractedValue ? (
+                                    <>
+                                      <CheckCircleIcon sx={{ fontSize: 16, color: "#10b981" }} />
+                                      <Chip
+                                        icon={<AutoAwesomeIcon sx={{ fontSize: 14 }} />}
+                                        label={`Valor detectado: ${new Intl.NumberFormat("pt-BR", {
+                                          style: "currency",
+                                          currency: "BRL",
+                                        }).format(fileWithType.extractedValue)}`}
+                                        size="small"
+                                        sx={{
+                                          bgcolor: alpha("#10b981", 0.1),
+                                          color: "#10b981",
+                                          fontWeight: 600,
+                                          "& .MuiChip-icon": { color: "#10b981" },
+                                        }}
+                                      />
+                                      {fileWithType.extractionConfidence && (
+                                        <Tooltip title="Confiança da extração">
+                                          <Chip
+                                            label={`${fileWithType.extractionConfidence}%`}
+                                            size="small"
+                                            variant="outlined"
+                                            sx={{ fontSize: "0.7rem" }}
+                                          />
+                                        </Tooltip>
+                                      )}
+                                    </>
+                                  ) : fileWithType.extractionError ? (
+                                    <>
+                                      <ErrorIcon sx={{ fontSize: 16, color: "#ef4444" }} />
+                                      <Typography variant="caption" color="error">
+                                        {fileWithType.extractionError}
+                                      </Typography>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <ErrorIcon sx={{ fontSize: 16, color: "#f59e0b" }} />
+                                      <Typography variant="caption" color="text.secondary">
+                                        Valor não detectado automaticamente
+                                      </Typography>
+                                    </>
+                                  )}
+                                </Box>
+                              )}
+                            </Box>
                             <IconButton
                               onClick={() => handleRemoveFile(index)}
                               color="error"
@@ -363,10 +479,25 @@ export default function NovoImpostoPage() {
                         </ListItem>
                       ))}
                     </List>
-                    <Box sx={{ p: 2, bgcolor: "grey.50" }}>
-                      <Typography variant="caption" color="text.secondary">
-                        Total: {selectedFiles.length} arquivo(s) selecionado(s)
-                      </Typography>
+                    <Box sx={{ p: 2, bgcolor: alpha("#8270FF", 0.02) }}>
+                      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <Typography variant="caption" color="text.secondary">
+                          Total: {selectedFiles.length} arquivo(s) selecionado(s)
+                        </Typography>
+                        {documentExtractionService.isConfigured() && (
+                          <Chip
+                            icon={<AutoAwesomeIcon sx={{ fontSize: 14 }} />}
+                            label="Extração automática ativa"
+                            size="small"
+                            sx={{
+                              bgcolor: alpha("#8270FF", 0.1),
+                              color: "#8270FF",
+                              fontWeight: 600,
+                              fontSize: "0.7rem",
+                            }}
+                          />
+                        )}
+                      </Box>
                     </Box>
                   </Card>
                 )}
