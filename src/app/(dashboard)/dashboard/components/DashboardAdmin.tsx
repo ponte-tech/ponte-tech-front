@@ -42,6 +42,13 @@ export default function DashboardAdmin() {
   const [error, setError] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState(0); // 0 = Consolidado, 1+ = Empresas
 
+  // Estado para o filtro de mês do resumo financeiro
+  const getCurrentMonth = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  };
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
+
   useEffect(() => {
     loadDashboard();
   }, []);
@@ -267,14 +274,53 @@ export default function DashboardAdmin() {
           mb: 4,
         }}
       >
-        <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
-          Resumo Financeiro (Mês Atual)
-        </Typography>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3, flexWrap: "wrap", gap: 2 }}>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            Resumo Financeiro
+          </Typography>
+
+          {/* Filtro de Mês */}
+          <Box
+            sx={{
+              position: 'relative',
+              display: 'inline-block',
+              minWidth: 200,
+            }}
+          >
+            <TextField
+              type="month"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              size="small"
+              InputLabelProps={{
+                shrink: true,
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  bgcolor: 'white',
+                  borderRadius: 2,
+                  '&:hover': {
+                    boxShadow: '0 0 0 2px rgba(130, 112, 255, 0.1)',
+                  },
+                  '&.Mui-focused': {
+                    boxShadow: '0 0 0 3px rgba(130, 112, 255, 0.2)',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#8270FF',
+                      borderWidth: 2,
+                    },
+                  },
+                },
+              }}
+            />
+          </Box>
+        </Box>
 
         <Grid container spacing={3}>
           {/* Card Consolidado */}
           {(() => {
-            const mesAtualConsolidado = financeiros.consolidado.meses[financeiros.consolidado.meses.length - 1];
+            // Encontrar dados do mês selecionado
+            const mesAtualConsolidado = financeiros.consolidado.meses.find(m => m.mes === selectedMonth) ||
+                                        financeiros.consolidado.meses[financeiros.consolidado.meses.length - 1];
             const receitasTotal = mesAtualConsolidado?.receitas || 0;
             const despesasTotal = (mesAtualConsolidado?.despesas_notas || 0) + (mesAtualConsolidado?.despesas_impostos || 0);
             const resultadoTotal = receitasTotal - despesasTotal;
@@ -398,8 +444,9 @@ export default function DashboardAdmin() {
 
           {/* Cards por Empresa */}
           {financeiros.empresas.map((empresa) => {
-            // Pegar o último mês (mais recente)
-            const mesAtual = empresa.meses[empresa.meses.length - 1];
+            // Encontrar dados do mês selecionado
+            const mesAtual = empresa.meses.find(m => m.mes === selectedMonth) ||
+                            empresa.meses[empresa.meses.length - 1];
             const receitas = mesAtual?.receitas || 0;
             const despesas = (mesAtual?.despesas_notas || 0) + (mesAtual?.despesas_impostos || 0);
             const resultado = receitas - despesas;
