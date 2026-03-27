@@ -344,9 +344,9 @@ export default function TabelaLancamentos({
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={readOnly ? 6 : 7} sx={{ bgcolor: "#fafafa", borderTop: "1px solid #e0e0e0" }} />
+            <TableCell colSpan={readOnly ? 9 : 10} sx={{ bgcolor: "#fafafa", borderTop: "1px solid #e0e0e0" }} />
             <TableCell
-              align="right"
+              align="center"
               sx={{
                 bgcolor: "#fafafa",
                 borderTop: "1px solid #e0e0e0",
