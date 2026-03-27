@@ -17,6 +17,9 @@ import {
 import {
   People,
   Business,
+  TrendingUp,
+  TrendingDown,
+  AccountBalance,
 } from "@mui/icons-material";
 import {
   BarChart,
@@ -253,6 +256,283 @@ export default function DashboardAdmin() {
         ))}
       </Grid>
 
+      {/* Resumo Financeiro por Empresa */}
+      <Paper
+        elevation={0}
+        sx={{
+          borderRadius: 3,
+          border: "1px solid",
+          borderColor: "divider",
+          p: 3,
+          mb: 4,
+        }}
+      >
+        <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
+          Resumo Financeiro (Mês Atual)
+        </Typography>
+
+        <Grid container spacing={3}>
+          {/* Card Consolidado */}
+          {(() => {
+            const mesAtualConsolidado = financeiros.consolidado.meses[financeiros.consolidado.meses.length - 1];
+            const receitasTotal = mesAtualConsolidado?.receitas || 0;
+            const despesasTotal = (mesAtualConsolidado?.despesas_notas || 0) + (mesAtualConsolidado?.despesas_impostos || 0);
+            const resultadoTotal = receitasTotal - despesasTotal;
+            const isPositivoTotal = resultadoTotal >= 0;
+
+            return (
+              <Grid item xs={12}>
+                <Card
+                  elevation={0}
+                  sx={{
+                    borderRadius: 3,
+                    border: "3px solid",
+                    borderColor: isPositivoTotal ? "#10b981" : "#ef4444",
+                    bgcolor: isPositivoTotal ? alpha("#10b981", 0.08) : alpha("#ef4444", 0.08),
+                    background: isPositivoTotal
+                      ? `linear-gradient(135deg, ${alpha("#10b981", 0.12)} 0%, ${alpha("#10b981", 0.04)} 100%)`
+                      : `linear-gradient(135deg, ${alpha("#ef4444", 0.12)} 0%, ${alpha("#ef4444", 0.04)} 100%)`,
+                  }}
+                >
+                  <CardContent sx={{ p: 4 }}>
+                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 3 }}>
+                      {/* Título */}
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Box
+                          sx={{
+                            width: 56,
+                            height: 56,
+                            borderRadius: 2,
+                            bgcolor: isPositivoTotal ? alpha("#10b981", 0.2) : alpha("#ef4444", 0.2),
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            mr: 2,
+                          }}
+                        >
+                          <AccountBalance sx={{ color: isPositivoTotal ? "#10b981" : "#ef4444", fontSize: 32 }} />
+                        </Box>
+                        <Box>
+                          <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
+                            Consolidado Geral
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Soma de todas as empresas
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {/* Valores em linha */}
+                      <Box sx={{ display: "flex", gap: 4, alignItems: "center", flexWrap: "wrap" }}>
+                        {/* Receitas */}
+                        <Box>
+                          <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+                            Receitas
+                          </Typography>
+                          <Typography variant="h6" sx={{ fontWeight: 700, color: "#10b981" }}>
+                            {receitasTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                          </Typography>
+                        </Box>
+
+                        {/* Menos */}
+                        <Typography variant="h6" color="text.secondary" sx={{ mt: 2 }}>
+                          -
+                        </Typography>
+
+                        {/* Despesas */}
+                        <Box>
+                          <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+                            Despesas
+                          </Typography>
+                          <Typography variant="h6" sx={{ fontWeight: 700, color: "#ef4444" }}>
+                            {despesasTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            (Notas: {(mesAtualConsolidado?.despesas_notas || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} +
+                            Impostos: {(mesAtualConsolidado?.despesas_impostos || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })})
+                          </Typography>
+                        </Box>
+
+                        {/* Igual */}
+                        <Typography variant="h6" color="text.secondary" sx={{ mt: 2 }}>
+                          =
+                        </Typography>
+
+                        {/* Resultado */}
+                        <Box
+                          sx={{
+                            bgcolor: isPositivoTotal ? alpha("#10b981", 0.15) : alpha("#ef4444", 0.15),
+                            borderRadius: 2,
+                            p: 2,
+                            minWidth: 180,
+                            textAlign: "center",
+                          }}
+                        >
+                          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5, mb: 0.5 }}>
+                            {isPositivoTotal ? (
+                              <TrendingUp sx={{ color: "#10b981", fontSize: 24 }} />
+                            ) : (
+                              <TrendingDown sx={{ color: "#ef4444", fontSize: 24 }} />
+                            )}
+                            <Typography variant="caption" color="text.secondary">
+                              Resultado
+                            </Typography>
+                          </Box>
+                          <Typography
+                            variant="h4"
+                            sx={{
+                              fontWeight: 700,
+                              color: isPositivoTotal ? "#10b981" : "#ef4444",
+                            }}
+                          >
+                            {resultadoTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            );
+          })()}
+
+          {/* Cards por Empresa */}
+          {financeiros.empresas.map((empresa) => {
+            // Pegar o último mês (mais recente)
+            const mesAtual = empresa.meses[empresa.meses.length - 1];
+            const receitas = mesAtual?.receitas || 0;
+            const despesas = (mesAtual?.despesas_notas || 0) + (mesAtual?.despesas_impostos || 0);
+            const resultado = receitas - despesas;
+            const isPositivo = resultado >= 0;
+
+            return (
+              <Grid item xs={12} md={6} lg={4} key={empresa.empresa_id}>
+                <Card
+                  elevation={0}
+                  sx={{
+                    height: "100%",
+                    borderRadius: 2,
+                    border: "2px solid",
+                    borderColor: isPositivo ? alpha("#10b981", 0.3) : alpha("#ef4444", 0.3),
+                    bgcolor: isPositivo ? alpha("#10b981", 0.05) : alpha("#ef4444", 0.05),
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      transform: "translateY(-4px)",
+                      boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
+                      borderColor: isPositivo ? "#10b981" : "#ef4444",
+                    },
+                  }}
+                >
+                  <CardContent sx={{ p: 3 }}>
+                    {/* Nome da Empresa */}
+                    <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                      <Box
+                        sx={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 2,
+                          bgcolor: isPositivo ? alpha("#10b981", 0.2) : alpha("#ef4444", 0.2),
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          mr: 1.5,
+                        }}
+                      >
+                        <AccountBalance sx={{ color: isPositivo ? "#10b981" : "#ef4444", fontSize: 24 }} />
+                      </Box>
+                      <Typography variant="h6" sx={{ fontWeight: 600, fontSize: "1rem" }}>
+                        {empresa.nome_fantasia}
+                      </Typography>
+                    </Box>
+
+                    {/* Valores */}
+                    <Box sx={{ mb: 2 }}>
+                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          Receitas:
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: "#10b981" }}>
+                          {receitas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          Despesas:
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: "#ef4444" }}>
+                          {despesas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                        </Typography>
+                      </Box>
+                      <Box
+                        sx={{
+                          borderTop: "2px solid",
+                          borderColor: "divider",
+                          pt: 1,
+                          mt: 1,
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                          {isPositivo ? (
+                            <TrendingUp sx={{ color: "#10b981", fontSize: 20 }} />
+                          ) : (
+                            <TrendingDown sx={{ color: "#ef4444", fontSize: 20 }} />
+                          )}
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            Resultado:
+                          </Typography>
+                        </Box>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: 700,
+                            color: isPositivo ? "#10b981" : "#ef4444",
+                          }}
+                        >
+                          {resultado.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                        </Typography>
+                      </Box>
+                    </Box>
+
+                    {/* Subtotal de Despesas */}
+                    <Box
+                      sx={{
+                        bgcolor: alpha("#64748b", 0.08),
+                        borderRadius: 1,
+                        p: 1.5,
+                        mt: 2,
+                      }}
+                    >
+                      <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+                        Detalhamento das Despesas:
+                      </Typography>
+                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
+                        <Typography variant="caption" color="text.secondary">
+                          • Notas Fiscais:
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                          {(mesAtual?.despesas_notas || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                        <Typography variant="caption" color="text.secondary">
+                          • Impostos:
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                          {(mesAtual?.despesas_impostos || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            );
+          })}
+        </Grid>
+      </Paper>
+
       {/* Gráfico Financeiro por Empresa */}
       <Paper
         elevation={0}
@@ -347,7 +627,7 @@ export default function DashboardAdmin() {
                   Receitas
                 </Typography>
                 <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  Soma dos contratos ativos de clientes
+                  Soma dos lançamentos contábeis do mês
                 </Typography>
               </Box>
             </Grid>
