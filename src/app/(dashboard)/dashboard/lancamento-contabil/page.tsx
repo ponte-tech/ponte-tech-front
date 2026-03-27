@@ -22,8 +22,13 @@ import FiltroMesAno from "./components/FiltroMesAno";
 import TabelaLancamentos from "./components/TabelaLancamentos";
 import UploadNotaModal from "./components/UploadNotaModal";
 import CreateLancamentoModal from "./components/CreateLancamentoModal";
+import { useAuth } from "@/app/hooks/useAuth";
 
 export default function LancamentoContabilPage() {
+  const { user } = useAuth();
+
+  // Verificar se é o usuário contábil (somente leitura)
+  const isContabilUser = user?.email === "contabil@pontetech.com";
   // Estado principal
   const [lancamentos, setLancamentos] = useState<LancamentoContabil[]>([]);
   const [loading, setLoading] = useState(false);
@@ -275,7 +280,7 @@ export default function LancamentoContabilPage() {
           label: "Novo Lançamento",
           icon: <AddIcon />,
           onClick: () => setCreateModalOpen(true),
-          visible: true,
+          visible: !isContabilUser, // Ocultar botão para usuário contábil
         }}
       />
 
@@ -312,8 +317,9 @@ export default function LancamentoContabilPage() {
           onSelectionChange={setSelectedIds}
           onUploadClick={handleUploadClick}
           onDownloadClick={handleDownloadClick}
-          onDeleteClick={handleDeleteClick}
-          onValorChange={handleValorChange}
+          onDeleteClick={isContabilUser ? undefined : handleDeleteClick} // Remover delete para contábil
+          onValorChange={isContabilUser ? undefined : handleValorChange} // Remover edição de valor para contábil
+          readOnly={isContabilUser} // Passar flag de somente leitura
         />
       </Card>
 

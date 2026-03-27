@@ -32,8 +32,9 @@ interface TabelaLancamentosProps {
   onSelectionChange: (ids: string[]) => void;
   onUploadClick: (lancamento: LancamentoContabil) => void;
   onDownloadClick: (lancamento: LancamentoContabil) => void;
-  onDeleteClick: (lancamento: LancamentoContabil) => void;
-  onValorChange: (lancamentoId: string, valor: number) => void;
+  onDeleteClick?: (lancamento: LancamentoContabil) => void;
+  onValorChange?: (lancamentoId: string, valor: number) => void;
+  readOnly?: boolean;
 }
 
 export default function TabelaLancamentos({
@@ -45,6 +46,7 @@ export default function TabelaLancamentos({
   onDownloadClick,
   onDeleteClick,
   onValorChange,
+  readOnly = false,
 }: TabelaLancamentosProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValor, setEditingValor] = useState<string>("");
@@ -155,9 +157,11 @@ export default function TabelaLancamentos({
             <TableCell sx={{ fontWeight: 600 }} align="center">
               Download NF
             </TableCell>
-            <TableCell sx={{ fontWeight: 600 }} align="center">
-              Ações
-            </TableCell>
+            {!readOnly && (
+              <TableCell sx={{ fontWeight: 600 }} align="center">
+                Ações
+              </TableCell>
+            )}
           </TableRow>
         </TableHead>
         <TableBody>
@@ -208,7 +212,7 @@ export default function TabelaLancamentos({
                 </TableCell>
 
                 <TableCell align="right">
-                  {isEditing ? (
+                  {isEditing && !readOnly ? (
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <TextField
                         size="small"
@@ -241,10 +245,10 @@ export default function TabelaLancamentos({
                   ) : (
                     <Typography
                       variant="body2"
-                      onClick={() => handleEditValor(lancamento)}
+                      onClick={!readOnly && onValorChange ? () => handleEditValor(lancamento) : undefined}
                       sx={{
-                        cursor: "pointer",
-                        "&:hover": { textDecoration: "underline" },
+                        cursor: !readOnly && onValorChange ? "pointer" : "default",
+                        "&:hover": !readOnly && onValorChange ? { textDecoration: "underline" } : {},
                       }}
                     >
                       {formatValor(lancamento.valor_nota_fiscal)}
@@ -290,17 +294,19 @@ export default function TabelaLancamentos({
                   )}
                 </TableCell>
 
-                <TableCell align="center">
-                  <Tooltip title="Deletar Lançamento">
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => onDeleteClick(lancamento)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip>
-                </TableCell>
+                {!readOnly && onDeleteClick && (
+                  <TableCell align="center">
+                    <Tooltip title="Deletar Lançamento">
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => onDeleteClick(lancamento)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                )}
               </TableRow>
             );
           })}
