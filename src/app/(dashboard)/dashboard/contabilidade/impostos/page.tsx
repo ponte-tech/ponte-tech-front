@@ -26,7 +26,7 @@ import JSZip from "jszip";
 import impostoService from "@/app/services/impostoService";
 import type { Imposto } from "@/app/types/imposto";
 import { TIPOS_IMPOSTO } from "@/app/types/imposto";
-import { PageHeader, FilterSearch, TableActionButtons, TableAction, AccessDenied } from "@/app/shared/components";
+import { PageHeader, FilterSearch, TableActionButtons, TableAction, AccessDenied, DeleteDialog } from "@/app/shared/components";
 import { useAuth } from "@/app/hooks/useAuth";
 
 export default function ImpostosPage() {
@@ -45,6 +45,12 @@ export default function ImpostosPage() {
 
   // Download
   const [downloadingImpostoId, setDownloadingImpostoId] = useState<string | null>(null);
+
+  // Delete
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [impostoToDelete, setImpostoToDelete] = useState<Imposto | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     loadImpostos();
@@ -192,6 +198,39 @@ export default function ImpostosPage() {
       imposto.tipo_imposto.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleDeleteClick = (imposto: Imposto) => {
+    setImpostoToDelete(imposto);
+    setDeleteDialogOpen(true);
+    setDeleteError(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!impostoToDelete) return;
+
+    try {
+      setDeleting(true);
+      await impostoService.delete(impostoToDelete.imposto_id, impostoToDelete.empresa_id);
+
+      // Remove da lista local
+      setImpostos(impostos.filter(i => i.imposto_id !== impostoToDelete.imposto_id));
+
+      setDeleteDialogOpen(false);
+      setImpostoToDelete(null);
+      setSnackbarMessage("Imposto excluído com sucesso");
+      setSnackbarOpen(true);
+    } catch (error: any) {
+      setDeleteError(error.response?.data?.message || error.message || "Erro ao excluir imposto");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setImpostoToDelete(null);
+    setDeleteError(null);
+  };
+
   const getTableActions = (imposto: Imposto): TableAction[] => {
     const actions: TableAction[] = [
       {
@@ -209,6 +248,13 @@ export default function ImpostosPage() {
         tooltip: "Baixar anexos",
       });
     }
+
+    // Adicionar ação de exclusão
+    actions.push({
+      type: "delete",
+      onClick: () => handleDeleteClick(imposto),
+      tooltip: "Excluir imposto",
+    });
 
     return actions;
   };
@@ -383,6 +429,17 @@ export default function ImpostosPage() {
           </Table>
         </TableContainer>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteDialog
+        open={deleteDialogOpen}
+        itemName={impostoToDelete?.descricao || ""}
+        itemType="o imposto"
+        error={deleteError}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+        loading={deleting}
+      />
 
       {/* Success Snackbar */}
       <Snackbar

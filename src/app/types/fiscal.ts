@@ -15,6 +15,23 @@ export interface NotaFiscal {
   data_atualizacao: string;
 }
 
+export interface NotaFiscalComColaborador extends NotaFiscal {
+  colaborador_nome: string;
+  colaborador_foto_perfil_url?: string;
+  empresa_nome?: string;
+  empresa_cnpj?: string;
+}
+
+export interface ListNotasFiscaisResponse {
+  notas_fiscais: NotaFiscalComColaborador[];
+  pagination: {
+    page: number;
+    limit: number;
+    total_items: number;
+    total_pages: number;
+  };
+}
+
 export interface InitiateUploadRequest {
   contrato_id: string;
   mes_referencia: string; // YYYY-MM

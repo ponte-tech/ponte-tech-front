@@ -1,6 +1,8 @@
 import api from './api';
 import type {
   NotaFiscal,
+  NotaFiscalComColaborador,
+  ListNotasFiscaisResponse,
   InitiateUploadRequest,
   InitiateUploadResponse,
   AtualizarStatusNotaRequest,
@@ -82,6 +84,37 @@ export const marcarNotaComoPaga = async (id: string): Promise<NotaFiscal> => {
   return atualizarStatusNota(id, { status: 'PAGA' });
 };
 
+// Admin - Listar todas as notas fiscais com paginação e filtros
+export const listAllNotasFiscais = async (params?: {
+  page?: number;
+  limit?: number;
+  status?: string;
+  colaborador_id?: string;
+  mes_referencia?: string;
+}): Promise<ListNotasFiscaisResponse> => {
+  const queryParams = new URLSearchParams();
+
+  if (params?.page) queryParams.append('page', params.page.toString());
+  if (params?.limit) queryParams.append('limit', params.limit.toString());
+  if (params?.status) queryParams.append('status', params.status);
+  if (params?.colaborador_id) queryParams.append('colaborador_id', params.colaborador_id);
+  if (params?.mes_referencia) queryParams.append('mes_referencia', params.mes_referencia);
+
+  const response = await api.get<ApiResponse<ListNotasFiscaisResponse>>(
+    `${BASE_URL_ADMIN}/notas-fiscais?${queryParams.toString()}`
+  );
+  return response.data.data!;
+};
+
+// Admin - Download de nota fiscal
+export const downloadNotaFiscal = async (id: string): Promise<Blob> => {
+  const response = await api.get(
+    `${BASE_URL_ADMIN}/notas-fiscais/${id}/download`,
+    { responseType: 'blob' }
+  );
+  return response.data;
+};
+
 const fiscalServiceExport = {
   initiateUpload,
   uploadFileToS3,
@@ -90,6 +123,8 @@ const fiscalServiceExport = {
   atualizarStatusNota,
   listNotasFiscaisByColaborador,
   marcarNotaComoPaga,
+  listAllNotasFiscais,
+  downloadNotaFiscal,
 };
 
 export default fiscalServiceExport;

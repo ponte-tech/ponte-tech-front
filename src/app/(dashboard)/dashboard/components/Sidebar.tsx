@@ -66,7 +66,7 @@ const menuItems: MenuItem[] = [
     text: "Dashboard",
     icon: <DashboardIcon />,
     path: "/dashboard",
-    allowedRoles: ["admin", "aluno", "vendedor", "professor", "contador"]
+    allowedRoles: ["admin", "aluno", "vendedor", "professor", "contador", "colaborador"]
   },
   {
     text: "Gestão",
@@ -90,10 +90,11 @@ const menuItems: MenuItem[] = [
   {
     text: "Contabilidade",
     icon: <AccountBalanceIcon />,
-    allowedRoles: ["admin", "contador"],
+    allowedRoles: ["admin"],
     subItems: [
       { text: "Lançamento Contábil", path: "/dashboard/lancamento-contabil" },
-      { text: "Impostos", path: "/dashboard/contabilidade/impostos" },
+      { text: "Lançamento Impostos", path: "/dashboard/contabilidade/impostos" },
+      { text: "NF Colaboradores", path: "/dashboard/contabilidade/notas-fiscais" },
     ]
   },
   {
@@ -138,11 +139,31 @@ export default function Sidebar({ open, mobileOpen, onMobileClose }: SidebarProp
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
   const userRole = user?.userType;
+  const userEmail = user?.email;
+
+  // Regra especial para usuários contábeis
+  const isContabilUser = userEmail === "contabil@pontetech.com";
+  const isAdminUser = userEmail === "admin@pontetech.com";
 
   // Filter menu items based on user role
-  const filteredMenuItems = menuItems.filter(
-    item => userRole && item.allowedRoles.includes(userRole)
-  );
+  const filteredMenuItems = menuItems.filter(item => {
+    // Regra especial: usuário contábil vê apenas Dashboard e Contabilidade
+    if (isContabilUser) {
+      return item.text === "Dashboard" || item.text === "Contabilidade";
+    }
+
+    // Menu Contabilidade: apenas para admin@pontetech.com e contabil@pontetech.com
+    if (item.text === "Contabilidade") {
+      return isAdminUser || isContabilUser;
+    }
+
+    // Regra padrão para outros usuários (exceto colaboradores no menu Contabilidade)
+    if (userRole === "colaborador" && item.text === "Contabilidade") {
+      return false;
+    }
+
+    return userRole && item.allowedRoles.includes(userRole);
+  });
 
   // Auto-expand categories when a subitem is active
   useEffect(() => {
