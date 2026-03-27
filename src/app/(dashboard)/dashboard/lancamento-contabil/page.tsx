@@ -294,6 +294,11 @@ export default function LancamentoContabilPage() {
     setSnackbar({ ...snackbar, open: false });
   };
 
+  // Filtrar lançamentos por empresa selecionada
+  const lancamentosFiltrados = empresaSelecionada
+    ? lancamentos.filter((l) => l.empresa_razao_social === empresaSelecionada)
+    : lancamentos;
+
   return (
     <Box>
       {/* Header */}
@@ -308,10 +313,13 @@ export default function LancamentoContabilPage() {
         }}
       />
 
-      {/* Filtro de Mês/Ano */}
-      <FiltroMesAno
+      {/* Filtro de Mês/Ano e Empresa */}
+      <FiltroLancamentos
         mesReferencia={mesReferencia}
         onMesReferenciaChange={setMesReferencia}
+        empresaSelecionada={empresaSelecionada}
+        onEmpresaChange={setEmpresaSelecionada}
+        empresas={empresas.map(e => ({ nome: e.nome_fantasia }))}
       />
 
       {/* Botão de Download em Lote */}
@@ -335,7 +343,7 @@ export default function LancamentoContabilPage() {
       {/* Tabela */}
       <Card sx={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
         <TabelaLancamentos
-          lancamentos={lancamentos}
+          lancamentos={lancamentosFiltrados}
           loading={loading}
           selectedIds={selectedIds}
           onSelectionChange={setSelectedIds}
