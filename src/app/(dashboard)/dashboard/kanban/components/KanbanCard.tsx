@@ -341,18 +341,36 @@ export default function KanbanCard({
                   sx={{
                     display: "flex",
                     alignItems: "center",
-                    gap: 0.375,
-                    px: 0.75,
-                    py: 0.375,
-                    borderRadius: 1,
-                    bgcolor: "rgba(249, 115, 22, 0.08)",
-                    transition: "all 0.15s ease",
-                    "&:hover": {
-                      bgcolor: "rgba(249, 115, 22, 0.12)",
-                    },
+                    gap: 0.5,
                   }}
                 >
-                  <CalendarTodayIcon sx={{ fontSize: "0.813rem", color: "#f97316" }} />
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "#94a3b8",
+                      fontSize: "0.688rem",
+                      fontWeight: 500,
+                      letterSpacing: "0.01em",
+                    }}
+                  >
+                    {format(new Date(card.delivery_date), "dd/MM/yy", { locale: ptBR })}
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      px: 0.75,
+                      py: 0.375,
+                      borderRadius: 1,
+                      bgcolor: "rgba(249, 115, 22, 0.08)",
+                      transition: "all 0.15s ease",
+                      "&:hover": {
+                        bgcolor: "rgba(249, 115, 22, 0.12)",
+                      },
+                    }}
+                  >
+                    <CalendarTodayIcon sx={{ fontSize: "0.813rem", color: "#f97316" }} />
+                  </Box>
                 </Box>
               </Tooltip>
             )}
