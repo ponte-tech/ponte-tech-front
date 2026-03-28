@@ -465,7 +465,8 @@ export default function LancamentoContabilPage() {
             value={new Intl.NumberFormat("pt-BR", {
               style: "currency",
               currency: "BRL",
-              minimumFractionDigits: 0,
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
             }).format(valorTotal)}
             subtitle="Somatório do período"
             icon={TrendingUpIcon}
@@ -585,6 +586,7 @@ export default function LancamentoContabilPage() {
           setLancamentoParaUpload(null);
         }}
         onSuccess={handleUploadSuccess}
+        onError={(message) => showSnackbar(message, "error")}
       />
 
       {/* Delete Confirmation Dialog */}

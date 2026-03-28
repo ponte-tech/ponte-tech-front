@@ -24,6 +24,7 @@ import {
 } from "@mui/icons-material";
 import type { LancamentoContabil } from "@/app/types/lancamentoContabil";
 import { formatCNPJ } from "@/app/utils/cnpjValidator";
+import { applyCurrencyMask, removeCurrencyMask } from "@/app/utils/currencyMask";
 
 interface TabelaLancamentosProps {
   lancamentos: LancamentoContabil[];
@@ -75,15 +76,20 @@ export default function TabelaLancamentos({
 
   const handleEditValor = (lancamento: LancamentoContabil) => {
     setEditingId(lancamento.lancamento_id);
+    // Formata o valor com máscara de moeda
+    const valor = lancamento.valor_nota_fiscal || 0;
     setEditingValor(
-      lancamento.valor_nota_fiscal?.toFixed(2).replace(".", ",") || ""
+      new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+      }).format(valor)
     );
   };
 
   const handleSaveValor = (lancamentoId: string) => {
-    const valor = parseFloat(editingValor.replace(",", "."));
-    if (!isNaN(valor) && valor > 0) {
-      onValorChange(lancamentoId, valor);
+    const valor = removeCurrencyMask(editingValor);
+    if (valor > 0) {
+      onValorChange?.(lancamentoId, valor);
     }
     setEditingId(null);
     setEditingValor("");
@@ -148,6 +154,7 @@ export default function TabelaLancamentos({
             <TableCell sx={{ fontWeight: 600 }}>CNPJ Empresa</TableCell>
             <TableCell sx={{ fontWeight: 600 }}>Razão Social Cliente</TableCell>
             <TableCell sx={{ fontWeight: 600 }}>Nome Fantasia Cliente</TableCell>
+            <TableCell sx={{ fontWeight: 600 }}>CNPJ Cliente</TableCell>
             <TableCell sx={{ fontWeight: 600 }} align="right">
               Valor NF
             </TableCell>
@@ -214,15 +221,21 @@ export default function TabelaLancamentos({
                   </Typography>
                 </TableCell>
 
+                <TableCell>
+                  <Typography variant="body2">
+                    {formatCNPJ(lancamento.cliente_cnpj)}
+                  </Typography>
+                </TableCell>
+
                 <TableCell align="right">
                   {isEditing && !readOnly ? (
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <TextField
                         size="small"
                         value={editingValor}
-                        onChange={(e) => setEditingValor(e.target.value)}
-                        placeholder="0,00"
-                        sx={{ width: 120 }}
+                        onChange={(e) => setEditingValor(applyCurrencyMask(e.target.value))}
+                        placeholder="R$ 0,00"
+                        sx={{ width: 140 }}
                         autoFocus
                         onKeyPress={(e) => {
                           if (e.key === "Enter") {

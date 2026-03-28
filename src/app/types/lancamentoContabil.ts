@@ -10,6 +10,7 @@ export interface LancamentoContabil {
   // Dados do cliente
   cliente_razao_social: string;
   cliente_nome_fantasia: string;
+  cliente_cnpj?: string;
 
   // Dados da nota fiscal
   mes_referencia: string; // YYYY-MM
