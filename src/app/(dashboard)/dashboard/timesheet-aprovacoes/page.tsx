@@ -173,7 +173,7 @@ export default function TimesheetAprovacoesPage() {
       });
       setNotasFiscaisPorColaborador(notasMap);
     } catch (err) {
-      console.error('Erro ao carregar colaboradores:', err);
+    // console.error('Erro ao carregar colaboradores:', err);
       setError('Erro ao carregar lista de colaboradores');
     } finally {
       if (!silent) {
@@ -318,7 +318,7 @@ export default function TimesheetAprovacoesPage() {
           });
         }
       } catch (whatsappError) {
-        console.error('Erro ao enviar mensagem WhatsApp:', whatsappError);
+    // console.error('Erro ao enviar mensagem WhatsApp:', whatsappError);
         // Não mostra erro ao usuário, pois a aprovação foi bem-sucedida
       }
 
@@ -449,7 +449,7 @@ export default function TimesheetAprovacoesPage() {
             const fileName = nota.arquivo_nome || `${nota.nome_cliente}_${nota.nota_fiscal_id.substring(0, 8)}.pdf`;
             zip.file(fileName, blob);
           } catch (err) {
-            console.error(`Erro ao baixar nota ${nota.nota_fiscal_id}:`, err);
+    // console.error(`Erro ao baixar nota ${nota.nota_fiscal_id}:`, err);
           }
         }
       }
@@ -471,7 +471,7 @@ export default function TimesheetAprovacoesPage() {
         severity: 'success',
       });
     } catch (err) {
-      console.error('Erro ao criar ZIP:', err);
+    // console.error('Erro ao criar ZIP:', err);
       setSnackbar({
         open: true,
         message: 'Erro ao preparar download das notas fiscais',
@@ -533,7 +533,7 @@ export default function TimesheetAprovacoesPage() {
       setDialogPagamentoLote(false);
       setSelectedColaboradores(new Set());
     } catch (err) {
-      console.error('Erro ao marcar notas como pagas:', err);
+    // console.error('Erro ao marcar notas como pagas:', err);
       setSnackbar({
         open: true,
         message: 'Erro ao marcar notas como pagas',
@@ -601,7 +601,7 @@ export default function TimesheetAprovacoesPage() {
             const fileName = nota.arquivo_nome || `${nota.nome_cliente}_${i + 1}.pdf`;
             zip.file(fileName, blob);
           } catch (err) {
-            console.error(`Erro ao baixar nota ${nota.nota_fiscal_id}:`, err);
+    // console.error(`Erro ao baixar nota ${nota.nota_fiscal_id}:`, err);
           }
         }
       }
@@ -623,7 +623,7 @@ export default function TimesheetAprovacoesPage() {
         severity: 'success',
       });
     } catch (err) {
-      console.error('Erro ao criar ZIP:', err);
+    // console.error('Erro ao criar ZIP:', err);
       setSnackbar({
         open: true,
         message: 'Erro ao preparar download das notas fiscais',

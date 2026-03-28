@@ -91,7 +91,7 @@ export default function MinhasHorasPage() {
         const data = await timesheetService.getContratos();
         setContratos(data);
       } catch (err) {
-        console.error('Erro ao carregar contratos:', err);
+    // console.error('Erro ao carregar contratos:', err);
         setError('Erro ao carregar contratos. Verifique sua conexão.');
       }
     };
@@ -116,7 +116,7 @@ export default function MinhasHorasPage() {
         setMesData(mesResp);
         setResumoData(resumoResp);
       } catch (err) {
-        console.error('Erro ao carregar dados:', err);
+    // console.error('Erro ao carregar dados:', err);
         setError('Erro ao carregar dados do mês. Tente novamente.');
       } finally {
         setLoading(false);

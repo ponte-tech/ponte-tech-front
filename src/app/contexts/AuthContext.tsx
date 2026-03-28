@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
         }
       } catch (error) {
-        console.error("Erro ao verificar autenticação:", error);
+    // console.error("Erro ao verificar autenticação:", error);
       } finally {
         setIsLoading(false);
       }
@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
         } catch (error) {
-          console.error("Erro ao atualizar usuário:", error);
+    // console.error("Erro ao atualizar usuário:", error);
         }
       }
     };
@@ -127,7 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || "Erro ao fazer login";
       setError(errorMessage);
-      console.error("Erro no login:", err);
+    // console.error("Erro no login:", err);
       throw new Error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -165,7 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || "Erro ao selecionar perfil";
       setError(errorMessage);
-      console.error("Erro ao selecionar perfil:", err);
+    // console.error("Erro ao selecionar perfil:", err);
       throw new Error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -179,7 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       // TODO: Implementar cadastro completo com todos os campos necessários
       // Por enquanto, manter mock para não quebrar a aplicação
-      console.warn("Cadastro ainda não implementado completamente. Use o formulário específico.");
+    // console.warn("Cadastro ainda não implementado completamente. Use o formulário específico.");
 
       const mockUser: User = {
         id: "1",
@@ -197,7 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       router.push("/dashboard");
     } catch (error) {
-      console.error("Erro no registro:", error);
+    // console.error("Erro no registro:", error);
       throw error;
     } finally {
       setIsLoading(false);

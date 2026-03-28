@@ -106,7 +106,7 @@ export default function NovoCursoPage() {
       }, 1500);
     } catch (err: any) {
       setError(err.message || "Erro ao criar curso");
-      console.error("Erro ao criar curso:", err);
+    // console.error("Erro ao criar curso:", err);
     } finally {
       setLoading(false);
     }

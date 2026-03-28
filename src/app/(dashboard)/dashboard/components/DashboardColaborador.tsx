@@ -40,16 +40,16 @@ export default function DashboardColaborador() {
 
       // Verificar se os dados estão vazios e mostrar aviso
       if (!data || Object.keys(data).length === 0) {
-        console.warn("⚠️ [DASHBOARD] Backend retornou dados vazios!");
+    // console.warn("⚠️ [DASHBOARD] Backend retornou dados vazios!");
         setError("O endpoint do dashboard ainda não está retornando dados. Verifique o backend.");
         return;
       }
 
       setDashboard(data);
     } catch (err: any) {
-      console.error("❌ [DASHBOARD] Erro ao carregar dashboard:", err);
-      console.error("❌ [DASHBOARD] Response data:", err.response?.data);
-      console.error("❌ [DASHBOARD] Status code:", err.response?.status);
+    // console.error("❌ [DASHBOARD] Erro ao carregar dashboard:", err);
+    // console.error("❌ [DASHBOARD] Response data:", err.response?.data);
+    // console.error("❌ [DASHBOARD] Status code:", err.response?.status);
 
       // Verificar se é erro 404 ou 500
       if (err.response?.status === 404) {

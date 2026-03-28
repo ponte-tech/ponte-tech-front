@@ -107,7 +107,7 @@ export default function ContractForm({ userId, onContractAdded }: ContractFormPr
       }, 1500);
     } catch (err: any) {
       setError(err.message || "Erro ao criar contrato");
-      console.error("Erro ao criar contrato:", err);
+    // console.error("Erro ao criar contrato:", err);
     } finally {
       setLoading(false);
     }

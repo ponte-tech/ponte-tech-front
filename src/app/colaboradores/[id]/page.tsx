@@ -79,7 +79,7 @@ export default function ColaboradorDetalhePage() {
       setColaborador(data);
     } catch (err: any) {
       setError(err.message || "Erro ao carregar colaborador");
-      console.error("Erro ao carregar colaborador:", err);
+    // console.error("Erro ao carregar colaborador:", err);
     } finally {
       setLoading(false);
     }
@@ -90,7 +90,7 @@ export default function ColaboradorDetalhePage() {
       const data = await contratosService.getByUserId(colaboradorId);
       setContratos(data || []);
     } catch (err: any) {
-      console.error("Erro ao carregar contratos:", err);
+    // console.error("Erro ao carregar contratos:", err);
     }
   };
 

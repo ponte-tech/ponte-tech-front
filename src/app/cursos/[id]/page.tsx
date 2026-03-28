@@ -71,7 +71,7 @@ export default function CursoDetalhePage() {
       setCurso(data);
     } catch (err: any) {
       setError(err.message || "Erro ao carregar curso");
-      console.error("Erro ao carregar curso:", err);
+    // console.error("Erro ao carregar curso:", err);
     } finally {
       setLoading(false);
     }

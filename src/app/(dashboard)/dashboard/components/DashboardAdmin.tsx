@@ -35,6 +35,7 @@ import {
 } from 'recharts';
 import dashboardService from "@/app/services/dashboardService";
 import type { DashboardAdminResponse, FinanceirosPorEmpresaResponse } from "@/app/types/dashboard";
+import { formatCNPJ } from "@/app/utils/cnpjValidator";
 
 export default function DashboardAdmin() {
   const [dashboard, setDashboard] = useState<DashboardAdminResponse | null>(null);
@@ -67,7 +68,7 @@ export default function DashboardAdmin() {
       setDashboard(dashboardData);
       setFinanceiros(financeirosData);
     } catch (err: any) {
-      console.error("Erro ao carregar dashboard:", err);
+    // console.error("Erro ao carregar dashboard:", err);
       setError(err.response?.data?.error || "Erro ao carregar dashboard");
     } finally {
       setLoading(false);
@@ -454,7 +455,7 @@ export default function DashboardAdmin() {
             const isPositivo = resultado >= 0;
 
             return (
-              <Grid item xs={12} md={6} lg={4} key={empresa.empresa_id}>
+              <Grid item xs={12} md={6} key={empresa.empresa_id}>
                 <Card
                   elevation={0}
                   sx={{
@@ -473,24 +474,31 @@ export default function DashboardAdmin() {
                 >
                   <CardContent sx={{ p: 3 }}>
                     {/* Nome da Empresa */}
-                    <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                      <Box
-                        sx={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: 2,
-                          bgcolor: isPositivo ? alpha("#10b981", 0.2) : alpha("#ef4444", 0.2),
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          mr: 1.5,
-                        }}
-                      >
-                        <AccountBalance sx={{ color: isPositivo ? "#10b981" : "#ef4444", fontSize: 24 }} />
+                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Box
+                          sx={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 2,
+                            bgcolor: isPositivo ? alpha("#10b981", 0.2) : alpha("#ef4444", 0.2),
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            mr: 1.5,
+                          }}
+                        >
+                          <AccountBalance sx={{ color: isPositivo ? "#10b981" : "#ef4444", fontSize: 24 }} />
+                        </Box>
+                        <Typography variant="h6" sx={{ fontWeight: 600, fontSize: "1rem" }}>
+                          {empresa.nome_fantasia}
+                        </Typography>
                       </Box>
-                      <Typography variant="h6" sx={{ fontWeight: 600, fontSize: "1rem" }}>
-                        {empresa.nome_fantasia}
-                      </Typography>
+                      {empresa.cnpj && (
+                        <Typography variant="caption" sx={{ color: "text.secondary", fontSize: "0.7rem" }}>
+                          {formatCNPJ(empresa.cnpj)}
+                        </Typography>
+                      )}
                     </Box>
 
                     {/* Valores */}

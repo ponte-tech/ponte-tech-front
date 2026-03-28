@@ -21,7 +21,7 @@ function decodeJWT(token: string) {
     );
     return JSON.parse(jsonPayload);
   } catch (error) {
-    console.error('❌ [DASHBOARD] Error decoding JWT:', error);
+    // console.error('❌ [DASHBOARD] Error decoding JWT:', error);
     return null;
   }
 }
@@ -35,7 +35,7 @@ export default function DashboardPage() {
     if (token) {
       const decodedToken = decodeJWT(token);
     } else {
-      console.error('❌ [DASHBOARD] No JWT token found in cookies');
+    // console.error('❌ [DASHBOARD] No JWT token found in cookies');
     }
   }, []);
 

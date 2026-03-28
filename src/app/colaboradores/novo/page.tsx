@@ -83,7 +83,7 @@ export default function NovoColaboradorPage() {
       const empresasResponse = await empresaService.list();
       setEmpresas(empresasResponse.empresas || []);
     } catch (err) {
-      console.error('Erro ao carregar opções:', err);
+    // console.error('Erro ao carregar opções:', err);
     }
   };
 
@@ -223,7 +223,7 @@ export default function NovoColaboradorPage() {
       });
 
     } catch (err) {
-      console.error("Erro ao buscar CEP:", err);
+    // console.error("Erro ao buscar CEP:", err);
       setFieldErrors((prev) => ({ ...prev, "endereco.cep": "Erro ao buscar CEP" }));
     }
   };
@@ -541,18 +541,18 @@ export default function NovoColaboradorPage() {
           try {
             const createdContract = await contratosService.create(userId, contract);
           } catch (contractError: any) {
-            console.error(`❌ [NOVO COLABORADOR] Erro ao criar contrato ${i + 1}:`, contractError);
-            console.error("❌ [NOVO COLABORADOR] Detalhes do erro:", contractError.response?.data || contractError.message);
+    // console.error(`❌ [NOVO COLABORADOR] Erro ao criar contrato ${i + 1}:`, contractError);
+    // console.error("❌ [NOVO COLABORADOR] Detalhes do erro:", contractError.response?.data || contractError.message);
             throw new Error(`Falha ao criar contrato ${i + 1}: ${contractError.response?.data?.message || contractError.message}`);
           }
         }
       } else {
-        console.warn("⚠️ [NOVO COLABORADOR] Nenhum contrato será criado. Motivo:", {
-          temContratos: currentContracts.length > 0,
-          temUserId: !!userId,
-          contracts: currentContracts,
-          userId: userId
-        });
+        // console.warn("⚠️ [NOVO COLABORADOR] Nenhum contrato será criado. Motivo:", {
+        //   temContratos: currentContracts.length > 0,
+        //   temUserId: !!userId,
+        //   contracts: currentContracts,
+        //   userId: userId
+        // });
       }
 
       setSuccess(true);
@@ -564,7 +564,7 @@ export default function NovoColaboradorPage() {
       // Extrair mensagem do erro da API
       const errorMessage = err.response?.data?.message || err.message || "Erro ao criar colaborador";
       setError(errorMessage);
-      console.error("Erro ao criar colaborador:", err);
+    // console.error("Erro ao criar colaborador:", err);
       // Scroll para o topo para exibir o erro
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {

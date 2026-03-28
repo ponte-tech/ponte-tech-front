@@ -46,7 +46,7 @@ export default function NovoClientePage() {
         const response = await empresaService.list();
         setEmpresas(response.empresas);
       } catch (err) {
-        console.error("Erro ao carregar empresas:", err);
+    // console.error("Erro ao carregar empresas:", err);
         setError("Erro ao carregar lista de empresas");
       } finally {
         setLoadingEmpresas(false);

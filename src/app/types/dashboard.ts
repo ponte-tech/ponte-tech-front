@@ -64,6 +64,7 @@ export interface MesFinanceiro {
 export interface EmpresaFinanceiro {
   empresa_id: string;
   nome_fantasia: string;
+  cnpj?: string;
   meses: MesFinanceiro[];
 }
 

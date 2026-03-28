@@ -96,7 +96,7 @@ api.interceptors.response.use(
 
     if (shouldRetry && config) {
       config._retry++;
-      console.warn(`Tentativa ${config._retry} de ${MAX_RETRIES} após erro de rede...`);
+    // console.warn(`Tentativa ${config._retry} de ${MAX_RETRIES} após erro de rede...`);
 
       // Delay exponencial: 1s, 2s, 4s
       await delay(RETRY_DELAY * Math.pow(2, config._retry - 1));
@@ -121,16 +121,16 @@ api.interceptors.response.use(
 
       // Erro de permissão
       if (status === 403) {
-        console.error("Acesso negado: Você não tem permissão para acessar este recurso");
+    // console.error("Acesso negado: Você não tem permissão para acessar este recurso");
       }
 
       // Erro do servidor
       if (status >= 500) {
-        console.error("Erro no servidor. Por favor, tente novamente mais tarde.");
+    // console.error("Erro no servidor. Por favor, tente novamente mais tarde.");
       }
     } else if (error.request) {
       // Requisição feita mas sem resposta (após todas as tentativas)
-      console.error("Erro de rede: Não foi possível conectar ao servidor após múltiplas tentativas");
+    // console.error("Erro de rede: Não foi possível conectar ao servidor após múltiplas tentativas");
     }
 
     return Promise.reject(error);

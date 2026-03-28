@@ -93,7 +93,7 @@ export default function NotasFiscaisSection({ colaboradorId, mes }: NotasFiscais
       const data = await fiscalService.listNotasFiscaisByColaborador(colaboradorId, mes);
       setNotas(data);
     } catch (err) {
-      console.error('Erro ao carregar notas fiscais:', err);
+    // console.error('Erro ao carregar notas fiscais:', err);
       setError('Erro ao carregar notas fiscais');
       setNotas([]);
     } finally {
@@ -138,7 +138,7 @@ export default function NotasFiscaisSection({ colaboradorId, mes }: NotasFiscais
             const fileName = nota.arquivo_nome || `${nota.nome_cliente}_${i + 1}.pdf`;
             zip.file(fileName, blob);
           } catch (err) {
-            console.error(`Erro ao baixar nota ${nota.nota_fiscal_id}:`, err);
+    // console.error(`Erro ao baixar nota ${nota.nota_fiscal_id}:`, err);
           }
         }
       }
@@ -154,7 +154,7 @@ export default function NotasFiscaisSection({ colaboradorId, mes }: NotasFiscais
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Erro ao criar ZIP:', err);
+    // console.error('Erro ao criar ZIP:', err);
       alert('Erro ao preparar download das notas fiscais');
     }
   };
@@ -182,7 +182,7 @@ export default function NotasFiscaisSection({ colaboradorId, mes }: NotasFiscais
       setDialogPagamento(false);
       setNotaParaPagar(null);
     } catch (err) {
-      console.error('Erro ao marcar nota como paga:', err);
+    // console.error('Erro ao marcar nota como paga:', err);
       alert('Erro ao marcar nota como paga');
     } finally {
       setProcessingNotaId(null);
@@ -203,7 +203,7 @@ export default function NotasFiscaisSection({ colaboradorId, mes }: NotasFiscais
       setDialogRemoverPagamento(false);
       setNotaParaDespagar(null);
     } catch (err) {
-      console.error('Erro ao remover pagamento:', err);
+    // console.error('Erro ao remover pagamento:', err);
       alert('Erro ao remover pagamento da nota');
     } finally {
       setProcessingNotaId(null);

@@ -104,7 +104,7 @@ export default function CadastroVendedorPage() {
         }));
       }
     } catch (err) {
-      console.error("Erro ao buscar CEP:", err);
+    // console.error("Erro ao buscar CEP:", err);
     }
   };
 
@@ -221,7 +221,7 @@ export default function CadastroVendedorPage() {
       setSuccess(true);
     } catch (err: any) {
       setError(err.message || "Erro ao cadastrar vendedor");
-      console.error("Erro ao cadastrar vendedor:", err);
+    // console.error("Erro ao cadastrar vendedor:", err);
       setSubmitting(false);
     }
   };

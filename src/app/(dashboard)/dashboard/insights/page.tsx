@@ -111,7 +111,7 @@ export default function InsightsPage() {
       setClients(clientsData);
       setAnalysts(analystsData);
     } catch (err) {
-      console.error("Erro ao carregar dados dos filtros:", err);
+    // console.error("Erro ao carregar dados dos filtros:", err);
     }
   };
 

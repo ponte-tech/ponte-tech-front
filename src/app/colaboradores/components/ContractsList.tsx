@@ -40,7 +40,7 @@ export default function ContractsList({ userId, onContractAdded }: ContractsList
       setContratos(data || []);
     } catch (err: any) {
       setError(err.message || "Erro ao carregar contratos");
-      console.error("Erro ao carregar contratos:", err);
+    // console.error("Erro ao carregar contratos:", err);
     } finally {
       setLoading(false);
     }
@@ -60,7 +60,7 @@ export default function ContractsList({ userId, onContractAdded }: ContractsList
       await loadContratos();
     } catch (err: any) {
       setError(err.message || "Erro ao ativar contrato");
-      console.error("Erro ao ativar contrato:", err);
+    // console.error("Erro ao ativar contrato:", err);
     } finally {
       setActivating(null);
     }

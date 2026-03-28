@@ -178,7 +178,7 @@ export default function EditarColaboradorPage() {
       const empresasResponse = await empresaService.list();
       setEmpresas(empresasResponse.empresas || []);
     } catch (err) {
-      console.error('Erro ao carregar empresas:', err);
+    // console.error('Erro ao carregar empresas:', err);
     }
   };
 
@@ -202,7 +202,7 @@ export default function EditarColaboradorPage() {
       }
     } catch (err: any) {
       setError(err.message || "Erro ao carregar colaborador");
-      console.error("Erro ao carregar colaborador:", err);
+    // console.error("Erro ao carregar colaborador:", err);
     } finally {
       setLoading(false);
     }
@@ -213,7 +213,7 @@ export default function EditarColaboradorPage() {
       const data = await contratosService.getByUserId(colaboradorId, isColaborador);
       setContracts(data);
     } catch (err: any) {
-      console.error("Erro ao carregar contratos:", err);
+    // console.error("Erro ao carregar contratos:", err);
     }
   };
 
@@ -315,7 +315,7 @@ export default function EditarColaboradorPage() {
       });
 
     } catch (err) {
-      console.error("Erro ao buscar CEP:", err);
+    // console.error("Erro ao buscar CEP:", err);
       setFieldErrors((prev) => ({ ...prev, "endereco.cep": "Erro ao buscar CEP" }));
     }
   };
@@ -657,7 +657,7 @@ export default function EditarColaboradorPage() {
       setEditingContract(null);
       setContractsKey(prev => prev + 1);
     } catch (err: any) {
-      console.error("Erro ao salvar contrato:", err);
+    // console.error("Erro ao salvar contrato:", err);
       setError(err.message || "Erro ao salvar contrato");
     }
   };
@@ -678,7 +678,7 @@ export default function EditarColaboradorPage() {
       await loadContracts();
       setContractsKey(prev => prev + 1);
     } catch (err: any) {
-      console.error("Erro ao deletar contrato:", err);
+    // console.error("Erro ao deletar contrato:", err);
       setError(err.message || "Erro ao deletar contrato");
     }
   };
@@ -845,7 +845,7 @@ export default function EditarColaboradorPage() {
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
       setError(err.message || "Erro ao atualizar colaborador");
-      console.error("Erro ao atualizar colaborador:", err);
+    // console.error("Erro ao atualizar colaborador:", err);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setSaving(false);

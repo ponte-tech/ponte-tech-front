@@ -157,15 +157,22 @@ class ImpostoService {
     fileName: string,
     fileSize: number,
     contentType: string,
-    tipoImposto: string
+    tipoImposto: string,
+    valor?: number
   ): Promise<void> {
-    await api.post<any>(`${this.baseUrl}/${impostoId}/anexos/confirm?empresa_id=${empresaId}`, {
+    const payload: any = {
       s3_key: s3Key,
       nome_arquivo: fileName,
       tamanho_bytes: fileSize,
       content_type: contentType,
       tipo_imposto: tipoImposto,
-    });
+    };
+
+    if (valor !== undefined && valor !== null) {
+      payload.valor = valor;
+    }
+
+    await api.post<any>(`${this.baseUrl}/${impostoId}/anexos/confirm?empresa_id=${empresaId}`, payload);
   }
 
   /**

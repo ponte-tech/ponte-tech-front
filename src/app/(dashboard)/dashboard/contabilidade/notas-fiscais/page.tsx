@@ -34,7 +34,9 @@ import {
   CheckCircle as CheckCircleIcon,
   Schedule as ScheduleIcon,
   Description as DescriptionIcon,
+  AutoAwesome as AutoAwesomeIcon,
 } from "@mui/icons-material";
+import ValidateNotaModal from "./components/ValidateNotaModal";
 import { useState, useEffect } from "react";
 import fiscalService from "@/app/services/fiscalService";
 import { NotaFiscalComColaborador, StatusNotaFiscal } from "@/app/types/fiscal";
@@ -156,6 +158,10 @@ export default function NotasFiscaisPage() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
 
+  // Estados do modal de validação
+  const [validateModalOpen, setValidateModalOpen] = useState(false);
+  const [notaToValidate, setNotaToValidate] = useState<NotaFiscalComColaborador | null>(null);
+
   // Hook customizado de paginação
   const [pagination, paginationHandlers] = useTablePagination(10);
   const { page, rowsPerPage, totalItems } = pagination;
@@ -173,7 +179,7 @@ export default function NotasFiscaisPage() {
       setNotasFiscais(response.notas_fiscais || []);
       setTotalItems(response.pagination.total_items);
     } catch (error) {
-      console.error("Erro ao carregar notas fiscais:", error);
+    // console.error("Erro ao carregar notas fiscais:", error);
       setSnackbarMessage("Erro ao carregar notas fiscais");
       setSnackbarOpen(true);
     } finally {
@@ -207,6 +213,18 @@ export default function NotasFiscaisPage() {
     setSelectedNotas(newSelected);
   };
 
+  // Handler para abrir modal de validação
+  const handleValidateNota = (nota: NotaFiscalComColaborador) => {
+    setNotaToValidate(nota);
+    setValidateModalOpen(true);
+  };
+
+  const handleValidationSuccess = () => {
+    loadNotasFiscais();
+    setSnackbarMessage("Nota fiscal processada com sucesso");
+    setSnackbarOpen(true);
+  };
+
   // Handler de download individual
   const handleDownloadNota = async (notaId: string, nomeArquivo: string) => {
     try {
@@ -226,7 +244,7 @@ export default function NotasFiscaisPage() {
       setSnackbarMessage("Download realizado com sucesso");
       setSnackbarOpen(true);
     } catch (error) {
-      console.error("Erro ao baixar nota fiscal:", error);
+    // console.error("Erro ao baixar nota fiscal:", error);
       setSnackbarMessage("Erro ao baixar nota fiscal");
       setSnackbarOpen(true);
     } finally {
@@ -268,7 +286,7 @@ export default function NotasFiscaisPage() {
       setSnackbarOpen(true);
       setSelectedNotas(new Set());
     } catch (error) {
-      console.error("Erro ao baixar notas fiscais:", error);
+    // console.error("Erro ao baixar notas fiscais:", error);
       setSnackbarMessage("Erro ao baixar algumas notas fiscais");
       setSnackbarOpen(true);
     } finally {
@@ -504,7 +522,7 @@ export default function NotasFiscaisPage() {
                       <TableCell>Status</TableCell>
                       <TableCell>Data Envio</TableCell>
                       <TableCell>Tamanho</TableCell>
-                      <TableCell align="center">Download</TableCell>
+                      <TableCell align="center">Ações</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -588,24 +606,41 @@ export default function NotasFiscaisPage() {
                           </Typography>
                         </TableCell>
                         <TableCell align="center">
-                          <Tooltip title="Baixar nota fiscal">
-                            <IconButton
-                              size="small"
-                              onClick={() =>
-                                handleDownloadNota(nota.nota_fiscal_id, nota.arquivo_nome)
-                              }
-                              disabled={downloading}
-                              sx={{
-                                color: "#8270FF",
-                                bgcolor: alpha("#8270FF", 0.08),
-                                "&:hover": {
-                                  bgcolor: alpha("#8270FF", 0.16),
-                                },
-                              }}
-                            >
-                              <DownloadIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
+                          <Stack direction="row" spacing={1} justifyContent="center">
+                            <Tooltip title="Validar com IA">
+                              <IconButton
+                                size="small"
+                                onClick={() => handleValidateNota(nota)}
+                                sx={{
+                                  color: "#8270FF",
+                                  bgcolor: alpha("#8270FF", 0.08),
+                                  "&:hover": {
+                                    bgcolor: alpha("#8270FF", 0.16),
+                                  },
+                                }}
+                              >
+                                <AutoAwesomeIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Baixar nota fiscal">
+                              <IconButton
+                                size="small"
+                                onClick={() =>
+                                  handleDownloadNota(nota.nota_fiscal_id, nota.arquivo_nome)
+                                }
+                                disabled={downloading}
+                                sx={{
+                                  color: "#8270FF",
+                                  bgcolor: alpha("#8270FF", 0.08),
+                                  "&:hover": {
+                                    bgcolor: alpha("#8270FF", 0.16),
+                                  },
+                                }}
+                              >
+                                <DownloadIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </Stack>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -638,6 +673,17 @@ export default function NotasFiscaisPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Modal de Validação com IA */}
+      <ValidateNotaModal
+        open={validateModalOpen}
+        nota={notaToValidate}
+        onClose={() => {
+          setValidateModalOpen(false);
+          setNotaToValidate(null);
+        }}
+        onSuccess={handleValidationSuccess}
+      />
 
       <Snackbar
         open={snackbarOpen}

@@ -73,7 +73,7 @@ function DetalhesImpostoContent() {
       );
       setEmpresa(empresaEncontrada || null);
     } catch (err) {
-      console.error("Erro ao carregar dados:", err);
+    // console.error("Erro ao carregar dados:", err);
       setError("Erro ao carregar detalhes do imposto");
     } finally {
       setLoading(false);
@@ -96,7 +96,7 @@ function DetalhesImpostoContent() {
       // Abrir em nova aba para download
       window.open(response.download_url, "_blank");
     } catch (err) {
-      console.error("❌ [DOWNLOAD] Erro ao fazer download do anexo:", err);
+    // console.error("❌ [DOWNLOAD] Erro ao fazer download do anexo:", err);
       setError("Erro ao fazer download do anexo");
     } finally {
       setDownloadingAnexoKey(null);

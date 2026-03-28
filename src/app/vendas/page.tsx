@@ -86,7 +86,7 @@ export default function VendasPage() {
       );
       setCategorias(uniqueCategories);
     } catch (error) {
-      console.error("Erro ao carregar cursos:", error);
+    // console.error("Erro ao carregar cursos:", error);
     } finally {
       setLoading(false);
     }

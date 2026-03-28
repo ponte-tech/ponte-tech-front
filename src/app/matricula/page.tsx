@@ -97,7 +97,7 @@ function MatriculaForm() {
       setInfo(data);
     } catch (err: any) {
       setError(err.message || "Erro ao carregar informações");
-      console.error("Erro ao carregar informações:", err);
+    // console.error("Erro ao carregar informações:", err);
     } finally {
       setLoading(false);
     }
@@ -136,7 +136,7 @@ function MatriculaForm() {
         }));
       }
     } catch (err) {
-      console.error("Erro ao buscar CEP:", err);
+    // console.error("Erro ao buscar CEP:", err);
     }
   };
 
@@ -239,7 +239,7 @@ function MatriculaForm() {
       }
     } catch (err: any) {
       setError(err.message || "Erro ao criar matrícula");
-      console.error("Erro ao criar matrícula:", err);
+    // console.error("Erro ao criar matrícula:", err);
       setSubmitting(false);
     }
   };

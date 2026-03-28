@@ -233,7 +233,7 @@ export default function CardModal({
           const response = await kanbanService.listAttachments(card.card_id);
           setAttachments(response.attachments || []);
         } catch (error) {
-          console.error("Error loading attachments:", error);
+    // console.error("Error loading attachments:", error);
         }
       } else {
         setAttachments([]);
@@ -265,7 +265,7 @@ export default function CardModal({
               setSubtasks(card?.subtasks || []);
             }
           } else {
-            console.error("Error loading subtasks:", error);
+    // console.error("Error loading subtasks:", error);
             setSubtasks(card?.subtasks || []);
           }
         }
@@ -339,7 +339,7 @@ export default function CardModal({
       // Reset input
       event.target.value = "";
     } catch (error) {
-      console.error("Error uploading file:", error);
+    // console.error("Error uploading file:", error);
       alert("Erro ao fazer upload do arquivo");
     } finally {
       setUploading(false);
@@ -355,7 +355,7 @@ export default function CardModal({
       const response = await kanbanService.downloadAttachment(card.card_id, attachmentId);
       window.open(response.download_url, "_blank");
     } catch (error) {
-      console.error("Error downloading file:", error);
+    // console.error("Error downloading file:", error);
       alert("Erro ao baixar arquivo");
     }
   };
@@ -380,7 +380,7 @@ export default function CardModal({
       setAttachmentDeleteDialogOpen(false);
       setAttachmentToDelete(null);
     } catch (error) {
-      console.error("Error deleting file:", error);
+    // console.error("Error deleting file:", error);
       alert("Erro ao excluir arquivo");
     } finally {
       setDeletingAttachment(false);
@@ -478,7 +478,7 @@ export default function CardModal({
         setNewSubtaskTitle("");
         setNewSubtaskDescription("");
       } else {
-        console.error("Error creating subtask:", error);
+    // console.error("Error creating subtask:", error);
         alert("Erro ao criar subtarefa");
       }
     }
@@ -511,7 +511,7 @@ export default function CardModal({
         const statusChange = subtask.completed ? "não concluída" : "concluída";
         addLocalHistoryEntry("Status da subtarefa", `"${subtask.title}" - ${subtask.completed ? "concluída" : "não concluída"}`, `"${subtask.title}" - ${statusChange}`);
       } else {
-        console.error("Error toggling subtask:", error);
+    // console.error("Error toggling subtask:", error);
         alert("Erro ao atualizar subtarefa");
       }
     }
@@ -557,7 +557,7 @@ export default function CardModal({
         setEditSubtaskTitle("");
         setEditSubtaskDescription("");
       } else {
-        console.error("Error updating subtask:", error);
+    // console.error("Error updating subtask:", error);
         alert("Erro ao atualizar subtarefa");
       }
     }
@@ -592,7 +592,7 @@ export default function CardModal({
         // Add history entry
         addLocalHistoryEntry("Subtarefa excluída", `"${subtask.title}"`, "");
       } else {
-        console.error("Error deleting subtask:", error);
+    // console.error("Error deleting subtask:", error);
         alert("Erro ao excluir subtarefa");
       }
     }
@@ -609,7 +609,7 @@ export default function CardModal({
       await navigator.clipboard.writeText(url);
       setShareSnackbarOpen(true);
     } catch (error) {
-      console.error("Erro ao copiar URL:", error);
+    // console.error("Erro ao copiar URL:", error);
       alert("Erro ao copiar link. Tente novamente.");
     }
   };

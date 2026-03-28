@@ -94,7 +94,7 @@ function EditarImpostoContent() {
       });
       setValorDisplay(formatCurrency(impostoData.valor));
     } catch (err) {
-      console.error("Erro ao carregar dados:", err);
+    // console.error("Erro ao carregar dados:", err);
       setError("Erro ao carregar dados do imposto");
     } finally {
       setLoadingData(false);
@@ -156,7 +156,7 @@ function EditarImpostoContent() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (err) {
-      console.error("Erro ao baixar anexo:", err);
+    // console.error("Erro ao baixar anexo:", err);
       setError("Erro ao baixar anexo");
     }
   };
@@ -181,7 +181,7 @@ function EditarImpostoContent() {
       await impostoService.update(impostoId, formData);
       router.push("/dashboard/contabilidade/impostos");
     } catch (err: any) {
-      console.error("Erro ao atualizar imposto:", err);
+    // console.error("Erro ao atualizar imposto:", err);
       setError(err.response?.data?.message || "Erro ao atualizar imposto");
     } finally {
       setLoading(false);

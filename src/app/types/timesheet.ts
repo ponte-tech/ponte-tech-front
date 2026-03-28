@@ -3,7 +3,11 @@ export interface Contrato {
   nome_cliente: string;
   valor_hora: number;
   total_hora_mes: number;
+  valor?: number; // Valor total do contrato (valor_hora * total_hora_mes)
   status: string;
+  empresa_cnpj?: string; // CNPJ da empresa (tomador do serviço)
+  empresa_nome?: string; // Nome da empresa
+  colaborador_cnpj?: string; // CNPJ do colaborador logado (emitente da NFS-e)
 }
 
 export type StatusApontamento = 'RASCUNHO' | 'SUBMETIDO' | 'APROVADO' | 'REPROVADO';

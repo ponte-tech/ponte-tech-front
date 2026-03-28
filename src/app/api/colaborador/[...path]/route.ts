@@ -67,7 +67,7 @@ async function proxyRequest(
         const jsonBody = await request.json();
         body = JSON.stringify(jsonBody);
       } catch (err) {
-        console.error('❌ [COLABORADOR-PROXY] Error parsing body:', err);
+    // console.error('❌ [COLABORADOR-PROXY] Error parsing body:', err);
       }
     }
 
@@ -90,8 +90,8 @@ async function proxyRequest(
       },
     });
   } catch (error) {
-    console.error('❌ [COLABORADOR-PROXY] Error:', error);
-    console.error('❌ [COLABORADOR-PROXY] Stack:', error instanceof Error ? error.stack : 'No stack');
+    // console.error('❌ [COLABORADOR-PROXY] Error:', error);
+    // console.error('❌ [COLABORADOR-PROXY] Stack:', error instanceof Error ? error.stack : 'No stack');
     return NextResponse.json(
       {
         error: 'Erro ao se comunicar com a API',

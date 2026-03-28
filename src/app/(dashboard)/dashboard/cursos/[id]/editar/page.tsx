@@ -82,7 +82,7 @@ export default function EditarCursoPage() {
       });
     } catch (err: any) {
       setError(err.message || "Erro ao carregar curso");
-      console.error("Erro ao carregar curso:", err);
+    // console.error("Erro ao carregar curso:", err);
     } finally {
       setLoading(false);
     }
@@ -127,7 +127,7 @@ export default function EditarCursoPage() {
       }, 1500);
     } catch (err: any) {
       setError(err.message || "Erro ao atualizar curso");
-      console.error("Erro ao atualizar curso:", err);
+    // console.error("Erro ao atualizar curso:", err);
     } finally {
       setSaving(false);
     }

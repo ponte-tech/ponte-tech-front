@@ -72,7 +72,7 @@ export default function ColaboradoresPage() {
       setColaboradores(response.colaboradores || []);
       setTotalItems(response.pagination.total_items);
     } catch (error) {
-      console.error("Erro ao carregar colaboradores:", error);
+    // console.error("Erro ao carregar colaboradores:", error);
     } finally {
       setLoading(false);
     }

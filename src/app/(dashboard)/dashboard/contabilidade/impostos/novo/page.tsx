@@ -37,7 +37,7 @@ import {
 import { useRouter } from "next/navigation";
 import impostoService from "@/app/services/impostoService";
 import empresaService from "@/app/services/empresaService";
-import documentExtractionService from "@/app/services/documentExtractionService";
+import awsDocumentExtractionService from "@/app/services/awsDocumentExtractionService";
 import type { CreateImpostoRequest, TipoImposto } from "@/app/types/imposto";
 import { TIPOS_IMPOSTO } from "@/app/types/imposto";
 import type { Empresa } from "@/app/types/empresa";
@@ -51,6 +51,8 @@ interface FileWithType {
   extractionConfidence?: number;
   extractionError?: string;
   extracting?: boolean;
+  manualValue?: number | null;
+  valorDisplay?: string;
 }
 
 export default function NovoImpostoPage() {
@@ -89,7 +91,7 @@ export default function NovoImpostoPage() {
       const response = await empresaService.list();
       setEmpresas(response.empresas || []);
     } catch (err) {
-      console.error("Erro ao carregar empresas:", err);
+    // console.error("Erro ao carregar empresas:", err);
       setError("Erro ao carregar lista de empresas");
     } finally {
       setLoadingEmpresas(false);
@@ -123,13 +125,13 @@ export default function NovoImpostoPage() {
         anexos: [...(prev.anexos || []), ...fileArray],
       }));
 
-      // Extrair valores automaticamente com IA
-      if (documentExtractionService.isConfigured()) {
+      // Extrair valores automaticamente com AWS Textract
+      if (awsDocumentExtractionService.isConfigured()) {
         fileArray.forEach(async (file, index) => {
           const baseIndex = selectedFiles.length + index;
 
           try {
-            const result = await documentExtractionService.extractValueFromDocument(file);
+            const result = await awsDocumentExtractionService.extractValueFromDocument(file);
 
             setSelectedFiles((prev) =>
               prev.map((item, i) =>
@@ -140,6 +142,12 @@ export default function NovoImpostoPage() {
                       extractedValue: result.valor,
                       extractionConfidence: result.confidence,
                       extractionError: result.error,
+                      valorDisplay: result.valor
+                        ? new Intl.NumberFormat("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          }).format(result.valor)
+                        : "R$ 0,00",
                     }
                   : item
               )
@@ -151,7 +159,7 @@ export default function NovoImpostoPage() {
               // setFormData((prev) => ({ ...prev, valor: result.valor }));
             }
           } catch (error: any) {
-            console.error('Erro na extração:', error);
+    // console.error('Erro na extração:', error);
             setSelectedFiles((prev) =>
               prev.map((item, i) =>
                 i === baseIndex
@@ -180,6 +188,19 @@ export default function NovoImpostoPage() {
   const handleFileTipoChange = (index: number, tipoImposto: TipoImposto) => {
     setSelectedFiles((prev) =>
       prev.map((item, i) => (i === index ? { ...item, tipoImposto } : item))
+    );
+  };
+
+  const handleFileValorChange = (index: number, value: string) => {
+    const masked = applyCurrencyMask(value);
+    const numeric = removeCurrencyMask(masked);
+
+    setSelectedFiles((prev) =>
+      prev.map((item, i) =>
+        i === index
+          ? { ...item, manualValue: numeric, valorDisplay: masked }
+          : item
+      )
     );
   };
 
@@ -212,6 +233,12 @@ export default function NovoImpostoPage() {
       return;
     }
 
+    // Validar que pelo menos um anexo foi selecionado
+    if (selectedFiles.length === 0) {
+      setError("Por favor, adicione pelo menos um anexo (comprovante)");
+      return;
+    }
+
     // Validar que todos os arquivos têm tipo de imposto selecionado
     if (selectedFiles.length > 0) {
       const filesWithoutType = selectedFiles.filter(f => !f.tipoImposto);
@@ -224,13 +251,21 @@ export default function NovoImpostoPage() {
     try {
       setLoading(true);
 
-      // 1. Criar o imposto sem anexos
+      // Calcular valor total dos anexos (manual ou extraído)
+      const valorTotal = selectedFiles.reduce((total, fileWithType) => {
+        const valor = fileWithType.manualValue !== undefined && fileWithType.manualValue !== null
+          ? fileWithType.manualValue
+          : fileWithType.extractedValue || 0;
+        return total + valor;
+      }, 0);
+
+      // 1. Criar o imposto com o valor total dos anexos
       const imposto = await impostoService.create({
         empresa_id: formData.empresa_id,
         descricao: formData.descricao,
         tipo_imposto: "TFE", // Tipo padrão obrigatório pelo backend
         mes_referencia: formData.mes_referencia,
-        valor: 0.01, // Valor mínimo obrigatório pelo backend (gt=0)
+        valor: valorTotal > 0 ? valorTotal : 0.01, // Usar valor total ou mínimo 0.01
       });
 
       // 2. Fazer upload de cada anexo
@@ -240,7 +275,7 @@ export default function NovoImpostoPage() {
             // Validar arquivo
             const validation = impostoService.validateFile(fileWithType.file);
             if (!validation.valid) {
-              console.error("Arquivo inválido:", fileWithType.file.name, validation.error);
+    // console.error("Arquivo inválido:", fileWithType.file.name, validation.error);
               continue; // Pular arquivo inválido
             }
 
@@ -259,7 +294,11 @@ export default function NovoImpostoPage() {
               fileWithType.file
             );
 
-            // Confirmar upload no backend
+            // Confirmar upload no backend com o valor (manual ou extraído)
+            const valorFinal = fileWithType.manualValue !== undefined && fileWithType.manualValue !== null
+              ? fileWithType.manualValue
+              : fileWithType.extractedValue || undefined;
+
             await impostoService.confirmAnexoUpload(
               imposto.imposto_id,
               imposto.empresa_id,
@@ -267,11 +306,12 @@ export default function NovoImpostoPage() {
               fileWithType.file.name,
               fileWithType.file.size,
               fileWithType.file.type,
-              fileWithType.tipoImposto
+              fileWithType.tipoImposto,
+              valorFinal
             );
           } catch (uploadErr: any) {
-            console.error("Erro ao fazer upload do arquivo:", fileWithType.file.name);
-            console.error("Detalhes do erro:", uploadErr.response?.data || uploadErr.message || uploadErr);
+    // console.error("Erro ao fazer upload do arquivo:", fileWithType.file.name);
+    // console.error("Detalhes do erro:", uploadErr.response?.data || uploadErr.message || uploadErr);
             // Continuar com os outros arquivos mesmo se um falhar
           }
         }
@@ -279,7 +319,7 @@ export default function NovoImpostoPage() {
 
       router.push("/dashboard/contabilidade/impostos");
     } catch (err: any) {
-      console.error("Erro ao cadastrar imposto:", err);
+    // console.error("Erro ao cadastrar imposto:", err);
       setError(err.response?.data?.message || "Erro ao cadastrar imposto");
     } finally {
       setLoading(false);
@@ -405,50 +445,52 @@ export default function NovoImpostoPage() {
                                 </Box>
                               )}
                               {!fileWithType.extracting && fileWithType.extractedValue !== undefined && (
-                                <Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 1 }}>
-                                  {fileWithType.extractedValue ? (
-                                    <>
-                                      <CheckCircleIcon sx={{ fontSize: 16, color: "#10b981" }} />
-                                      <Chip
-                                        icon={<AutoAwesomeIcon sx={{ fontSize: 14 }} />}
-                                        label={`Valor detectado: ${new Intl.NumberFormat("pt-BR", {
-                                          style: "currency",
-                                          currency: "BRL",
-                                        }).format(fileWithType.extractedValue)}`}
-                                        size="small"
-                                        sx={{
-                                          bgcolor: alpha("#10b981", 0.1),
-                                          color: "#10b981",
-                                          fontWeight: 600,
-                                          "& .MuiChip-icon": { color: "#10b981" },
-                                        }}
-                                      />
-                                      {fileWithType.extractionConfidence && (
-                                        <Tooltip title="Confiança da extração">
-                                          <Chip
-                                            label={`${fileWithType.extractionConfidence}%`}
-                                            size="small"
-                                            variant="outlined"
-                                            sx={{ fontSize: "0.7rem" }}
-                                          />
-                                        </Tooltip>
-                                      )}
-                                    </>
-                                  ) : fileWithType.extractionError ? (
-                                    <>
-                                      <ErrorIcon sx={{ fontSize: 16, color: "#ef4444" }} />
-                                      <Typography variant="caption" color="error">
-                                        {fileWithType.extractionError}
-                                      </Typography>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <ErrorIcon sx={{ fontSize: 16, color: "#f59e0b" }} />
-                                      <Typography variant="caption" color="text.secondary">
-                                        Valor não detectado automaticamente
-                                      </Typography>
-                                    </>
-                                  )}
+                                <Box sx={{ mt: 1 }}>
+                                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                                    {fileWithType.extractedValue ? (
+                                      <>
+                                        <CheckCircleIcon sx={{ fontSize: 16, color: "#10b981" }} />
+                                        <Chip
+                                          icon={<AutoAwesomeIcon sx={{ fontSize: 14 }} />}
+                                          label={`Valor detectado: ${new Intl.NumberFormat("pt-BR", {
+                                            style: "currency",
+                                            currency: "BRL",
+                                          }).format(fileWithType.extractedValue)}`}
+                                          size="small"
+                                          sx={{
+                                            bgcolor: alpha("#10b981", 0.1),
+                                            color: "#10b981",
+                                            fontWeight: 600,
+                                            "& .MuiChip-icon": { color: "#10b981" },
+                                          }}
+                                        />
+                                        {fileWithType.extractionConfidence && (
+                                          <Tooltip title="Confiança da extração">
+                                            <Chip
+                                              label={`${fileWithType.extractionConfidence}%`}
+                                              size="small"
+                                              variant="outlined"
+                                              sx={{ fontSize: "0.7rem" }}
+                                            />
+                                          </Tooltip>
+                                        )}
+                                      </>
+                                    ) : fileWithType.extractionError ? (
+                                      <>
+                                        <ErrorIcon sx={{ fontSize: 16, color: "#ef4444" }} />
+                                        <Typography variant="caption" color="error">
+                                          {fileWithType.extractionError}
+                                        </Typography>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <ErrorIcon sx={{ fontSize: 16, color: "#f59e0b" }} />
+                                        <Typography variant="caption" color="text.secondary">
+                                          Valor não detectado automaticamente
+                                        </Typography>
+                                      </>
+                                    )}
+                                  </Box>
                                 </Box>
                               )}
                             </Box>
@@ -460,7 +502,7 @@ export default function NovoImpostoPage() {
                               <DeleteIcon />
                             </IconButton>
                           </Box>
-                          <Box sx={{ pl: 6 }}>
+                          <Box sx={{ pl: 6, display: "flex", gap: 2 }}>
                             <FormControl fullWidth size="small">
                               <InputLabel>Tipo de Imposto</InputLabel>
                               <Select
@@ -475,6 +517,30 @@ export default function NovoImpostoPage() {
                                 ))}
                               </Select>
                             </FormControl>
+                            <TextField
+                              label="Valor"
+                              size="small"
+                              fullWidth
+                              value={
+                                fileWithType.valorDisplay ||
+                                (fileWithType.extractedValue
+                                  ? new Intl.NumberFormat("pt-BR", {
+                                      style: "currency",
+                                      currency: "BRL",
+                                    }).format(fileWithType.extractedValue)
+                                  : "R$ 0,00")
+                              }
+                              onChange={(e) => handleFileValorChange(index, e.target.value)}
+                              placeholder="R$ 0,00"
+                              disabled={fileWithType.extracting}
+                              helperText={
+                                fileWithType.extracting
+                                  ? "Aguarde a extração da IA terminar..."
+                                  : fileWithType.extractedValue && !fileWithType.manualValue
+                                  ? "Valor detectado pela IA. Você pode editar se necessário."
+                                  : "Digite o valor ou deixe a IA extrair automaticamente"
+                              }
+                            />
                           </Box>
                         </ListItem>
                       ))}
@@ -484,14 +550,14 @@ export default function NovoImpostoPage() {
                         <Typography variant="caption" color="text.secondary">
                           Total: {selectedFiles.length} arquivo(s) selecionado(s)
                         </Typography>
-                        {documentExtractionService.isConfigured() && (
+                        {awsDocumentExtractionService.isConfigured() && (
                           <Chip
                             icon={<AutoAwesomeIcon sx={{ fontSize: 14 }} />}
-                            label="Extração automática ativa"
+                            label="AWS Textract ativo"
                             size="small"
                             sx={{
-                              bgcolor: alpha("#8270FF", 0.1),
-                              color: "#8270FF",
+                              bgcolor: alpha("#FF9900", 0.1),
+                              color: "#FF9900",
                               fontWeight: 600,
                               fontSize: "0.7rem",
                             }}
@@ -520,13 +586,19 @@ export default function NovoImpostoPage() {
                   type="submit"
                   variant="contained"
                   startIcon={loading ? <CircularProgress size={20} /> : <SaveIcon />}
-                  disabled={loading}
+                  disabled={loading || selectedFiles.length === 0 || selectedFiles.some(f => f.extracting)}
                   sx={{
                     bgcolor: "#8270FF",
                     "&:hover": { bgcolor: "#6a5dd9" },
                   }}
                 >
-                  {loading ? "Cadastrando..." : "Cadastrar Imposto"}
+                  {loading
+                    ? "Cadastrando..."
+                    : selectedFiles.length === 0
+                      ? "Adicione um anexo"
+                      : selectedFiles.some(f => f.extracting)
+                        ? "Aguarde a IA..."
+                        : "Cadastrar Imposto"}
                 </Button>
               </Box>
             </Box>

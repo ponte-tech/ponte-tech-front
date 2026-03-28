@@ -77,7 +77,7 @@ export default function NotasFiscaisPage() {
       setNotas(data);
       setNotasFiltradas(data);
     } catch (err) {
-      console.error('Erro ao carregar notas fiscais:', err);
+    // console.error('Erro ao carregar notas fiscais:', err);
       setError('Erro ao carregar notas fiscais. Tente novamente.');
     } finally {
       setLoading(false);

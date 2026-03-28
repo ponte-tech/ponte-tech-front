@@ -328,19 +328,19 @@ function KanbanPageContent() {
   useEffect(() => {
     const cardId = searchParams.get('card');
     if (cardId && cards.length > 0) {
-      console.log('[SHARE DEBUG] Procurando card com ID:', cardId);
-      console.log('[SHARE DEBUG] Cards disponíveis:', cards.map(c => c.card_id));
+    // console.log('[SHARE DEBUG] Procurando card com ID:', cardId);
+    // console.log('[SHARE DEBUG] Cards disponíveis:', cards.map(c => c.card_id));
 
       const card = cards.find(c => c.card_id === cardId);
       if (card) {
-        console.log('[SHARE DEBUG] Card encontrado:', card.title);
+    // console.log('[SHARE DEBUG] Card encontrado:', card.title);
         setSelectedCard(card);
         setCardModalOpen(true);
         // Remover o parâmetro da URL sem recarregar a página
         const newUrl = window.location.pathname;
         window.history.replaceState({}, '', newUrl);
       } else {
-        console.log('[SHARE DEBUG] Card NÃO encontrado');
+    // console.log('[SHARE DEBUG] Card NÃO encontrado');
       }
     }
   }, [searchParams, cards]);
@@ -384,7 +384,7 @@ function KanbanPageContent() {
         setSelectedBoardId(newBoard.board_id);
       }
     } catch (error: any) {
-      console.error("Erro ao carregar dados iniciais:", error);
+    // console.error("Erro ao carregar dados iniciais:", error);
       setSnackbar({
         open: true,
         message: error.message || "Erro ao carregar dados",
@@ -426,7 +426,7 @@ function KanbanPageContent() {
       // Calcular tarefas urgentes por colaborador
       calculateUrgentTasksByColaborador(allCards, columnsList);
     } catch (error: any) {
-      console.error("Erro ao carregar board:", error);
+    // console.error("Erro ao carregar board:", error);
       setSnackbar({
         open: true,
         message: error.message || "Erro ao carregar board",
@@ -514,9 +514,9 @@ function KanbanPageContent() {
     }
     const nextBusinessDayStr = nextBusinessDay.toISOString().split('T')[0];
 
-    console.log('[OVERVIEW DEBUG] Hoje:', todayStr);
-    console.log('[OVERVIEW DEBUG] Próximo dia útil:', nextBusinessDayStr);
-    console.log('[OVERVIEW DEBUG] Total de cards:', cardsList.length);
+    // console.log('[OVERVIEW DEBUG] Hoje:', todayStr);
+    // console.log('[OVERVIEW DEBUG] Próximo dia útil:', nextBusinessDayStr);
+    // console.log('[OVERVIEW DEBUG] Total de cards:', cardsList.length);
 
     // Identificar colunas finalizadas
     const completedColumnNames = ['concluído', 'concluido', 'finalizado', 'done', 'completed', 'fechado'];
@@ -524,24 +524,24 @@ function KanbanPageContent() {
       .filter(col => completedColumnNames.some(name => col.name.toLowerCase().includes(name)))
       .map(col => col.column_id);
 
-    console.log('[OVERVIEW DEBUG] Colunas finalizadas:', completedColumnIds);
+    // console.log('[OVERVIEW DEBUG] Colunas finalizadas:', completedColumnIds);
 
     // Agrupar tarefas urgentes por colaborador
     const tasksByColab: Record<string, Array<{ card: Card; urgencyType: 'overdue' | 'today' | 'next_business_day' }>> = {};
 
     cardsList.forEach(card => {
-      console.log('[OVERVIEW DEBUG] Verificando card:', card.title, '| delivery_date:', card.delivery_date, '| assigned_to:', card.assigned_to);
+    // console.log('[OVERVIEW DEBUG] Verificando card:', card.title, '| delivery_date:', card.delivery_date, '| assigned_to:', card.assigned_to);
 
       if (!card.delivery_date) {
-        console.log('[OVERVIEW DEBUG]   -> Sem delivery_date');
+    // console.log('[OVERVIEW DEBUG]   -> Sem delivery_date');
         return;
       }
       if (!card.assigned_to || card.assigned_to.length === 0) {
-        console.log('[OVERVIEW DEBUG]   -> Sem assigned_to');
+    // console.log('[OVERVIEW DEBUG]   -> Sem assigned_to');
         return;
       }
       if (completedColumnIds.includes(card.column_id)) {
-        console.log('[OVERVIEW DEBUG]   -> Está em coluna finalizada');
+    // console.log('[OVERVIEW DEBUG]   -> Está em coluna finalizada');
         return;
       }
 
@@ -549,15 +549,15 @@ function KanbanPageContent() {
       const isToday = card.delivery_date === todayStr;
       const isNextBusinessDay = card.delivery_date === nextBusinessDayStr;
 
-      console.log('[OVERVIEW DEBUG]   -> isOverdue:', isOverdue, '| isToday:', isToday, '| isNextBusinessDay:', isNextBusinessDay);
+    // console.log('[OVERVIEW DEBUG]   -> isOverdue:', isOverdue, '| isToday:', isToday, '| isNextBusinessDay:', isNextBusinessDay);
 
       if (!isOverdue && !isToday && !isNextBusinessDay) {
-        console.log('[OVERVIEW DEBUG]   -> Não atende critério de urgência');
+    // console.log('[OVERVIEW DEBUG]   -> Não atende critério de urgência');
         return;
       }
 
       const urgencyType = isOverdue ? 'overdue' : isToday ? 'today' : 'next_business_day';
-      console.log('[OVERVIEW DEBUG]   -> ADICIONADA! urgencyType:', urgencyType);
+    // console.log('[OVERVIEW DEBUG]   -> ADICIONADA! urgencyType:', urgencyType);
 
       card.assigned_to.forEach(colabId => {
         if (!tasksByColab[colabId]) {
@@ -567,7 +567,7 @@ function KanbanPageContent() {
       });
     });
 
-    console.log('[OVERVIEW DEBUG] Total de colaboradores com tarefas urgentes:', Object.keys(tasksByColab).length);
+    // console.log('[OVERVIEW DEBUG] Total de colaboradores com tarefas urgentes:', Object.keys(tasksByColab).length);
 
     // Converter para array e adicionar dados do colaborador
     const result = Object.entries(tasksByColab)
@@ -584,7 +584,7 @@ function KanbanPageContent() {
         return b.tasks.length - a.tasks.length;
       });
 
-    console.log('[OVERVIEW DEBUG] Resultado final:', result.length, 'colaboradores');
+    // console.log('[OVERVIEW DEBUG] Resultado final:', result.length, 'colaboradores');
     setUrgentTasksByColaborador(result);
   };
 

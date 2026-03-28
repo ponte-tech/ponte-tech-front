@@ -84,7 +84,7 @@ export default function WhatsAppPage() {
 
       setConversations(sortedConversations);
     } catch (error: any) {
-      console.error("Erro ao carregar conversas:", error);
+    // console.error("Erro ao carregar conversas:", error);
       if (!silent) {
         setSnackbar({
           open: true,
@@ -118,7 +118,7 @@ export default function WhatsAppPage() {
         )
       );
     } catch (error: any) {
-      console.error("Erro ao carregar mensagens:", error);
+    // console.error("Erro ao carregar mensagens:", error);
       if (!silent) {
         setSnackbar({
           open: true,
@@ -140,7 +140,7 @@ export default function WhatsAppPage() {
       const response = await colaboradoresService.list({ status: "ativo" });
       setColaboradores(response.colaboradores || []);
     } catch (error: any) {
-      console.error("Erro ao carregar colaboradores:", error);
+    // console.error("Erro ao carregar colaboradores:", error);
     } finally {
       setLoadingColaboradores(false);
     }
@@ -202,7 +202,7 @@ export default function WhatsAppPage() {
         severity: "success",
       });
     } catch (error: any) {
-      console.error("Erro ao enviar mensagem:", error);
+    // console.error("Erro ao enviar mensagem:", error);
       setSnackbar({
         open: true,
         message: error.message || "Erro ao enviar mensagem",
@@ -233,7 +233,7 @@ export default function WhatsAppPage() {
 
       return response;
     } catch (error: any) {
-      console.error("Erro ao enviar broadcast:", error);
+    // console.error("Erro ao enviar broadcast:", error);
       throw error;
     }
   };

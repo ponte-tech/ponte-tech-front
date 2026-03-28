@@ -49,7 +49,7 @@ export default function EditarClientePage({ params }: { params: Promise<{ id: st
         const response = await empresaService.list();
         setEmpresas(response.empresas);
       } catch (err) {
-        console.error("Erro ao carregar empresas:", err);
+    // console.error("Erro ao carregar empresas:", err);
         setError("Erro ao carregar lista de empresas");
       } finally {
         setLoadingEmpresas(false);

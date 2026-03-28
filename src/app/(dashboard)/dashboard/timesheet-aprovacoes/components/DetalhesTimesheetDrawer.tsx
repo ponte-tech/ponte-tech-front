@@ -61,7 +61,7 @@ export default function DetalhesTimesheetDrawer({
       const data = await timesheetService.getResumoColaborador(colaboradorId, mes);
       setResumo(data);
     } catch (err) {
-      console.error('Erro ao carregar resumo:', err);
+    // console.error('Erro ao carregar resumo:', err);
       setError('Erro ao carregar detalhes do timesheet');
     } finally {
       setLoading(false);

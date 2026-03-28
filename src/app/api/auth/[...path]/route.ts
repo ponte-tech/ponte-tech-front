@@ -85,7 +85,7 @@ async function proxyRequest(
       },
     });
   } catch (error) {
-    console.error('❌ [AUTH-PROXY] Error:', error);
+    // console.error('❌ [AUTH-PROXY] Error:', error);
     return NextResponse.json(
       { error: 'Erro ao se comunicar com a API de autenticação' },
       { status: 500 }

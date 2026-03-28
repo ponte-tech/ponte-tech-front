@@ -74,7 +74,7 @@ export default function ClientesPage() {
 
       setClientes(response.clientes || []);
     } catch (err) {
-      console.error('❌ [CLIENTES] Erro ao carregar:', err);
+    // console.error('❌ [CLIENTES] Erro ao carregar:', err);
       const error = err as { response?: { data?: { message?: string } } };
       setSnackbarMessage(error.response?.data?.message || "Erro ao carregar clientes");
       setSnackbarOpen(true);

@@ -45,7 +45,7 @@ export default function NovoContratoPage() {
         const response = await clienteService.list();
         setClientes(response.clientes);
       } catch (err) {
-        console.error("Erro ao carregar clientes:", err);
+    // console.error("Erro ao carregar clientes:", err);
         setError("Erro ao carregar lista de clientes");
       } finally {
         setLoadingClientes(false);

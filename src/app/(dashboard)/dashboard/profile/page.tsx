@@ -308,7 +308,7 @@ export default function ProfilePage() {
         }));
       }
     } catch (err) {
-      console.error("Erro ao buscar CEP:", err);
+    // console.error("Erro ao buscar CEP:", err);
     }
   };
 

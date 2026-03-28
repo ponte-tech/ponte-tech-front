@@ -213,7 +213,7 @@ export default function ImpostosPage() {
             const fileName = `${tipoLabel}_${anexo.nome_arquivo}`;
             zip.file(fileName, blob);
           } catch (err) {
-            console.error("Erro ao baixar anexo:", anexo.nome_arquivo, err);
+    // console.error("Erro ao baixar anexo:", anexo.nome_arquivo, err);
             // Continuar com os outros arquivos
           }
         }

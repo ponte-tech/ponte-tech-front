@@ -28,6 +28,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [loginSuccess, setLoginSuccess] = useState(false);
   const { login, isLoading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,10 +37,17 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
+      // Login bem-sucedido - esconder a tela de login
+      setLoginSuccess(true);
     } catch (err) {
       setError("Credenciais inválidas. Tente novamente.");
     }
   };
+
+  // Se login foi bem-sucedido, não renderizar nada (tela de boas-vindas será mostrada)
+  if (loginSuccess) {
+    return null;
+  }
 
   return (
     <Box

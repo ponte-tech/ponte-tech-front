@@ -55,7 +55,7 @@ interface SubMenuItem {
 
 interface MenuItem {
   text: string;
-  icon: JSX.Element;
+  icon: React.ReactElement;
   path?: string;
   allowedRoles: string[];
   subItems?: SubMenuItem[];
@@ -66,7 +66,7 @@ const menuItems: MenuItem[] = [
     text: "Dashboard",
     icon: <DashboardIcon />,
     path: "/dashboard",
-    allowedRoles: ["admin", "aluno", "vendedor", "professor", "contador", "colaborador"]
+    allowedRoles: ["admin", "aluno", "vendedor", "professor", "contador"]
   },
   {
     text: "Gestão",
@@ -187,7 +187,7 @@ export default function Sidebar({ open, mobileOpen, onMobileClose }: SidebarProp
         return hasChanges ? { ...prev, ...newExpandedItems } : prev;
       });
     }
-  }, [pathname]); // Only depend on pathname
+  }, [pathname, filteredMenuItems]);
 
   const handleNavigation = (path: string) => {
     router.push(path);

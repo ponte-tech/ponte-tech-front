@@ -81,24 +81,24 @@ export const insightsService = {
         name: client.nome_fantasia || client.razao_social || client.nome || client.razaoSocial || client.name || "Cliente sem nome",
       }));
     } catch (error) {
-      console.error("Erro ao buscar clientes:", error);
+    // console.error("Erro ao buscar clientes:", error);
       return [];
     }
   },
 
   async getAnalysts(): Promise<AnalystOption[]> {
     try {
-      console.log("Chamando API /api/admin/colaboradores...");
+    // console.log("Chamando API /api/admin/colaboradores...");
       const response = await api.get("/api/admin/colaboradores");
-      console.log("Resposta da API colaboradores:", response);
-      console.log("response.data:", response.data);
+    // console.log("Resposta da API colaboradores:", response);
+    // console.log("response.data:", response.data);
 
       // A API retorna {success: true, data: {...}} similar à de clientes
       const rawData = response.data?.data || response.data;
-      console.log("rawData colaboradores:", rawData);
-      console.log("rawData é array?", Array.isArray(rawData));
-      console.log("Tipo de rawData:", typeof rawData);
-      console.log("Propriedades de rawData:", Object.keys(rawData));
+    // console.log("rawData colaboradores:", rawData);
+    // console.log("rawData é array?", Array.isArray(rawData));
+    // console.log("Tipo de rawData:", typeof rawData);
+    // console.log("Propriedades de rawData:", Object.keys(rawData));
 
       // Se rawData é um objeto com propriedade 'colaboradores', extrair
       let data = Array.isArray(rawData) ? rawData : [];
@@ -106,22 +106,22 @@ export const insightsService = {
         // Tentar pegar de várias propriedades possíveis
         data = rawData.colaboradores || rawData.users || rawData.data || rawData.items || Object.values(rawData);
       }
-      console.log("Data após extração:", data);
-      console.log("Total de colaboradores recebidos:", data.length);
+    // console.log("Data após extração:", data);
+    // console.log("Total de colaboradores recebidos:", data.length);
 
       // Filtrar apenas colaboradores ativos
       const analysts = data.filter((c: any) => c.status === "ativo" || c.status === "ATIVO");
-      console.log("Colaboradores ativos filtrados:", analysts.length);
+    // console.log("Colaboradores ativos filtrados:", analysts.length);
 
       const mapped = analysts.map((analyst: any) => ({
         id: analyst.user_id || analyst.id,
         name: analyst.nome_completo || analyst.nome || analyst.name || "Analista sem nome",
         foto_perfil_url: analyst.foto_perfil_url,
       }));
-      console.log("Colaboradores mapeados:", mapped);
+    // console.log("Colaboradores mapeados:", mapped);
       return mapped;
     } catch (error) {
-      console.error("Erro ao buscar analistas:", error);
+    // console.error("Erro ao buscar analistas:", error);
       return [];
     }
   },

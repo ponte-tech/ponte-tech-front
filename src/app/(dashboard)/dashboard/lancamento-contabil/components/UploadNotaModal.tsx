@@ -88,12 +88,12 @@ export default function UploadNotaModal({
       setValidationResult(null);
       setShowValidationDetails(false);
 
-      console.log("🔍 [UploadModal - Lançamento Contábil] Iniciando validação da nota fiscal");
-      console.log("📊 [UploadModal] Dados para validação:", {
-        valorEsperado: lancamento?.valor_nota_fiscal,
-        clienteCNPJ_tomador: lancamento?.cliente_cnpj, // CNPJ do Cliente (Tomador do Serviço)
-        empresaCNPJ_emitente: lancamento?.empresa_cnpj, // CNPJ da Empresa (Emitente)
-      });
+      // console.log("🔍 [UploadModal - Lançamento Contábil] Iniciando validação da nota fiscal");
+      // console.log("📊 [UploadModal] Dados para validação:", {
+      //   valorEsperado: lancamento?.valor_nota_fiscal,
+      //   clienteCNPJ_tomador: lancamento?.cliente_cnpj, // CNPJ do Cliente (Tomador do Serviço)
+      //   empresaCNPJ_emitente: lancamento?.empresa_cnpj, // CNPJ da Empresa (Emitente)
+      // });
 
       // Validar com os CNPJs corretos:
       // - Cliente CNPJ como Destinatário (Tomador do Serviço)
@@ -108,16 +108,16 @@ export default function UploadNotaModal({
       setShowValidationDetails(true);
 
       if (result.error) {
-        console.warn("⚠️ [UploadModal] Erro na validação:", result.error);
+    // console.warn("⚠️ [UploadModal] Erro na validação:", result.error);
       } else if (result.validations) {
         if (result.validations.all_valid) {
-          console.log("✅ [UploadModal] Validação passou!");
+    // console.log("✅ [UploadModal] Validação passou!");
         } else {
-          console.warn("❌ [UploadModal] Validação falhou:", result.validations);
+    // console.warn("❌ [UploadModal] Validação falhou:", result.validations);
         }
       }
     } catch (err) {
-      console.error("❌ [UploadModal] Erro ao validar:", err);
+    // console.error("❌ [UploadModal] Erro ao validar:", err);
 
       const errorMessage = err instanceof Error ? err.message : String(err);
       let userMessage = "";

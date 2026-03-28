@@ -93,7 +93,7 @@ export default function CursosPage() {
       setCursos(response.cursos);
       setTotalItems(response.pagination.total_items);
     } catch (error) {
-      console.error("Erro ao carregar cursos:", error);
+    // console.error("Erro ao carregar cursos:", error);
     } finally {
       setLoading(false);
     }
@@ -167,7 +167,7 @@ export default function CursosPage() {
       setSnackbarMessage("Link de compartilhamento copiado!");
       setSnackbarOpen(true);
     } catch (error) {
-      console.error("Erro ao copiar link:", error);
+    // console.error("Erro ao copiar link:", error);
       setSnackbarMessage("Erro ao copiar link");
       setSnackbarOpen(true);
     }

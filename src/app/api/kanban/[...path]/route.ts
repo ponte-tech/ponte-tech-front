@@ -62,7 +62,7 @@ async function proxyRequest(
         const jsonBody = await request.json();
         body = JSON.stringify(jsonBody);
       } catch (err) {
-        console.error('❌ [KANBAN-PROXY] Error parsing body:', err);
+    // console.error('❌ [KANBAN-PROXY] Error parsing body:', err);
       }
     }
 
@@ -84,8 +84,8 @@ async function proxyRequest(
       },
     });
   } catch (error) {
-    console.error('❌ [KANBAN-PROXY] Error:', error);
-    console.error('❌ [KANBAN-PROXY] Stack:', error instanceof Error ? error.stack : 'No stack');
+    // console.error('❌ [KANBAN-PROXY] Error:', error);
+    // console.error('❌ [KANBAN-PROXY] Stack:', error instanceof Error ? error.stack : 'No stack');
     return NextResponse.json(
       {
         error: 'Erro ao se comunicar com a API',

@@ -66,7 +66,7 @@ export default function CursosPage() {
       setCursos(response.cursos);
       setTotalPages(response.pagination.total_pages);
     } catch (error) {
-      console.error("Erro ao carregar cursos:", error);
+    // console.error("Erro ao carregar cursos:", error);
     } finally {
       setLoading(false);
     }

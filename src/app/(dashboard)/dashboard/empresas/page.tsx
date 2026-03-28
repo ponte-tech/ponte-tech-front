@@ -52,7 +52,7 @@ export default function EmpresasPage() {
       const response = await empresaService.list();
       setEmpresas(response.empresas || []);
     } catch (err) {
-      console.error('❌ [EMPRESAS] Erro ao carregar:', err);
+    // console.error('❌ [EMPRESAS] Erro ao carregar:', err);
       const error = err as { response?: { data?: { message?: string } } };
       setSnackbarMessage(error.response?.data?.message || "Erro ao carregar empresas");
       setSnackbarOpen(true);

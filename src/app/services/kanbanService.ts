@@ -236,7 +236,7 @@ class KanbanService {
         throw error;
       }
       // Log other errors
-      console.error('Error listing subtasks:', error);
+    // console.error('Error listing subtasks:', error);
       throw error;
     }
   }
@@ -261,7 +261,7 @@ class KanbanService {
         throw error;
       }
       // Log other errors
-      console.error('Error creating subtask:', error);
+    // console.error('Error creating subtask:', error);
       throw error;
     }
   }
@@ -290,7 +290,7 @@ class KanbanService {
         throw error;
       }
       // Log other errors
-      console.error('Error updating subtask:', error);
+    // console.error('Error updating subtask:', error);
       throw error;
     }
   }
@@ -313,7 +313,7 @@ class KanbanService {
         throw error;
       }
       // Log other errors
-      console.error('Error deleting subtask:', error);
+    // console.error('Error deleting subtask:', error);
       throw error;
     }
   }
