@@ -12,14 +12,15 @@ import {
   Alert,
 } from "@mui/material";
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from "@mui/icons-material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import empresaService from "@/app/services/empresaService";
 import type { Empresa, UpdateEmpresaRequest } from "@/app/types/empresa";
 import { useAuth } from "@/app/hooks/useAuth";
 import { formatCNPJ, cleanCNPJ } from "@/app/utils/cnpjValidator";
 
-export default function EditarEmpresaPage({ params }: { params: { id: string } }) {
+export default function EditarEmpresaPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -47,7 +48,7 @@ export default function EditarEmpresaPage({ params }: { params: { id: string } }
       try {
         setLoading(true);
         const response = await empresaService.list();
-        const empresaEncontrada = response.empresas.find((e) => e.empresa_id === params.id);
+        const empresaEncontrada = response.empresas.find((e) => e.empresa_id === id);
 
         if (!empresaEncontrada) {
           setError("Empresa não encontrada");
@@ -70,7 +71,7 @@ export default function EditarEmpresaPage({ params }: { params: { id: string } }
     };
 
     loadEmpresa();
-  }, [params.id, router]);
+  }, [id, router]);
 
   const handleChange = (field: keyof UpdateEmpresaRequest, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -105,7 +106,7 @@ export default function EditarEmpresaPage({ params }: { params: { id: string } }
         cnpj: cleanCNPJ(formData.cnpj),
       };
 
-      await empresaService.update(params.id, dataToSend);
+      await empresaService.update(id, dataToSend);
       setSuccess(true);
 
       // Redirecionar após 1 segundo
