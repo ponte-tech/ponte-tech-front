@@ -276,6 +276,7 @@ export default function Navbar({ onMenuClick, onSidebarToggle, sidebarOpen }: Na
             anchorEl={anchorEl}
             open={Boolean(anchorEl)}
             onClose={handleMenuClose}
+            disableScrollLock
             sx={{
               mt: 1,
               "& .MuiPaper-root": {
