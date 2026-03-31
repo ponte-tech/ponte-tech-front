@@ -2281,7 +2281,7 @@ function KanbanPageContent() {
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2" fontSize="0.813rem">
-                            {new Date(task.card.delivery_date || '').toLocaleDateString('pt-BR')}
+                            {new Date((task.card.delivery_date || '') + 'T00:00:00').toLocaleDateString('pt-BR')}
                           </Typography>
                         </TableCell>
                         <TableCell>
