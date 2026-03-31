@@ -929,19 +929,14 @@ export default function TimesheetAprovacoesPage() {
                         <TableCell>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                             <Avatar
-                              src={colab.foto_perfil_url || ''}
+                              src={colab.foto_perfil_url || '/avatar.svg'}
                               alt={colab.nome_completo}
                               sx={{
                                 width: 40,
                                 height: 40,
-                                bgcolor: colab.foto_perfil_url ? 'transparent' : '#8270FF',
-                                color: 'white',
-                                fontSize: '0.875rem',
-                                fontWeight: 600,
+                                bgcolor: 'transparent',
                               }}
-                            >
-                              {!colab.foto_perfil_url && colab.nome_completo.charAt(0).toUpperCase()}
-                            </Avatar>
+                            />
                             <Typography variant="body2" fontWeight="600">
                               {colab.nome_completo}
                             </Typography>

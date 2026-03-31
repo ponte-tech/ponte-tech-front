@@ -423,17 +423,13 @@ export default function InsightsPage() {
                         size="small"
                         avatar={
                           <Avatar
-                            src={option.foto_perfil_url || ""}
+                            src={option.foto_perfil_url || "/avatar.svg"}
                             sx={{
                               width: 24,
                               height: 24,
-                              bgcolor: option.foto_perfil_url ? "transparent" : "#FF6B9D",
-                              fontSize: "0.65rem",
-                              fontWeight: 600,
+                              bgcolor: "transparent",
                             }}
-                          >
-                            {!option.foto_perfil_url && option.name?.substring(0, 2).toUpperCase()}
-                          </Avatar>
+                          />
                         }
                         {...getTagProps({ index })}
                         sx={{ bgcolor: alpha("#FF6B9D", 0.1), color: "#FF6B9D" }}
@@ -446,17 +442,13 @@ export default function InsightsPage() {
                       <li key={key} {...otherProps}>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                           <Avatar
-                            src={option.foto_perfil_url || ""}
+                            src={option.foto_perfil_url || "/avatar.svg"}
                             sx={{
                               width: 32,
                               height: 32,
-                              bgcolor: option.foto_perfil_url ? "transparent" : "#FF6B9D",
-                              fontSize: "0.75rem",
-                              fontWeight: 600,
+                              bgcolor: "transparent",
                             }}
-                          >
-                            {!option.foto_perfil_url && option.name?.substring(0, 2).toUpperCase()}
-                          </Avatar>
+                          />
                           <Typography sx={{ fontSize: "0.875rem" }}>
                             {option.name}
                           </Typography>
@@ -776,22 +768,15 @@ export default function InsightsPage() {
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
-                                  backgroundColor: (colaborador as any)?.foto_perfil_url ? 'transparent' : analystColor,
-                                  color: 'white',
-                                  fontSize: '0.7rem',
-                                  fontWeight: 600,
+                                  backgroundColor: 'transparent',
                                   border: '2px solid white',
                                   boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                                 }}>
-                                  {(colaborador as any)?.foto_perfil_url ? (
-                                    <img
-                                      src={(colaborador as any).foto_perfil_url}
-                                      alt={name}
-                                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                    />
-                                  ) : (
-                                    <span>{name?.charAt(0)?.toUpperCase() || "?"}</span>
-                                  )}
+                                  <img
+                                    src={(colaborador as any)?.foto_perfil_url || '/avatar.svg'}
+                                    alt={name}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                  />
                                 </div>
                               </foreignObject>
                               {/* Nome */}
@@ -832,19 +817,14 @@ export default function InsightsPage() {
                               >
                                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1 }}>
                                   <Avatar
-                                    src={(colaborador as any)?.foto_perfil_url || ""}
+                                    src={(colaborador as any)?.foto_perfil_url || "/avatar.svg"}
                                     alt={data.analyst_name}
                                     sx={{
                                       width: 32,
                                       height: 32,
-                                      bgcolor: (colaborador as any)?.foto_perfil_url ? "transparent" : analystColor,
-                                      color: "white",
-                                      fontSize: "0.75rem",
-                                      fontWeight: 600,
+                                      bgcolor: "transparent",
                                     }}
-                                  >
-                                    {!(colaborador as any)?.foto_perfil_url && (data.analyst_name?.charAt(0)?.toUpperCase() || "?")}
-                                  </Avatar>
+                                  />
                                   <Typography variant="body2" fontWeight={600}>
                                     {data.analyst_name || "Colaborador"}
                                   </Typography>
@@ -942,21 +922,14 @@ export default function InsightsPage() {
                                       display: 'flex',
                                       alignItems: 'center',
                                       justifyContent: 'center',
-                                      backgroundColor: analyst?.foto_perfil_url ? 'transparent' : '#8270FF',
-                                      color: 'white',
-                                      fontSize: '0.75rem',
-                                      fontWeight: 600,
+                                      backgroundColor: 'transparent',
                                       flexShrink: 0
                                     }}>
-                                      {analyst?.foto_perfil_url ? (
-                                        <img
-                                          src={analyst.foto_perfil_url}
-                                          alt={payload.value}
-                                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                        />
-                                      ) : (
-                                        <span>{payload.value?.charAt(0)?.toUpperCase() || "?"}</span>
-                                      )}
+                                      <img
+                                        src={analyst?.foto_perfil_url || '/avatar.svg'}
+                                        alt={payload.value}
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                      />
                                     </div>
                                     <div style={{
                                       fontSize: '11px',
@@ -990,19 +963,14 @@ export default function InsightsPage() {
                                 >
                                   <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1.5, pb: 1.5, borderBottom: "1px solid #e2e8f0" }}>
                                     <Avatar
-                                      src={analyst.foto_perfil_url || ""}
+                                      src={analyst.foto_perfil_url || "/avatar.svg"}
                                       alt={analyst.analyst_name}
                                       sx={{
                                         width: 36,
                                         height: 36,
-                                        bgcolor: analyst.foto_perfil_url ? "transparent" : "#8270FF",
-                                        color: "white",
-                                        fontSize: "0.875rem",
-                                        fontWeight: 600,
+                                        bgcolor: "transparent",
                                       }}
-                                    >
-                                      {!analyst.foto_perfil_url && analyst.analyst_name.charAt(0).toUpperCase()}
-                                    </Avatar>
+                                    />
                                     <Box>
                                       <Typography variant="body2" fontWeight={600}>
                                         {analyst.analyst_name}
@@ -1080,19 +1048,14 @@ export default function InsightsPage() {
                           <CardContent>
                             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
                               <Avatar
-                                src={analyst.foto_perfil_url || ""}
+                                src={analyst.foto_perfil_url || "/avatar.svg"}
                                 alt={analyst.analyst_name}
                                 sx={{
                                   width: 40,
                                   height: 40,
-                                  bgcolor: analyst.foto_perfil_url ? "transparent" : "#8270FF",
-                                  color: "white",
-                                  fontSize: "0.875rem",
-                                  fontWeight: 600,
+                                  bgcolor: "transparent",
                                 }}
-                              >
-                                {!analyst.foto_perfil_url && analyst.analyst_name.charAt(0).toUpperCase()}
-                              </Avatar>
+                              />
                               <Box sx={{ flex: 1, minWidth: 0 }}>
                                 <Typography variant="subtitle2" fontWeight={600} noWrap>
                                   {analyst.analyst_name}

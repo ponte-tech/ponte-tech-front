@@ -251,14 +251,11 @@ export default function Navbar({ onMenuClick, onSidebarToggle, sidebarOpen }: Na
               </Box>
             </Box>
             <Avatar
-              src={user?.foto_perfil_url || ""}
+              src={user?.foto_perfil_url || "/avatar.svg"}
               sx={{
-                bgcolor: userTypeConfig.color,
-                background: user?.foto_perfil_url ? "transparent" : `linear-gradient(135deg, ${userTypeConfig.color} 0%, ${alpha(userTypeConfig.color, 0.8)} 100%)`,
+                bgcolor: "transparent",
                 width: 42,
                 height: 42,
-                fontWeight: 700,
-                fontSize: "0.875rem",
                 border: "2px solid white",
                 boxShadow: `0 4px 12px ${alpha(userTypeConfig.color, 0.4)}`,
                 transition: "all 0.2s ease-in-out",
@@ -266,9 +263,7 @@ export default function Navbar({ onMenuClick, onSidebarToggle, sidebarOpen }: Na
                   objectFit: "cover",
                 },
               }}
-            >
-              {!user?.foto_perfil_url && (user?.name ? getInitials(user.name) : "U")}
-            </Avatar>
+            />
           </IconButton>
 
           {/* User Menu Dropdown */}

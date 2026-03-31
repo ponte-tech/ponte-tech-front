@@ -426,13 +426,11 @@ export default function KanbanCard({
                       return (
                         <Avatar
                           key={colaboradorId}
-                          src={colaboradorFoto || ""}
+                          src={colaboradorFoto || "/avatar.svg"}
                           sx={{
                             width: 24,
                             height: 24,
-                            fontSize: "0.625rem",
-                            fontWeight: 600,
-                            bgcolor: colaboradorFoto ? "transparent" : "#8270FF",
+                            bgcolor: "transparent",
                             border: "2px solid white",
                             marginLeft: index > 0 ? "-10px" : 0,
                             boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
@@ -443,9 +441,7 @@ export default function KanbanCard({
                               transform: "translateY(-2px)",
                             },
                           }}
-                        >
-                          {!colaboradorFoto && colaboradorName.substring(0, 2).toUpperCase()}
-                        </Avatar>
+                        />
                       );
                     })}
                     {card.assigned_to.length > 3 && (
@@ -541,16 +537,13 @@ export default function KanbanCard({
               >
                 <ListItemIcon>
                   <Avatar
-                    src={colab.foto_perfil_url || ""}
+                    src={colab.foto_perfil_url || "/avatar.svg"}
                     sx={{
                       width: 24,
                       height: 24,
-                      fontSize: "0.7rem",
-                      bgcolor: colab.foto_perfil_url ? "transparent" : (isAssigned ? "#8270FF" : "#bdbdbd"),
+                      bgcolor: "transparent",
                     }}
-                  >
-                    {!colab.foto_perfil_url && colab.nome.substring(0, 2).toUpperCase()}
-                  </Avatar>
+                  />
                 </ListItemIcon>
                 <ListItemText primary={colab.nome} />
               </MenuItem>

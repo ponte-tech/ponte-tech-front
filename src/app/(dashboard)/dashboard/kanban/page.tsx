@@ -1368,14 +1368,12 @@ function KanbanPageContent() {
                     }}
                   >
                     <Avatar
-                      src={colab?.foto_perfil_url || ""}
+                      src={colab?.foto_perfil_url || "/avatar.svg"}
                       onClick={() => handleToggleColaborador(colabId)}
                       sx={{
                         width: 32,
                         height: 32,
-                        fontSize: "0.8rem",
-                        fontWeight: 600,
-                        bgcolor: colab?.foto_perfil_url ? "transparent" : "#8270FF",
+                        bgcolor: "transparent",
                         cursor: "pointer",
                         "&:hover": {
                           opacity: 0.8,
@@ -1383,9 +1381,7 @@ function KanbanPageContent() {
                         },
                         transition: "all 0.2s",
                       }}
-                    >
-                      {!colab?.foto_perfil_url && (colab?.nome_completo?.charAt(0).toUpperCase() || "?")}
-                    </Avatar>
+                    />
                   </Badge>
                 </Tooltip>
               );
@@ -1951,17 +1947,14 @@ function KanbanPageContent() {
                     }}
                   />
                   <Avatar
-                    src={option.foto_perfil_url || ""}
+                    src={option.foto_perfil_url || "/avatar.svg"}
                     sx={{
                       width: 24,
                       height: 24,
-                      fontSize: "0.7rem",
-                      bgcolor: option.foto_perfil_url ? "transparent" : "#8270FF",
+                      bgcolor: "transparent",
                       mr: 1,
                     }}
-                  >
-                    {!option.foto_perfil_url && (option.nome_completo?.charAt(0).toUpperCase() || "?")}
-                  </Avatar>
+                  />
                   <Typography sx={{ fontSize: "0.8rem" }}>
                     {option.nome_completo}
                   </Typography>
@@ -2261,13 +2254,10 @@ function KanbanPageContent() {
                         {taskIndex === 0 ? (
                           <TableCell rowSpan={tasks.length} sx={{ verticalAlign: "top", fontWeight: 500 }}>
                             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                              {colaborador.foto_perfil_url ? (
-                                <Avatar src={colaborador.foto_perfil_url} sx={{ width: 32, height: 32 }} />
-                              ) : (
-                                <Avatar sx={{ width: 32, height: 32, bgcolor: "#8270FF" }}>
-                                  {colaborador.nome_completo?.charAt(0) || "?"}
-                                </Avatar>
-                              )}
+                              <Avatar
+                                src={colaborador.foto_perfil_url || "/avatar.svg"}
+                                sx={{ width: 32, height: 32, bgcolor: "transparent" }}
+                              />
                               <Box>
                                 <Typography variant="body2" fontWeight={500}>
                                   {colaborador.nome_completo}
