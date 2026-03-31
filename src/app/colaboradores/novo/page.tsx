@@ -23,6 +23,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Snackbar,
 } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
@@ -41,6 +42,7 @@ import clienteService from "@/app/services/clienteService";
 import type { Cliente } from "@/app/types/cliente";
 import empresaService from "@/app/services/empresaService";
 import type { Empresa } from "@/app/types/empresa";
+import { getErrorMessage } from "@/app/lib/errorMessages";
 
 export default function NovoColaboradorPage() {
   const router = useRouter();
@@ -561,12 +563,10 @@ export default function NovoColaboradorPage() {
         router.push(`/colaboradores/${response.id}`);
       }, 1500);
     } catch (err: any) {
-      // Extrair mensagem do erro da API
-      const errorMessage = err.response?.data?.message || err.message || "Erro ao criar colaborador";
+      // Usar função de tradução de erros
+      const errorMessage = getErrorMessage(err);
       setError(errorMessage);
     // console.error("Erro ao criar colaborador:", err);
-      // Scroll para o topo para exibir o erro
-      window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setLoading(false);
     }
@@ -597,17 +597,51 @@ export default function NovoColaboradorPage() {
         </Box>
       </Box>
 
-      {/* Alerts */}
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+      {/* Snackbar Notifications */}
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={() => setError(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setError(null)}
+          severity="error"
+          variant="filled"
+          sx={{
+            width: '100%',
+            boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
+            '& .MuiAlert-message': {
+              fontSize: '0.938rem',
+              fontWeight: 500
+            }
+          }}
+        >
           {error}
         </Alert>
-      )}
-      {success && (
-        <Alert severity="success" sx={{ mb: 3 }}>
+      </Snackbar>
+
+      <Snackbar
+        open={success}
+        autoHideDuration={3000}
+        onClose={() => setSuccess(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          severity="success"
+          variant="filled"
+          sx={{
+            width: '100%',
+            boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
+            '& .MuiAlert-message': {
+              fontSize: '0.938rem',
+              fontWeight: 500
+            }
+          }}
+        >
           Colaborador criado com sucesso! Redirecionando...
         </Alert>
-      )}
+      </Snackbar>
 
       {/* Form */}
       <form onSubmit={handleSubmit}>
