@@ -234,7 +234,7 @@ export default function StatusMes({
                 </Button>
               )}
 
-              {statusMes === 'PENDENTE_ENVIO' && totalHoras > 0 && (
+              {(statusMes === 'PENDENTE_ENVIO' || statusMes === 'REPROVADO') && totalHoras > 0 && (
                 <Button
                   variant="contained"
                   sx={{
@@ -260,7 +260,7 @@ export default function StatusMes({
                   onClick={onEnviarParaAprovacao}
                   disabled={loading}
                 >
-                  Enviar para Aprovação
+                  {statusMes === 'REPROVADO' ? 'Reenviar para Aprovação' : 'Enviar para Aprovação'}
                 </Button>
               )}
             </Stack>
