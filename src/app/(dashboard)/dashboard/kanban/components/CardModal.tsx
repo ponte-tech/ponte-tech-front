@@ -755,7 +755,7 @@ export default function CardModal({
                 {/* Title Field */}
                 <Box>
                   <Typography variant="caption" sx={{ color: "#64748b", fontWeight: 600, mb: 1, display: "block" }}>
-                    Título *
+                    Título * ({formData.title.length}/500)
                   </Typography>
                   <TextField
                     fullWidth
@@ -763,6 +763,7 @@ export default function CardModal({
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     required
                     placeholder="Digite o título do card..."
+                    inputProps={{ maxLength: 500 }}
                     sx={{
                       ...modernInputSx,
                       "& .MuiOutlinedInput-input": {
@@ -780,7 +781,7 @@ export default function CardModal({
                 {/* Description Field */}
                 <Box>
                   <Typography variant="caption" sx={{ color: "#64748b", fontWeight: 600, mb: 1, display: "block" }}>
-                    Descrição
+                    Descrição ({formData.description.length}/10000)
                   </Typography>
                   <TextField
                     fullWidth
@@ -789,6 +790,7 @@ export default function CardModal({
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Adicione uma descrição detalhada..."
+                    inputProps={{ maxLength: 10000 }}
                     sx={{
                       ...modernInputSx,
                       "& .MuiOutlinedInput-input": {
@@ -1727,7 +1729,7 @@ export default function CardModal({
               </Box>
               <Typography variant="body2" sx={{ color: "#333", fontSize: "0.85rem" }}>
                 {formData.delivery_date
-                  ? format(new Date(formData.delivery_date), "dd/MM/yyyy", { locale: ptBR })
+                  ? format(new Date(formData.delivery_date + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR })
                   : "-"}
               </Typography>
             </Box>
