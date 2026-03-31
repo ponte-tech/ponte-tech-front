@@ -973,18 +973,13 @@ export default function CardModal({
                           label={option.nome}
                           avatar={
                             <Avatar
-                              src={option.foto_perfil_url || ""}
+                              src={option.foto_perfil_url || "/avatar.svg"}
                               sx={{
                                 width: 24,
                                 height: 24,
-                                bgcolor: option.foto_perfil_url ? "transparent" : "#8270FF",
-                                color: "white",
-                                fontSize: "0.65rem",
-                                fontWeight: 600,
+                                bgcolor: "transparent",
                               }}
-                            >
-                              {!option.foto_perfil_url && (option.nome?.substring(0, 2).toUpperCase() || "??")}
-                            </Avatar>
+                            />
                           }
                           size="small"
                           sx={{
@@ -1004,18 +999,13 @@ export default function CardModal({
                       <li {...props} key={option.colaborador_id}>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                           <Avatar
-                            src={option.foto_perfil_url || ""}
+                            src={option.foto_perfil_url || "/avatar.svg"}
                             sx={{
                               width: 32,
                               height: 32,
-                              bgcolor: option.foto_perfil_url ? "transparent" : "#8270FF",
-                              color: "white",
-                              fontSize: "0.75rem",
-                              fontWeight: 600,
+                              bgcolor: "transparent",
                             }}
-                          >
-                            {!option.foto_perfil_url && (option.nome?.substring(0, 2).toUpperCase() || "??")}
-                          </Avatar>
+                          />
                           <span>{option.nome || "Sem nome"}</span>
                         </Box>
                       </li>
@@ -1676,18 +1666,13 @@ export default function CardModal({
                       label={colab.nome}
                       avatar={
                         <Avatar
-                          src={colab.foto_perfil_url || ""}
+                          src={colab.foto_perfil_url || "/avatar.svg"}
                           sx={{
                             width: 20,
                             height: 20,
-                            bgcolor: colab.foto_perfil_url ? "transparent" : "#8270FF",
-                            color: "white",
-                            fontSize: "0.6rem",
-                            fontWeight: 600,
+                            bgcolor: "transparent",
                           }}
-                        >
-                          {!colab.foto_perfil_url && (colab.nome?.substring(0, 2).toUpperCase() || "??")}
-                        </Avatar>
+                        />
                       }
                       size="small"
                       sx={{

@@ -290,19 +290,14 @@ export default function ColaboradoresPage() {
                     <TableCell>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                         <Avatar
-                          src={colaborador.foto_perfil_url || ""}
+                          src={colaborador.foto_perfil_url || "/avatar.svg"}
                           alt={colaborador.nome_completo}
                           sx={{
                             width: 40,
                             height: 40,
-                            bgcolor: colaborador.foto_perfil_url ? "transparent" : "#8270FF",
-                            color: "white",
-                            fontSize: "0.875rem",
-                            fontWeight: 600,
+                            bgcolor: "transparent",
                           }}
-                        >
-                          {!colaborador.foto_perfil_url && colaborador.nome_completo.charAt(0).toUpperCase()}
-                        </Avatar>
+                        />
                         <Typography variant="body2" fontWeight={500}>
                           {colaborador.nome_completo}
                         </Typography>

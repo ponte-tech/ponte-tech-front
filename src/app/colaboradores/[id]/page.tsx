@@ -183,16 +183,13 @@ export default function ColaboradorDetalhePage() {
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 3 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               <Avatar
+                src={colaborador.foto_perfil_url || "/avatar.svg"}
                 sx={{
                   width: 64,
                   height: 64,
-                  bgcolor: "#667eea",
-                  fontSize: 24,
-                  fontWeight: "600",
+                  bgcolor: "transparent",
                 }}
-              >
-                {iniciais}
-              </Avatar>
+              />
               <Box>
                 <Typography variant="h4" fontWeight="600" sx={{ mb: 0.5 }}>
                   {colaborador.nome_completo}

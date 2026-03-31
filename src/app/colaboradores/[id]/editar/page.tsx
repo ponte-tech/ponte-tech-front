@@ -924,23 +924,19 @@ export default function EditarColaboradorPage() {
           border: `1px solid ${alpha("#8270FF", 0.1)}`,
         }}>
           <Avatar
-            src={avatarPreview || colaborador.foto_perfil_url || ""}
+            src={avatarPreview || colaborador.foto_perfil_url || "/avatar.svg"}
             sx={{
               width: 96,
               height: 96,
               border: "4px solid",
               borderColor: "#8270FF",
               boxShadow: "0 8px 24px rgba(130, 112, 255, 0.25)",
-              fontSize: "2.5rem",
-              bgcolor: alpha("#8270FF", 0.1),
-              color: "#8270FF",
+              bgcolor: "transparent",
               "& img": {
                 objectFit: "cover",
               },
             }}
-          >
-            {colaborador.nome_completo?.charAt(0)?.toUpperCase() || "U"}
-          </Avatar>
+          />
           <Box sx={{ flex: 1, textAlign: { xs: "center", md: "left" } }}>
             <Typography variant="h4" fontWeight="700" sx={{ color: "#1a1a1a", mb: 0.5 }}>
               {colaborador.nome_completo}
@@ -1029,25 +1025,21 @@ export default function EditarColaboradorPage() {
                   <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 3 }}>
                     <Box sx={{ position: "relative", width: 120, height: 120, flexShrink: 0 }}>
                       <Avatar
-                        src={avatarPreview || colaborador.foto_perfil_url || ""}
+                        src={avatarPreview || colaborador.foto_perfil_url || "/avatar.svg"}
                         sx={{
                           width: 120,
                           height: 120,
                           border: "4px solid",
                           borderColor: "#8270FF",
                           boxShadow: "0 4px 12px rgba(130, 112, 255, 0.2)",
-                          fontSize: "3rem",
-                          bgcolor: alpha("#8270FF", 0.1),
-                          color: "#8270FF",
+                          bgcolor: "transparent",
                           "& img": {
                             objectFit: "cover",
                             width: "100%",
                             height: "100%",
                           },
                         }}
-                      >
-                        {colaborador.nome_completo?.charAt(0)?.toUpperCase() || "U"}
-                      </Avatar>
+                      />
                       {uploadingAvatar && (
                         <Box
                           sx={{
