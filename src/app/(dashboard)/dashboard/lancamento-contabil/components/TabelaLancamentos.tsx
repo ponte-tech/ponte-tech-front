@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -8,7 +7,6 @@ import {
   TableRow,
   Checkbox,
   IconButton,
-  TextField,
   Typography,
   CircularProgress,
   Chip,
@@ -18,13 +16,10 @@ import {
 import {
   CloudUpload as UploadIcon,
   CloudDownload as DownloadIcon,
-  Check as CheckIcon,
-  Close as CloseIcon,
   Delete as DeleteIcon,
 } from "@mui/icons-material";
 import type { LancamentoContabil } from "@/app/types/lancamentoContabil";
 import { formatCNPJ } from "@/app/utils/cnpjValidator";
-import { applyCurrencyMask, removeCurrencyMask } from "@/app/utils/currencyMask";
 
 interface TabelaLancamentosProps {
   lancamentos: LancamentoContabil[];
@@ -49,9 +44,6 @@ export default function TabelaLancamentos({
   onValorChange,
   readOnly = false,
 }: TabelaLancamentosProps) {
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingValor, setEditingValor] = useState<string>("");
-
   const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
       const allIds = lancamentos.map((l) => l.lancamento_id);
@@ -72,32 +64,6 @@ export default function TabelaLancamentos({
     }
 
     onSelectionChange(newSelected);
-  };
-
-  const handleEditValor = (lancamento: LancamentoContabil) => {
-    setEditingId(lancamento.lancamento_id);
-    // Formata o valor com máscara de moeda
-    const valor = lancamento.valor_nota_fiscal || 0;
-    setEditingValor(
-      new Intl.NumberFormat("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-      }).format(valor)
-    );
-  };
-
-  const handleSaveValor = (lancamentoId: string) => {
-    const valor = removeCurrencyMask(editingValor);
-    if (valor > 0) {
-      onValorChange?.(lancamentoId, valor);
-    }
-    setEditingId(null);
-    setEditingValor("");
-  };
-
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    setEditingValor("");
   };
 
   const formatValor = (valor?: number): string => {
@@ -177,7 +143,6 @@ export default function TabelaLancamentos({
         <TableBody>
           {lancamentos.map((lancamento) => {
             const isItemSelected = isSelected(lancamento.lancamento_id);
-            const isEditing = editingId === lancamento.lancamento_id;
             const temNotaFiscal = !!lancamento.nota_fiscal_id;
 
             return (
@@ -228,48 +193,9 @@ export default function TabelaLancamentos({
                 </TableCell>
 
                 <TableCell align="right">
-                  {isEditing && !readOnly ? (
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <TextField
-                        size="small"
-                        value={editingValor}
-                        onChange={(e) => setEditingValor(applyCurrencyMask(e.target.value))}
-                        placeholder="R$ 0,00"
-                        sx={{ width: 140 }}
-                        autoFocus
-                        onKeyPress={(e) => {
-                          if (e.key === "Enter") {
-                            handleSaveValor(lancamento.lancamento_id);
-                          }
-                        }}
-                      />
-                      <IconButton
-                        size="small"
-                        color="success"
-                        onClick={() => handleSaveValor(lancamento.lancamento_id)}
-                      >
-                        <CheckIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={handleCancelEdit}
-                      >
-                        <CloseIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  ) : (
-                    <Typography
-                      variant="body2"
-                      onClick={!readOnly && onValorChange ? () => handleEditValor(lancamento) : undefined}
-                      sx={{
-                        cursor: !readOnly && onValorChange ? "pointer" : "default",
-                        "&:hover": !readOnly && onValorChange ? { textDecoration: "underline" } : {},
-                      }}
-                    >
-                      {formatValor(lancamento.valor_nota_fiscal)}
-                    </Typography>
-                  )}
+                  <Typography variant="body2">
+                    {formatValor(lancamento.valor_nota_fiscal)}
+                  </Typography>
                 </TableCell>
 
                 <TableCell align="center">
