@@ -102,23 +102,34 @@ export default function NotasFiscaisSection({ colaboradorId, mes }: NotasFiscais
   };
 
   const handleDownload = async (nota: NotaFiscal) => {
-    if (nota.arquivo_url) {
-      window.open(nota.arquivo_url, '_blank');
+    try {
+      const blob = await fiscalService.downloadNotaFiscal(nota.nota_fiscal_id);
+
+      // Criar link de download
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = nota.arquivo_nome;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Erro ao baixar nota fiscal:', err);
+      alert('Erro ao fazer download da nota fiscal');
     }
   };
 
   const handleDownloadAll = async () => {
     // Download all invoices at once
-    const notasComUrl = notas.filter(n => n.arquivo_url);
-
-    if (notasComUrl.length === 0) {
+    if (notas.length === 0) {
       alert('Nenhuma nota fiscal disponível para download');
       return;
     }
 
     // Se houver apenas 1 nota, baixar diretamente
-    if (notasComUrl.length === 1) {
-      window.open(notasComUrl[0].arquivo_url, '_blank');
+    if (notas.length === 1) {
+      await handleDownload(notas[0]);
       return;
     }
 
@@ -127,19 +138,16 @@ export default function NotasFiscaisSection({ colaboradorId, mes }: NotasFiscais
       const zip = new JSZip();
 
       // Baixar cada nota e adicionar ao ZIP
-      for (let i = 0; i < notasComUrl.length; i++) {
-        const nota = notasComUrl[i];
-        if (nota.arquivo_url) {
-          try {
-            const response = await fetch(nota.arquivo_url);
-            const blob = await response.blob();
+      for (let i = 0; i < notas.length; i++) {
+        const nota = notas[i];
+        try {
+          const blob = await fiscalService.downloadNotaFiscal(nota.nota_fiscal_id);
 
-            // Usar nome do arquivo ou gerar um nome baseado no cliente
-            const fileName = nota.arquivo_nome || `${nota.nome_cliente}_${i + 1}.pdf`;
-            zip.file(fileName, blob);
-          } catch (err) {
-    // console.error(`Erro ao baixar nota ${nota.nota_fiscal_id}:`, err);
-          }
+          // Usar nome do arquivo ou gerar um nome baseado no cliente
+          const fileName = nota.arquivo_nome || `${nota.nome_cliente}_${i + 1}.pdf`;
+          zip.file(fileName, blob);
+        } catch (err) {
+          console.error(`Erro ao baixar nota ${nota.nota_fiscal_id}:`, err);
         }
       }
 

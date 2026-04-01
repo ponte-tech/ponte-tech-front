@@ -409,11 +409,7 @@ export default function TimesheetAprovacoesPage() {
 
     selectedColaboradores.forEach((colaboradorId) => {
       const notas = notasFiscaisPorColaborador[colaboradorId] || [];
-      notas.forEach(nota => {
-        if (nota.arquivo_url) {
-          notasParaDownload.push(nota);
-        }
-      });
+      notasParaDownload.push(...notas);
     });
 
     if (notasParaDownload.length === 0) {
@@ -427,12 +423,29 @@ export default function TimesheetAprovacoesPage() {
 
     // Se houver apenas 1 nota, baixar diretamente
     if (notasParaDownload.length === 1) {
-      window.open(notasParaDownload[0].arquivo_url, '_blank');
-      setSnackbar({
-        open: true,
-        message: 'Download iniciado',
-        severity: 'success',
-      });
+      try {
+        const blob = await fiscalService.downloadNotaFiscal(notasParaDownload[0].nota_fiscal_id);
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = notasParaDownload[0].arquivo_nome;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        setSnackbar({
+          open: true,
+          message: 'Download iniciado',
+          severity: 'success',
+        });
+      } catch (err) {
+        setSnackbar({
+          open: true,
+          message: 'Erro ao fazer download',
+          severity: 'error',
+        });
+      }
       return;
     }
 
@@ -449,17 +462,14 @@ export default function TimesheetAprovacoesPage() {
       // Baixar cada nota e adicionar ao ZIP
       for (let i = 0; i < notasParaDownload.length; i++) {
         const nota = notasParaDownload[i];
-        if (nota.arquivo_url) {
-          try {
-            const response = await fetch(nota.arquivo_url);
-            const blob = await response.blob();
+        try {
+          const blob = await fiscalService.downloadNotaFiscal(nota.nota_fiscal_id);
 
-            // Usar nome do arquivo ou gerar um nome baseado no cliente
-            const fileName = nota.arquivo_nome || `${nota.nome_cliente}_${nota.nota_fiscal_id.substring(0, 8)}.pdf`;
-            zip.file(fileName, blob);
-          } catch (err) {
-    // console.error(`Erro ao baixar nota ${nota.nota_fiscal_id}:`, err);
-          }
+          // Usar nome do arquivo ou gerar um nome baseado no cliente
+          const fileName = nota.arquivo_nome || `${nota.nome_cliente}_${nota.nota_fiscal_id.substring(0, 8)}.pdf`;
+          zip.file(fileName, blob);
+        } catch (err) {
+          console.error(`Erro ao baixar nota ${nota.nota_fiscal_id}:`, err);
         }
       }
 
@@ -566,9 +576,8 @@ export default function TimesheetAprovacoesPage() {
   const handleDownloadNotasColaborador = async (colaboradorId: string) => {
     const colaborador = colaboradores.find(c => c.colaborador_id === colaboradorId);
     const notas = notasFiscaisPorColaborador[colaboradorId] || [];
-    const notasComUrl = notas.filter(n => n.arquivo_url);
 
-    if (notasComUrl.length === 0) {
+    if (notas.length === 0) {
       setSnackbar({
         open: true,
         message: 'Nenhuma nota fiscal disponível para download',
@@ -578,13 +587,30 @@ export default function TimesheetAprovacoesPage() {
     }
 
     // Se houver apenas 1 nota, baixar diretamente
-    if (notasComUrl.length === 1) {
-      window.open(notasComUrl[0].arquivo_url, '_blank');
-      setSnackbar({
-        open: true,
-        message: 'Download iniciado',
-        severity: 'success',
-      });
+    if (notas.length === 1) {
+      try {
+        const blob = await fiscalService.downloadNotaFiscal(notas[0].nota_fiscal_id);
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = notas[0].arquivo_nome;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        setSnackbar({
+          open: true,
+          message: 'Download iniciado',
+          severity: 'success',
+        });
+      } catch (err) {
+        setSnackbar({
+          open: true,
+          message: 'Erro ao fazer download',
+          severity: 'error',
+        });
+      }
       return;
     }
 
@@ -592,26 +618,23 @@ export default function TimesheetAprovacoesPage() {
     try {
       setSnackbar({
         open: true,
-        message: `Preparando download de ${notasComUrl.length} notas fiscais...`,
+        message: `Preparando download de ${notas.length} notas fiscais...`,
         severity: 'info',
       });
 
       const zip = new JSZip();
 
       // Baixar cada nota e adicionar ao ZIP
-      for (let i = 0; i < notasComUrl.length; i++) {
-        const nota = notasComUrl[i];
-        if (nota.arquivo_url) {
-          try {
-            const response = await fetch(nota.arquivo_url);
-            const blob = await response.blob();
+      for (let i = 0; i < notas.length; i++) {
+        const nota = notas[i];
+        try {
+          const blob = await fiscalService.downloadNotaFiscal(nota.nota_fiscal_id);
 
-            // Usar nome do arquivo ou gerar um nome baseado no cliente
-            const fileName = nota.arquivo_nome || `${nota.nome_cliente}_${i + 1}.pdf`;
-            zip.file(fileName, blob);
-          } catch (err) {
-    // console.error(`Erro ao baixar nota ${nota.nota_fiscal_id}:`, err);
-          }
+          // Usar nome do arquivo ou gerar um nome baseado no cliente
+          const fileName = nota.arquivo_nome || `${nota.nome_cliente}_${i + 1}.pdf`;
+          zip.file(fileName, blob);
+        } catch (err) {
+          console.error(`Erro ao baixar nota ${nota.nota_fiscal_id}:`, err);
         }
       }
 
