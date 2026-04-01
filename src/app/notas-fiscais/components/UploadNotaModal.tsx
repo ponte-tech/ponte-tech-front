@@ -48,7 +48,9 @@ export default function UploadNotaModal({ open, onClose, onSuccess }: UploadNota
   const [contratoId, setContratoId] = useState('');
   const [mesReferencia, setMesReferencia] = useState(() => {
     const hoje = new Date();
-    return `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+    // Sempre usa o mês anterior
+    const mesAnterior = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
+    return `${mesAnterior.getFullYear()}-${String(mesAnterior.getMonth() + 1).padStart(2, '0')}`;
   });
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
