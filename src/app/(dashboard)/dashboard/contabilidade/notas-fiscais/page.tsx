@@ -140,11 +140,20 @@ function KPICard({
 export default function NotasFiscaisPage() {
   const { user } = useAuth();
 
-  // Obter mês/ano atual
+  // Obter mês/ano inicial - carrega mês anterior se estiver nos primeiros 7 dias
   const getCurrentMonthYear = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const today = new Date();
+    const dayOfMonth = today.getDate();
+
+    // Se está nos primeiros 7 dias do mês, carrega o mês anterior
+    if (dayOfMonth <= 7) {
+      const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      return `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, "0")}`;
+    }
+
+    // Caso contrário, carrega o mês atual
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
     return `${year}-${month}`;
   };
 

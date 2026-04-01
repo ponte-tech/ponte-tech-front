@@ -73,7 +73,6 @@ const modernInputSx = {
   "& .MuiOutlinedInput-root": {
     borderRadius: 2,
     backgroundColor: "#fff",
-    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
     "& fieldset": {
       borderColor: "rgba(226, 232, 240, 1)",
       borderWidth: "1px",
@@ -630,8 +629,7 @@ export default function CardModal({
       }}
       sx={{
         "& .MuiBackdrop-root": {
-          backdropFilter: "blur(4px)",
-          backgroundColor: "rgba(15, 23, 42, 0.4)",
+          backgroundColor: "rgba(15, 23, 42, 0.5)",
         },
       }}
     >
@@ -692,11 +690,9 @@ export default function CardModal({
           onClick={onClose}
           sx={{
             color: "#64748b",
-            transition: "all 0.15s ease",
             "&:hover": {
               color: "#0f172a",
               bgcolor: "rgba(100, 116, 139, 0.08)",
-              transform: "scale(1.05)",
             },
           }}
         >
@@ -722,10 +718,8 @@ export default function CardModal({
                 minHeight: 48,
                 px: 2,
                 py: 1.5,
-                transition: "all 0.15s ease",
                 "&:hover": {
                   color: "#8270FF",
-                  bgcolor: "rgba(130, 112, 255, 0.04)",
                 },
                 "&.Mui-disabled": {
                   opacity: 0.4,
@@ -872,7 +866,6 @@ export default function CardModal({
                         "& .MuiOutlinedInput-root": {
                           borderRadius: 2,
                           backgroundColor: alpha("#8270FF", 0.03),
-                          transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                           height: 48,
                           "& fieldset": {
                             borderColor: "rgba(130, 112, 255, 0.3)",
@@ -942,7 +935,6 @@ export default function CardModal({
                           "& .MuiOutlinedInput-root": {
                             borderRadius: 1.5,
                             backgroundColor: "#fff",
-                            transition: "all 0.2s ease-in-out",
                             "& fieldset": {
                               borderColor: "#e0e0e0",
                               borderWidth: "1px",
@@ -1212,7 +1204,6 @@ export default function CardModal({
                                     display: "flex",
                                     gap: 0.5,
                                     opacity: 0,
-                                    transition: "opacity 0.2s",
                                     alignSelf: "flex-start",
                                   }}
                                 >
@@ -1258,7 +1249,6 @@ export default function CardModal({
                       "& .MuiOutlinedInput-root": {
                         borderRadius: 1.5,
                         backgroundColor: "#fff",
-                        transition: "all 0.2s ease-in-out",
                         "& fieldset": {
                           borderColor: "#e0e0e0",
                           borderWidth: "1px",
@@ -1359,7 +1349,6 @@ export default function CardModal({
                     textAlign: "center",
                     bgcolor: alpha("#8270FF", 0.02),
                     cursor: uploading ? "not-allowed" : "pointer",
-                    transition: "all 0.2s ease-in-out",
                     "&:hover": {
                       borderColor: uploading ? "#e0e0e0" : "#8270FF",
                       bgcolor: uploading ? alpha("#8270FF", 0.02) : alpha("#8270FF", 0.05),
@@ -1783,7 +1772,6 @@ export default function CardModal({
                 px: 2,
                 py: 1,
                 borderRadius: 2,
-                transition: "all 0.15s ease",
                 "&:hover": {
                   color: "#8270FF",
                   bgcolor: "rgba(130, 112, 255, 0.08)",
@@ -1805,7 +1793,6 @@ export default function CardModal({
               py: 1.25,
               borderRadius: 2,
               border: "1px solid rgba(226, 232, 240, 1)",
-              transition: "all 0.15s ease",
               "&:hover": {
                 borderColor: "#94a3b8",
                 bgcolor: "rgba(100, 116, 139, 0.04)",
@@ -1827,14 +1814,9 @@ export default function CardModal({
               py: 1.25,
               borderRadius: 2,
               boxShadow: "0 2px 8px rgba(130, 112, 255, 0.3)",
-              transition: "all 0.15s ease",
               "&:hover": {
                 bgcolor: "#6b5ce0",
                 boxShadow: "0 4px 12px rgba(130, 112, 255, 0.4)",
-                transform: "translateY(-1px)",
-              },
-              "&:active": {
-                transform: "translateY(0)",
               },
               "&.Mui-disabled": {
                 bgcolor: "#e2e8f0",

@@ -139,12 +139,22 @@ export default function LancamentoContabilPage() {
   const [lancamentos, setLancamentos] = useState<LancamentoContabil[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Filtro de mês/ano
-  const currentDate = new Date();
-  const currentMonth = `${currentDate.getFullYear()}-${String(
-    currentDate.getMonth() + 1
-  ).padStart(2, "0")}`;
-  const [mesReferencia, setMesReferencia] = useState(currentMonth);
+  // Filtro de mês/ano - Carrega mês anterior se estiver nos primeiros 7 dias
+  const getInitialMonth = () => {
+    const today = new Date();
+    const dayOfMonth = today.getDate();
+
+    // Se está nos primeiros 7 dias do mês, carrega o mês anterior
+    if (dayOfMonth <= 7) {
+      const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      return `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, "0")}`;
+    }
+
+    // Caso contrário, carrega o mês atual
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+  };
+
+  const [mesReferencia, setMesReferencia] = useState(getInitialMonth());
 
   // Filtro de empresa
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
