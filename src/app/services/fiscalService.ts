@@ -108,11 +108,20 @@ export const listAllNotasFiscais = async (params?: {
 
 // Admin - Download de nota fiscal
 export const downloadNotaFiscal = async (id: string): Promise<Blob> => {
-  const response = await api.get(
-    `${BASE_URL_ADMIN}/notas-fiscais/${id}/download`,
-    { responseType: 'blob' }
+  // Get presigned URL from API
+  const response = await api.get<ApiResponse<{ url: string; nome_arquivo: string; expires_in: number }>>(
+    `${BASE_URL_ADMIN}/notas-fiscais/${id}/download`
   );
-  return response.data;
+
+  const downloadUrl = response.data.data!.url;
+
+  // Download file directly from S3 using presigned URL
+  const fileResponse = await fetch(downloadUrl);
+  if (!fileResponse.ok) {
+    throw new Error('Failed to download file from S3');
+  }
+
+  return await fileResponse.blob();
 };
 
 const fiscalServiceExport = {

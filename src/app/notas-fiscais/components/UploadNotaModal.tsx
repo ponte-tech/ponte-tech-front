@@ -62,6 +62,8 @@ export default function UploadNotaModal({ open, onClose, onSuccess }: UploadNota
   const [validating, setValidating] = useState(false);
   const [validationResult, setValidationResult] = useState<ExtractionResult | null>(null);
   const [showValidationDetails, setShowValidationDetails] = useState(false);
+  const [manualValor, setManualValor] = useState<string>('');
+  const [confirmManualReview, setConfirmManualReview] = useState(false);
 
   const steps = ['Dados Básicos', 'Upload da Nota', 'Revisão'];
 
@@ -87,6 +89,7 @@ export default function UploadNotaModal({ open, onClose, onSuccess }: UploadNota
       setFile(null);
       setValidationResult(null);
       setShowValidationDetails(false);
+      setConfirmManualReview(false);
       return;
     }
 
@@ -96,6 +99,7 @@ export default function UploadNotaModal({ open, onClose, onSuccess }: UploadNota
       setFile(null);
       setValidationResult(null);
       setShowValidationDetails(false);
+      setConfirmManualReview(false);
       return;
     }
 
@@ -106,6 +110,7 @@ export default function UploadNotaModal({ open, onClose, onSuccess }: UploadNota
       setFile(null);
       setValidationResult(null);
       setShowValidationDetails(false);
+      setConfirmManualReview(false);
       return;
     }
 
@@ -201,6 +206,7 @@ export default function UploadNotaModal({ open, onClose, onSuccess }: UploadNota
       setFile(null);
       setValidationResult(null);
       setShowValidationDetails(false);
+      setConfirmManualReview(false);
 
       // Verificar se é erro de rede
       const errorMessage = err instanceof Error ? err.message : String(err);
@@ -289,6 +295,7 @@ export default function UploadNotaModal({ open, onClose, onSuccess }: UploadNota
       setIsSubmitting(false);
       setValidationResult(null);
       setShowValidationDetails(false);
+      setConfirmManualReview(false);
       onClose();
     }
   };
@@ -301,6 +308,12 @@ export default function UploadNotaModal({ open, onClose, onSuccess }: UploadNota
       case 1: // Step 2: Upload
         return file !== null && validationResult !== null && !validating;
       case 2: // Step 3: Revisão
+        // Se o valor não foi extraído, apenas precisa confirmar a revisão manual
+        // O checkbox de confirmação substitui a validação automática
+        if (validationResult?.valor === null || validationResult?.valor === undefined) {
+          return confirmManualReview; // Só precisa confirmar, não valida can_proceed
+        }
+        // Se o valor foi extraído, usa a validação normal
         return validationResult?.validations?.can_proceed !== false;
       default:
         return false;
@@ -778,9 +791,19 @@ export default function UploadNotaModal({ open, onClose, onSuccess }: UploadNota
                           />
                         </>
                       ) : (
-                        <Typography variant="body1" color="text.secondary" fontStyle="italic">
-                          ⚠️ Não foi possível extrair o valor automaticamente
-                        </Typography>
+                        <Box>
+                          <Alert severity="warning" sx={{ mb: 2, borderRadius: 2 }}>
+                            <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
+                              ⚠️ A IA não conseguiu extrair o valor automaticamente
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              A revisão será feita de forma manual pelo administrador. Por favor, verifique os dados abaixo.
+                            </Typography>
+                          </Alert>
+                          <Typography variant="body2" color="text.secondary" fontStyle="italic">
+                            Valor não identificado - Aguardando revisão manual
+                          </Typography>
+                        </Box>
                       )}
                     </Box>
                     {validationResult.valorAprovadoAdmin !== undefined && (
@@ -863,6 +886,197 @@ export default function UploadNotaModal({ open, onClose, onSuccess }: UploadNota
                     </Box>
                   )}
                 </Box>
+
+                {/* Alerta de Revisão Manual - quando valor não foi extraído */}
+                {(validationResult.valor === null || validationResult.valor === undefined) && (() => {
+                  const contrato = contratos.find(c => c.contrato_id === contratoId);
+                  const cnpjEmitenteExtraido = validationResult.cnpj_emitente || 'não identificado';
+                  const cnpjTomadorExtraido = validationResult.cnpj_destinatario || 'não identificado';
+                  const cnpjEmitenteEsperado = contrato?.colaborador_cnpj || 'não identificado';
+                  const cnpjTomadorEsperado = contrato?.empresa_cnpj || 'não identificado';
+                  const nomeEmpresa = contrato?.empresa_nome || 'Empresa';
+
+                  const emitenteMatch = cnpjEmitenteExtraido === cnpjEmitenteEsperado;
+                  const tomadorMatch = cnpjTomadorExtraido === cnpjTomadorEsperado;
+
+                  return (
+                    <Box
+                      sx={{
+                        p: 3,
+                        borderRadius: 3,
+                        background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(220, 38, 38, 0.02) 100%)',
+                        border: '2px solid',
+                        borderColor: alpha("#ef4444", 0.3),
+                        boxShadow: '0 4px 20px rgba(239, 68, 68, 0.1)',
+                      }}
+                    >
+                      <Stack spacing={3}>
+                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                          <WarningIcon sx={{ fontSize: 32, color: "#ef4444", mt: 0.5 }} />
+                          <Box flex={1}>
+                            <Typography variant="h6" fontWeight={700} color="#ef4444" sx={{ mb: 1 }}>
+                              Revisão Manual Necessária
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                              A IA não conseguiu extrair o valor da nota fiscal automaticamente.
+                              O administrador fará a validação completa da nota.
+                            </Typography>
+                            <Box
+                              sx={{
+                                p: 2,
+                                borderRadius: 2,
+                                background: alpha("#fef3c7", 0.5),
+                                border: '1px solid',
+                                borderColor: alpha("#f59e0b", 0.3),
+                              }}
+                            >
+                              <Typography variant="body2" fontWeight={600} color="#0f172a" sx={{ mb: 1.5 }}>
+                                ⚠️ Por favor, confira os CNPJs extraídos da nota:
+                              </Typography>
+                              <Stack spacing={2}>
+                                {/* CNPJ Emitente */}
+                                <Box>
+                                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+                                    Seu CNPJ (Emitente):
+                                  </Typography>
+                                  <Stack direction="row" spacing={1} alignItems="center">
+                                    <Typography variant="body2" fontFamily="monospace" fontWeight={700} color={emitenteMatch ? "#10b981" : "#ef4444"}>
+                                      {cnpjEmitenteExtraido}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                      {emitenteMatch ? '✓ correto' : `✗ esperado: ${cnpjEmitenteEsperado}`}
+                                    </Typography>
+                                  </Stack>
+                                </Box>
+
+                                {/* CNPJ Tomador */}
+                                <Box>
+                                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+                                    CNPJ {nomeEmpresa} (Tomador):
+                                  </Typography>
+                                  <Stack direction="row" spacing={1} alignItems="center">
+                                    <Typography variant="body2" fontFamily="monospace" fontWeight={700} color={tomadorMatch ? "#10b981" : "#ef4444"}>
+                                      {cnpjTomadorExtraido}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                      {tomadorMatch ? '✓ correto' : `✗ esperado: ${cnpjTomadorEsperado}`}
+                                    </Typography>
+                                  </Stack>
+                                </Box>
+                              </Stack>
+                            </Box>
+                          </Box>
+                        </Box>
+
+                      <Divider />
+
+                      <Box>
+                        <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 2, color: '#0f172a' }}>
+                          Dados para Conferência:
+                        </Typography>
+                        <Stack spacing={2}>
+                          {validationResult.cnpj_emitente && (() => {
+                            const contrato = contratos.find(c => c.contrato_id === contratoId);
+                            const cnpjEsperado = contrato?.colaborador_cnpj;
+                            return (
+                              <Box
+                                sx={{
+                                  p: 2,
+                                  borderRadius: 2,
+                                  background: alpha("#f8fafc", 0.8),
+                                  border: '1px solid',
+                                  borderColor: alpha("#e2e8f0", 0.8),
+                                }}
+                              >
+                                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
+                                  CNPJ do Emitente (Você):
+                                </Typography>
+                                <Typography variant="body1" fontFamily="monospace" fontWeight={700}>
+                                  Extraído: {validationResult.cnpj_emitente}
+                                </Typography>
+                                {cnpjEsperado && (
+                                  <Typography variant="body2" color="text.secondary" fontFamily="monospace" sx={{ mt: 0.5 }}>
+                                    Esperado: {cnpjEsperado}
+                                  </Typography>
+                                )}
+                              </Box>
+                            );
+                          })()}
+
+                          {validationResult.cnpj_destinatario && (() => {
+                            const contrato = contratos.find(c => c.contrato_id === contratoId);
+                            const cnpjEsperado = contrato?.empresa_cnpj;
+                            const nomeEmpresa = contrato?.empresa_nome;
+                            return (
+                              <Box
+                                sx={{
+                                  p: 2,
+                                  borderRadius: 2,
+                                  background: alpha("#f8fafc", 0.8),
+                                  border: '1px solid',
+                                  borderColor: alpha("#e2e8f0", 0.8),
+                                }}
+                              >
+                                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
+                                  CNPJ do Tomador ({nomeEmpresa}):
+                                </Typography>
+                                <Typography variant="body1" fontFamily="monospace" fontWeight={700}>
+                                  Extraído: {validationResult.cnpj_destinatario}
+                                </Typography>
+                                {cnpjEsperado && (
+                                  <Typography variant="body2" color="text.secondary" fontFamily="monospace" sx={{ mt: 0.5 }}>
+                                    Esperado: {cnpjEsperado}
+                                  </Typography>
+                                )}
+                              </Box>
+                            );
+                          })()}
+                        </Stack>
+                      </Box>
+
+                      <Box
+                        sx={{
+                          p: 2,
+                          borderRadius: 2,
+                          background: alpha("#fbbf24", 0.1),
+                          border: '1px solid',
+                          borderColor: alpha("#fbbf24", 0.3),
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            background: alpha("#fbbf24", 0.15),
+                          }
+                        }}
+                        onClick={() => setConfirmManualReview(!confirmManualReview)}
+                      >
+                        <Stack direction="row" spacing={2} alignItems="center">
+                          <Box
+                            sx={{
+                              width: 24,
+                              height: 24,
+                              borderRadius: 1,
+                              border: '2px solid',
+                              borderColor: confirmManualReview ? '#f59e0b' : '#cbd5e1',
+                              background: confirmManualReview ? '#f59e0b' : 'transparent',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'all 0.2s',
+                            }}
+                          >
+                            {confirmManualReview && (
+                              <CheckCircleIcon sx={{ fontSize: 16, color: '#fff' }} />
+                            )}
+                          </Box>
+                          <Typography variant="body2" fontWeight={600} color="#0f172a">
+                            Confirmo que revisei os CNPJs e desejo prosseguir com o envio para validação do administrador
+                          </Typography>
+                        </Stack>
+                      </Box>
+                    </Stack>
+                  </Box>
+                  );
+                })()}
 
                 {/* CNPJ Emitente */}
                 {validationResult.cnpj_emitente && (() => {
