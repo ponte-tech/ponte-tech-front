@@ -1128,39 +1128,78 @@ export default function TimesheetAprovacoesPage() {
               <Typography variant="subtitle2" gutterBottom sx={{ mb: 2, fontWeight: 600 }}>
                 Detalhes por Contrato:
               </Typography>
-              {selectedColaborador.contratos.map((contrato, index) => (
-                <Box key={contrato.contrato_id} sx={{ mb: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 2 }}>
-                  <Typography variant="body2" fontWeight="600" gutterBottom>
-                    {contrato.nome_cliente}
-                  </Typography>
-                  <Grid container spacing={2}>
-                    <Grid item xs={4}>
-                      <Typography variant="caption" color="text.secondary">
-                        Horas lançadas
+              {selectedColaborador.contratos.map((contrato, index) => {
+                const tipoContratoFechado = contrato.tipo_contrato === "fechado";
+                const valorTotalContrato = (contrato.total_hora_mes || 0) * (contrato.valor_hora || 0);
+
+                return (
+                  <Box key={contrato.contrato_id} sx={{ mb: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 2 }}>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+                      <Typography variant="body2" fontWeight="600">
+                        {contrato.nome_cliente}
                       </Typography>
-                      <Typography variant="body2" fontWeight="500">
-                        {contrato.horas_lancadas.toFixed(2)}h
-                      </Typography>
+                      <Chip
+                        label={tipoContratoFechado ? "Horas Fechadas" : "Valor por Hora"}
+                        size="small"
+                        sx={{
+                          bgcolor: tipoContratoFechado ? "#8270FF" : "#f59e0b",
+                          color: "#FFFFFF",
+                          fontWeight: 600,
+                          fontSize: "0.7rem",
+                        }}
+                      />
+                    </Stack>
+                    <Grid container spacing={2}>
+                      <Grid item xs={4}>
+                        <Typography variant="caption" color="text.secondary">
+                          Horas Contrato
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {(contrato.total_hora_mes || 0).toFixed(2)}h
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={4}>
+                        <Typography variant="caption" color="text.secondary">
+                          Horas Lançadas
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {(contrato.horas_lancadas || 0).toFixed(2)}h
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={4}>
+                        <Typography variant="caption" color="text.secondary">
+                          Valor/hora
+                        </Typography>
+                        <Typography variant="body2" fontWeight="500">
+                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(contrato.valor_hora || 0)}
+                        </Typography>
+                      </Grid>
+                      {tipoContratoFechado && (
+                        <Grid item xs={12}>
+                          <Box sx={{ mt: 1, p: 1.5, bgcolor: 'rgba(130, 112, 255, 0.1)', borderRadius: 1 }}>
+                            <Typography variant="caption" color="text.secondary" display="block">
+                              Valor Total do Contrato (Fechado)
+                            </Typography>
+                            <Typography variant="body1" fontWeight="600" sx={{ color: '#8270FF' }}>
+                              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTotalContrato)}
+                            </Typography>
+                          </Box>
+                        </Grid>
+                      )}
+                      <Grid item xs={12}>
+                        <Box sx={{ mt: 1, pt: 1.5, borderTop: '1px solid rgba(0,0,0,0.1)' }}>
+                          <Typography variant="caption" color="text.secondary">
+                            Total a Pagar (Horas Lançadas)
+                          </Typography>
+                          <Typography variant="body2" fontWeight="600">
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(contrato.valor_total || 0)}
+                          </Typography>
+                        </Box>
+                      </Grid>
                     </Grid>
-                    <Grid item xs={4}>
-                      <Typography variant="caption" color="text.secondary">
-                        Valor/hora
-                      </Typography>
-                      <Typography variant="body2" fontWeight="500">
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(contrato.valor_hora)}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={4}>
-                      <Typography variant="caption" color="text.secondary">
-                        Total
-                      </Typography>
-                      <Typography variant="body2" fontWeight="500">
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(contrato.valor_total)}
-                      </Typography>
-                    </Grid>
-                  </Grid>
-                </Box>
-              ))}
+                  </Box>
+                );
+              })}
               <Box sx={{ mt: 2, p: 2, bgcolor: '#e3f2fd', borderRadius: 2 }}>
                 <Typography variant="subtitle2" gutterBottom>
                   Total Geral
@@ -1185,41 +1224,90 @@ export default function TimesheetAprovacoesPage() {
                 </Grid>
               </Box>
             </Box>
-          ) : (
-            // Um único contrato - mostrar formato simples
-            <Grid container spacing={2} sx={{ mb: 2 }}>
-              <Grid item xs={4}>
-                <Box sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 2, textAlign: 'center' }}>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Horas lançadas
-                  </Typography>
-                  <Typography variant="h6" fontWeight="600">
-                    {selectedColaborador?.total_horas_lancadas.toFixed(2)}h
-                  </Typography>
+          ) : selectedColaborador && selectedColaborador.contratos && selectedColaborador.contratos.length === 1 ? (
+            // Um único contrato - mostrar formato detalhado
+            (() => {
+              const contrato = selectedColaborador.contratos[0];
+              const tipoContratoFechado = contrato.tipo_contrato === "fechado";
+              const valorTotalContrato = (contrato.total_hora_mes || 0) * (contrato.valor_hora || 0);
+
+              return (
+                <Box sx={{ mb: 3 }}>
+                  <Box sx={{ mb: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 2 }}>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+                      <Typography variant="subtitle2" fontWeight="600">
+                        {contrato.nome_cliente}
+                      </Typography>
+                      <Chip
+                        label={tipoContratoFechado ? "Horas Fechadas" : "Valor por Hora"}
+                        size="small"
+                        sx={{
+                          bgcolor: tipoContratoFechado ? "#8270FF" : "#f59e0b",
+                          color: "#FFFFFF",
+                          fontWeight: 600,
+                          fontSize: "0.7rem",
+                        }}
+                      />
+                    </Stack>
+                    <Grid container spacing={2}>
+                      <Grid item xs={4}>
+                        <Box sx={{ textAlign: 'center' }}>
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            Horas Contrato
+                          </Typography>
+                          <Typography variant="h6" fontWeight="600">
+                            {(contrato.total_hora_mes || 0).toFixed(2)}h
+                          </Typography>
+                        </Box>
+                      </Grid>
+                      <Grid item xs={4}>
+                        <Box sx={{ textAlign: 'center' }}>
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            Horas Lançadas
+                          </Typography>
+                          <Typography variant="h6" fontWeight="600">
+                            {(contrato.horas_lancadas || 0).toFixed(2)}h
+                          </Typography>
+                        </Box>
+                      </Grid>
+                      <Grid item xs={4}>
+                        <Box sx={{ textAlign: 'center' }}>
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            Valor/hora
+                          </Typography>
+                          <Typography variant="h6" fontWeight="600">
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(contrato.valor_hora || 0)}
+                          </Typography>
+                        </Box>
+                      </Grid>
+                      {tipoContratoFechado && (
+                        <Grid item xs={12}>
+                          <Box sx={{ mt: 2, p: 2, bgcolor: 'rgba(130, 112, 255, 0.1)', borderRadius: 2 }}>
+                            <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                              Valor Total do Contrato (Fechado)
+                            </Typography>
+                            <Typography variant="h5" fontWeight="700" sx={{ color: '#8270FF' }}>
+                              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTotalContrato)}
+                            </Typography>
+                          </Box>
+                        </Grid>
+                      )}
+                      <Grid item xs={12}>
+                        <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid rgba(0,0,0,0.1)', textAlign: 'center' }}>
+                          <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                            Total a Pagar (Horas Lançadas)
+                          </Typography>
+                          <Typography variant="h5" fontWeight="700">
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedColaborador.total_valor_lancado || 0)}
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  </Box>
                 </Box>
-              </Grid>
-              <Grid item xs={4}>
-                <Box sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 2, textAlign: 'center' }}>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Valor da hora
-                  </Typography>
-                  <Typography variant="h6" fontWeight="600">
-                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedColaborador?.valor_hora || 0)}
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={4}>
-                <Box sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 2, textAlign: 'center' }}>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Valor total
-                  </Typography>
-                  <Typography variant="h6" fontWeight="600">
-                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedColaborador?.total_valor_lancado || 0)}
-                  </Typography>
-                </Box>
-              </Grid>
-            </Grid>
-          )}
+              );
+            })()
+          ) : null}
 
           <TextField
             fullWidth
