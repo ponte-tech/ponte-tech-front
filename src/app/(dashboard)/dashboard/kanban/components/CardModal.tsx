@@ -619,6 +619,7 @@ export default function CardModal({
       onClose={onClose}
       maxWidth="lg"
       fullWidth
+      disableScrollLock
       PaperProps={{
         sx: {
           borderRadius: 4,
