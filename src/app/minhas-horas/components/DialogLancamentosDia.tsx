@@ -313,14 +313,6 @@ export default function DialogLancamentosDia({
                                     {lanc.duracao_horas_ajustada.toFixed(2)}h
                                   </Typography>
                                 </Box>
-                                <Box>
-                                  <Typography variant="caption" color="text.secondary">
-                                    Tipo
-                                  </Typography>
-                                  <Typography variant="body2" fontWeight={600}>
-                                    {lanc.tipo}
-                                  </Typography>
-                                </Box>
                               </Stack>
 
                               {lanc.observacao && (

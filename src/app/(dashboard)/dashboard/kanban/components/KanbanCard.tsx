@@ -336,7 +336,7 @@ export default function KanbanCard({
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.875, ml: "auto" }}>
             {/* Delivery Date */}
             {card.delivery_date && (
-              <Tooltip title={`Entrega: ${format(new Date(card.delivery_date), "dd/MM/yyyy", { locale: ptBR })}`}>
+              <Tooltip title={`Entrega: ${format(new Date(card.delivery_date + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR })}`}>
                 <Box
                   sx={{
                     display: "flex",
@@ -353,7 +353,7 @@ export default function KanbanCard({
                       letterSpacing: "0.01em",
                     }}
                   >
-                    {format(new Date(card.delivery_date), "dd/MM/yy", { locale: ptBR })}
+                    {format(new Date(card.delivery_date + "T00:00:00"), "dd/MM/yy", { locale: ptBR })}
                   </Typography>
                   <Box
                     sx={{

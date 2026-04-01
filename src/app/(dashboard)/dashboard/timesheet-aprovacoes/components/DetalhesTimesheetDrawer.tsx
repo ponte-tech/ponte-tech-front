@@ -15,6 +15,8 @@ import {
   Alert,
   Stack,
   LinearProgress,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -23,8 +25,10 @@ import {
   CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
 import timesheetService from '@/app/services/timesheetService';
-import type { ResumoMesResponse, ResumoContratoMes } from '@/app/types/timesheet';
+import type { ResumoMesResponse, ResumoContratoMes, MesResponse } from '@/app/types/timesheet';
 import NotasFiscaisSection from './NotasFiscaisSection';
+import CalendarioHoras from '@/app/minhas-horas/components/CalendarioHoras';
+import DialogLancamentosDia from '@/app/minhas-horas/components/DialogLancamentosDia';
 
 interface DetalhesTimesheetDrawerProps {
   open: boolean;
@@ -43,10 +47,23 @@ export default function DetalhesTimesheetDrawer({
 }: DetalhesTimesheetDrawerProps) {
   const [loading, setLoading] = useState(false);
   const [resumo, setResumo] = useState<ResumoMesResponse | null>(null);
+  const [mesData, setMesData] = useState<MesResponse | null>(null);
+  const [loadingCalendario, setLoadingCalendario] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentTab, setCurrentTab] = useState(0);
+
+  // Dialog de lançamentos do dia
+  const [dialogDiaOpen, setDialogDiaOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   useEffect(() => {
     if (open && colaboradorId) {
+      // Resetar estados quando abre o drawer ou troca de colaborador
+      setResumo(null);
+      setMesData(null);
+      setCurrentTab(0);
+      setError(null);
+
       loadResumo();
     }
   }, [open, colaboradorId, mes]);
@@ -66,6 +83,34 @@ export default function DetalhesTimesheetDrawer({
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadCalendario = async () => {
+    if (!colaboradorId) return;
+
+    try {
+      setLoadingCalendario(true);
+      const data = await timesheetService.getMesColaborador(colaboradorId, mes);
+      setMesData(data);
+    } catch (err) {
+    // console.error('Erro ao carregar calendário:', err);
+      // Não mostra erro aqui para não atrapalhar a visualização do resumo
+    } finally {
+      setLoadingCalendario(false);
+    }
+  };
+
+  // Carregar calendário quando a aba de calendário é aberta ou quando colaborador/mês muda
+  useEffect(() => {
+    if (currentTab === 1 && colaboradorId && open) {
+      // Recarregar sempre que trocar de aba ou mudar colaborador/mês
+      loadCalendario();
+    }
+  }, [currentTab, colaboradorId, mes, open]);
+
+  const handleSelectDay = (date: string) => {
+    setSelectedDate(date);
+    setDialogDiaOpen(true);
   };
 
   const formatCurrency = (value: number) => {
@@ -98,7 +143,7 @@ export default function DetalhesTimesheetDrawer({
       onClose={onClose}
       PaperProps={{
         sx: {
-          width: { xs: '100%', sm: 700, md: 850 },
+          width: { xs: '100%', sm: 800, md: 1000, lg: 1200 },
         },
       }}
     >
@@ -123,6 +168,12 @@ export default function DetalhesTimesheetDrawer({
 
         <Divider sx={{ mb: 3 }} />
 
+        {/* Tabs */}
+        <Tabs value={currentTab} onChange={(_, newValue) => setCurrentTab(newValue)} sx={{ mb: 3 }}>
+          <Tab label="Resumo" />
+          <Tab label="Calendário" />
+        </Tabs>
+
         {/* Content */}
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
@@ -131,7 +182,10 @@ export default function DetalhesTimesheetDrawer({
         ) : error ? (
           <Alert severity="error">{error}</Alert>
         ) : resumo ? (
-          <Stack spacing={3}>
+          <>
+            {/* Tab 0: Resumo */}
+            {currentTab === 0 && (
+              <Stack spacing={3}>
             {/* Resumo Geral */}
             <Grid container spacing={2}>
               <Grid item xs={6}>
@@ -315,8 +369,52 @@ export default function DetalhesTimesheetDrawer({
               </Box>
             )}
           </Stack>
+            )}
+
+            {/* Tab 1: Calendário */}
+            {currentTab === 1 && (
+              <Box>
+                {loadingCalendario ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                    <CircularProgress />
+                  </Box>
+                ) : mesData ? (
+                  <Card variant="outlined">
+                    <CardContent>
+                      <CalendarioHoras
+                        dias={mesData.dias}
+                        mesAtual={mes}
+                        onMesChange={() => {}} // Read-only, não permite mudança de mês
+                        onDiaClick={handleSelectDay}
+                      />
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Alert severity="info">
+                    <Typography variant="body2">
+                      Não foi possível carregar o calendário. Tente novamente.
+                    </Typography>
+                  </Alert>
+                )}
+              </Box>
+            )}
+          </>
         ) : null}
       </Box>
+
+      {/* Dialog de Lançamentos do Dia */}
+      {selectedDate && mesData && (
+        <DialogLancamentosDia
+          open={dialogDiaOpen}
+          onClose={() => setDialogDiaOpen(false)}
+          data={selectedDate}
+          lancamentos={
+            mesData.dias.find(d => d.data === selectedDate)?.lancamentos || []
+          }
+          onDelete={async () => {}} // Read-only mode
+          onAddNew={() => {}} // Read-only mode
+        />
+      )}
     </Drawer>
   );
 }

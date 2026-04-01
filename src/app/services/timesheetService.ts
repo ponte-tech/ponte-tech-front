@@ -126,6 +126,20 @@ export const getResumoColaborador = async (colaboradorId: string, mes: string): 
   return response.data.data!;
 };
 
+// Admin - Obter calendário completo de um colaborador para um mês
+export const getMesColaborador = async (colaboradorId: string, mes: string, skipCache = false): Promise<MesResponse> => {
+  const params: any = {};
+  if (skipCache) {
+    params._t = Date.now(); // Timestamp para bypass de cache
+  }
+
+  const response = await api.get<ApiResponse<MesResponse>>(
+    `/api/admin/timesheet/${colaboradorId}/mes/${mes}/calendario`,
+    { params }
+  );
+  return response.data.data!;
+};
+
 const timesheetServiceExport = {
   getContratos,
   getMesCalendario,
@@ -141,6 +155,7 @@ const timesheetServiceExport = {
   reprovarMes,
   listarColaboradoresTimesheet,
   getResumoColaborador,
+  getMesColaborador,
 };
 
 export default timesheetServiceExport;
