@@ -41,6 +41,7 @@ export default function CreateLancamentoModal({
   const [mesReferencia, setMesReferencia] = useState(defaultMesReferencia || "");
   const [valorNotaFiscal, setValorNotaFiscal] = useState("R$ 0,00");
   const [emitirNotaFiscal, setEmitirNotaFiscal] = useState(true);
+  const [observacao, setObservacao] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -53,6 +54,7 @@ export default function CreateLancamentoModal({
       setMesReferencia(defaultMesReferencia || "");
       setValorNotaFiscal("R$ 0,00");
       setEmitirNotaFiscal(true);
+      setObservacao("");
       setError(null);
     }
   }, [open, defaultMesReferencia]);
@@ -97,6 +99,7 @@ export default function CreateLancamentoModal({
         mes_referencia: mesReferencia,
         valor_nota_fiscal: valor,
         emitir_nota_fiscal: emitirNotaFiscal,
+        observacao: observacao.trim() || undefined,
       };
 
       // Import dynamically to avoid circular dependency
@@ -247,10 +250,27 @@ export default function CreateLancamentoModal({
                 />
               }
               label="Emitir Nota Fiscal?"
+            />
+
+            {/* Observação */}
+            <TextField
+              label="Observação"
+              multiline
+              rows={4}
+              value={observacao}
+              onChange={(e) => setObservacao(e.target.value)}
+              placeholder="Digite uma observação sobre este lançamento (máximo 1000 caracteres)"
+              fullWidth
+              inputProps={{ maxLength: 1000 }}
+              helperText={`${observacao.length}/1000 caracteres`}
               sx={{
-                "& .MuiFormControlLabel-label": {
-                  fontWeight: 500,
-                  color: "#0f172a",
+                "& .MuiOutlinedInput-root": {
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#8270FF",
+                  },
+                },
+                "& .MuiInputLabel-root.Mui-focused": {
+                  color: "#8270FF",
                 },
               }}
             />

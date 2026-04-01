@@ -21,6 +21,9 @@ export interface LancamentoContabil {
   nota_fiscal_arquivo_url?: string;
   nota_fiscal_data_upload?: string;
 
+  // Observação do lançamento
+  observacao?: string;
+
   data_cadastro: string;
   data_atualizacao: string;
 }
@@ -39,6 +42,7 @@ export interface CreateLancamentoRequest {
   mes_referencia: string; // YYYY-MM
   valor_nota_fiscal: number;
   emitir_nota_fiscal?: boolean;
+  observacao?: string;
 }
 
 export interface UpdateValorNotaRequest {

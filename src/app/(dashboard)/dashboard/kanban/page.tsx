@@ -901,6 +901,12 @@ function KanbanPageContent() {
         setCards((prev) =>
           prev.map((c) => (c.card_id === selectedCard.card_id ? updated : c))
         );
+        setCardModalOpen(false);
+        setSnackbar({
+          open: true,
+          message: "Card atualizado",
+          severity: "success",
+        });
       } else {
         // Create - need board_id and position
         const cardsInColumn = cards.filter((c) => c.column_id === data.column_id);
@@ -921,13 +927,15 @@ function KanbanPageContent() {
         });
         const newCard = (response as any).data || response;
         setCards((prev) => [...prev, newCard]);
+
+        // Manter modal aberto e carregar o card recém-criado para permitir adicionar observações/anexos
+        setSelectedCard(newCard);
+        setSnackbar({
+          open: true,
+          message: "Card criado! Agora você pode adicionar observações e anexos.",
+          severity: "success",
+        });
       }
-      setCardModalOpen(false);
-      setSnackbar({
-        open: true,
-        message: selectedCard ? "Card atualizado" : "Card criado",
-        severity: "success",
-      });
     } catch (error: any) {
       setSnackbar({
         open: true,

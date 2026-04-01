@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -12,11 +13,17 @@ import {
   Chip,
   Box,
   Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
 } from "@mui/material";
 import {
   CloudUpload as UploadIcon,
   CloudDownload as DownloadIcon,
   Delete as DeleteIcon,
+  Description as DescriptionIcon,
 } from "@mui/icons-material";
 import type { LancamentoContabil } from "@/app/types/lancamentoContabil";
 import { formatCNPJ } from "@/app/utils/cnpjValidator";
@@ -44,6 +51,11 @@ export default function TabelaLancamentos({
   onValorChange,
   readOnly = false,
 }: TabelaLancamentosProps) {
+  const [observacaoModal, setObservacaoModal] = useState<{
+    open: boolean;
+    lancamento: LancamentoContabil | null;
+  }>({ open: false, lancamento: null });
+
   const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
       const allIds = lancamentos.map((l) => l.lancamento_id);
@@ -256,17 +268,35 @@ export default function TabelaLancamentos({
                   )}
                 </TableCell>
 
-                {!readOnly && onDeleteClick && (
+                {!readOnly && (
                   <TableCell align="center">
-                    <Tooltip title="Deletar Lançamento">
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => onDeleteClick(lancamento)}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Tooltip>
+                    <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
+                      <Tooltip title={lancamento.observacao ? "Ver Observação" : "Sem observação"}>
+                        <span>
+                          <IconButton
+                            size="small"
+                            color={lancamento.observacao ? "primary" : "default"}
+                            onClick={() =>
+                              setObservacaoModal({ open: true, lancamento })
+                            }
+                            disabled={!lancamento.observacao}
+                          >
+                            <DescriptionIcon />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                      {onDeleteClick && (
+                        <Tooltip title="Deletar Lançamento">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => onDeleteClick(lancamento)}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                    </Box>
                   </TableCell>
                 )}
               </TableRow>
@@ -274,6 +304,28 @@ export default function TabelaLancamentos({
           })}
         </TableBody>
       </Table>
+
+      {/* Modal de Observação */}
+      <Dialog
+        open={observacaoModal.open}
+        onClose={() => setObservacaoModal({ open: false, lancamento: null })}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Observação do Lançamento</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", mt: 2 }}>
+            {observacaoModal.lancamento?.observacao || "Sem observação"}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setObservacaoModal({ open: false, lancamento: null })}
+          >
+            Fechar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </TableContainer>
   );
 }
