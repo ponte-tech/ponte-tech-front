@@ -45,11 +45,20 @@ export default function DashboardAdmin() {
   const [selectedTab, setSelectedTab] = useState(0); // 0 = Consolidado, 1+ = Empresas
 
   // Estado para o filtro de mês do resumo financeiro
-  const getCurrentMonth = () => {
+  const getDefaultMonth = () => {
     const now = new Date();
+    const dayOfMonth = now.getDate();
+
+    // Se estamos nos primeiros 7 dias do mês, retornar o mês anterior
+    if (dayOfMonth <= 7) {
+      const previousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      return `${previousMonth.getFullYear()}-${String(previousMonth.getMonth() + 1).padStart(2, "0")}`;
+    }
+
+    // Caso contrário, retornar o mês atual
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   };
-  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
+  const [selectedMonth, setSelectedMonth] = useState(getDefaultMonth());
 
   useEffect(() => {
     loadDashboard();
@@ -62,7 +71,7 @@ export default function DashboardAdmin() {
 
       const [dashboardData, financeirosData] = await Promise.all([
         dashboardService.getDashboardAdmin(),
-        dashboardService.getFinanceirosPorEmpresa(6), // Últimos 6 meses
+        dashboardService.getFinanceirosPorEmpresa(12), // Últimos 12 meses para garantir dados históricos
       ]);
 
       setDashboard(dashboardData);
@@ -276,10 +285,19 @@ export default function DashboardAdmin() {
           mb: 4,
         }}
       >
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3, flexWrap: "wrap", gap: 2 }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            Resumo Financeiro
-          </Typography>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 3, flexWrap: "wrap", gap: 2 }}>
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+              Resumo Financeiro
+            </Typography>
+            <Typography variant="body2" sx={{ color: "text.secondary" }}>
+              {(() => {
+                const [year, month] = selectedMonth.split("-");
+                const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+                return `${monthNames[parseInt(month) - 1]} de ${year}`;
+              })()}
+            </Typography>
+          </Box>
 
           {/* Filtro de Mês */}
           <Box
@@ -321,10 +339,21 @@ export default function DashboardAdmin() {
           {/* Card Consolidado */}
           {(() => {
             // Encontrar dados do mês selecionado
-            const mesAtualConsolidado = financeiros.consolidado.meses.find(m => m.mes === selectedMonth) ||
-                                        financeiros.consolidado.meses[financeiros.consolidado.meses.length - 1];
-            const receitasTotal = mesAtualConsolidado?.receitas || 0;
-            const despesasTotal = (mesAtualConsolidado?.despesas_notas || 0) + (mesAtualConsolidado?.despesas_impostos || 0);
+            const mesAtualConsolidado = financeiros.consolidado.meses.find(m => m.mes === selectedMonth);
+
+            // Se não encontrar o mês selecionado, não exibir nada
+            if (!mesAtualConsolidado) {
+              return (
+                <Grid item xs={12}>
+                  <Alert severity="info">
+                    Não há dados disponíveis para o mês selecionado ({selectedMonth}).
+                  </Alert>
+                </Grid>
+              );
+            }
+
+            const receitasTotal = mesAtualConsolidado.receitas || 0;
+            const despesasTotal = (mesAtualConsolidado.despesas_notas || 0) + (mesAtualConsolidado.despesas_impostos || 0);
             const resultadoTotal = receitasTotal - despesasTotal;
             const isPositivoTotal = resultadoTotal >= 0;
 
@@ -447,10 +476,15 @@ export default function DashboardAdmin() {
           {/* Cards por Empresa */}
           {financeiros.empresas.map((empresa) => {
             // Encontrar dados do mês selecionado
-            const mesAtual = empresa.meses.find(m => m.mes === selectedMonth) ||
-                            empresa.meses[empresa.meses.length - 1];
-            const receitas = mesAtual?.receitas || 0;
-            const despesas = (mesAtual?.despesas_notas || 0) + (mesAtual?.despesas_impostos || 0);
+            const mesAtual = empresa.meses.find(m => m.mes === selectedMonth);
+
+            // Pular empresa se não houver dados para o mês selecionado
+            if (!mesAtual) {
+              return null;
+            }
+
+            const receitas = mesAtual.receitas || 0;
+            const despesas = (mesAtual.despesas_notas || 0) + (mesAtual.despesas_impostos || 0);
             const resultado = receitas - despesas;
             const isPositivo = resultado >= 0;
 

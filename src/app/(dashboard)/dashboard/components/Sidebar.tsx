@@ -34,6 +34,8 @@ import {
   ViewKanban as ViewKanbanIcon,
   Insights as InsightsIcon,
   Assignment as AssignmentIcon,
+  MedicalServices as MedicalServicesIcon,
+  Badge as BadgeIcon,
 } from "@mui/icons-material";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/app/hooks/useAuth";

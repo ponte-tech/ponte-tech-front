@@ -202,6 +202,7 @@ export default function NovoColaboradorPage() {
 
       if (data.erro) {
         setFieldErrors((prev) => ({ ...prev, "endereco.cep": "CEP não encontrado" }));
+        setError("CEP não encontrado. Verifique o número e tente novamente");
         return;
       }
 

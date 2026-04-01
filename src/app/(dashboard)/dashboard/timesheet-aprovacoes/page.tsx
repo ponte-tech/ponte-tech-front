@@ -93,6 +93,15 @@ export default function TimesheetAprovacoesPage() {
   const [colaboradores, setColaboradores] = useState<ColaboradorTimesheetStatus[]>([]);
   const [mesAtual, setMesAtual] = useState(() => {
     const hoje = new Date();
+    const dayOfMonth = hoje.getDate();
+
+    // Se estamos nos primeiros 7 dias do mês, retornar o mês anterior
+    if (dayOfMonth <= 7) {
+      const previousMonth = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
+      return `${previousMonth.getFullYear()}-${String(previousMonth.getMonth() + 1).padStart(2, '0')}`;
+    }
+
+    // Caso contrário, retornar o mês atual
     return `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
   });
 
