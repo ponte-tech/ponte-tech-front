@@ -34,9 +34,7 @@ import {
   CheckCircle as CheckCircleIcon,
   Schedule as ScheduleIcon,
   Description as DescriptionIcon,
-  AutoAwesome as AutoAwesomeIcon,
 } from "@mui/icons-material";
-import ValidateNotaModal from "./components/ValidateNotaModal";
 import { useState, useEffect } from "react";
 import fiscalService from "@/app/services/fiscalService";
 import { NotaFiscalComColaborador, StatusNotaFiscal } from "@/app/types/fiscal";
@@ -167,10 +165,6 @@ export default function NotasFiscaisPage() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
 
-  // Estados do modal de validação
-  const [validateModalOpen, setValidateModalOpen] = useState(false);
-  const [notaToValidate, setNotaToValidate] = useState<NotaFiscalComColaborador | null>(null);
-
   // Hook customizado de paginação
   const [pagination, paginationHandlers] = useTablePagination(50);
   const { page, rowsPerPage, totalItems } = pagination;
@@ -220,18 +214,6 @@ export default function NotasFiscaisPage() {
       newSelected.add(notaId);
     }
     setSelectedNotas(newSelected);
-  };
-
-  // Handler para abrir modal de validação
-  const handleValidateNota = (nota: NotaFiscalComColaborador) => {
-    setNotaToValidate(nota);
-    setValidateModalOpen(true);
-  };
-
-  const handleValidationSuccess = () => {
-    loadNotasFiscais();
-    setSnackbarMessage("Nota fiscal processada com sucesso");
-    setSnackbarOpen(true);
   };
 
   // Handler de download individual
@@ -615,41 +597,24 @@ export default function NotasFiscaisPage() {
                           </Typography>
                         </TableCell>
                         <TableCell align="center">
-                          <Stack direction="row" spacing={1} justifyContent="center">
-                            <Tooltip title="Validar com IA">
-                              <IconButton
-                                size="small"
-                                onClick={() => handleValidateNota(nota)}
-                                sx={{
-                                  color: "#8270FF",
-                                  bgcolor: alpha("#8270FF", 0.08),
-                                  "&:hover": {
-                                    bgcolor: alpha("#8270FF", 0.16),
-                                  },
-                                }}
-                              >
-                                <AutoAwesomeIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Baixar nota fiscal">
-                              <IconButton
-                                size="small"
-                                onClick={() =>
-                                  handleDownloadNota(nota.nota_fiscal_id, nota.arquivo_nome)
-                                }
-                                disabled={downloading}
-                                sx={{
-                                  color: "#8270FF",
-                                  bgcolor: alpha("#8270FF", 0.08),
-                                  "&:hover": {
-                                    bgcolor: alpha("#8270FF", 0.16),
-                                  },
-                                }}
-                              >
-                                <DownloadIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          </Stack>
+                          <Tooltip title="Baixar nota fiscal">
+                            <IconButton
+                              size="small"
+                              onClick={() =>
+                                handleDownloadNota(nota.nota_fiscal_id, nota.arquivo_nome)
+                              }
+                              disabled={downloading}
+                              sx={{
+                                color: "#8270FF",
+                                bgcolor: alpha("#8270FF", 0.08),
+                                "&:hover": {
+                                  bgcolor: alpha("#8270FF", 0.16),
+                                },
+                              }}
+                            >
+                              <DownloadIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -682,17 +647,6 @@ export default function NotasFiscaisPage() {
           )}
         </CardContent>
       </Card>
-
-      {/* Modal de Validação com IA */}
-      <ValidateNotaModal
-        open={validateModalOpen}
-        nota={notaToValidate}
-        onClose={() => {
-          setValidateModalOpen(false);
-          setNotaToValidate(null);
-        }}
-        onSuccess={handleValidationSuccess}
-      />
 
       <Snackbar
         open={snackbarOpen}
