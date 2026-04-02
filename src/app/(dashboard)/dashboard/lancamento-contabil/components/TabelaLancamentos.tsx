@@ -145,11 +145,9 @@ export default function TabelaLancamentos({
             <TableCell sx={{ fontWeight: 600 }} align="center">
               Download NF
             </TableCell>
-            {!readOnly && (
-              <TableCell sx={{ fontWeight: 600 }} align="center">
-                Ações
-              </TableCell>
-            )}
+            <TableCell sx={{ fontWeight: 600 }} align="center">
+              Ações
+            </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -268,37 +266,35 @@ export default function TabelaLancamentos({
                   )}
                 </TableCell>
 
-                {!readOnly && (
-                  <TableCell align="center">
-                    <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
-                      <Tooltip title={lancamento.observacao ? "Ver Observação" : "Sem observação"}>
-                        <span>
-                          <IconButton
-                            size="small"
-                            color={lancamento.observacao ? "primary" : "default"}
-                            onClick={() =>
-                              setObservacaoModal({ open: true, lancamento })
-                            }
-                            disabled={!lancamento.observacao}
-                          >
-                            <DescriptionIcon />
-                          </IconButton>
-                        </span>
+                <TableCell align="center">
+                  <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
+                    <Tooltip title={lancamento.observacao ? "Ver Observação" : "Sem observação"}>
+                      <span>
+                        <IconButton
+                          size="small"
+                          color={lancamento.observacao ? "primary" : "default"}
+                          onClick={() =>
+                            setObservacaoModal({ open: true, lancamento })
+                          }
+                          disabled={!lancamento.observacao}
+                        >
+                          <DescriptionIcon />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                    {onDeleteClick && (
+                      <Tooltip title="Deletar Lançamento">
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => onDeleteClick(lancamento)}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
                       </Tooltip>
-                      {onDeleteClick && (
-                        <Tooltip title="Deletar Lançamento">
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => onDeleteClick(lancamento)}
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                    </Box>
-                  </TableCell>
-                )}
+                    )}
+                  </Box>
+                </TableCell>
               </TableRow>
             );
           })}
