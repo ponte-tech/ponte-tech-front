@@ -172,7 +172,7 @@ export default function NotasFiscaisPage() {
   const [notaToValidate, setNotaToValidate] = useState<NotaFiscalComColaborador | null>(null);
 
   // Hook customizado de paginação
-  const [pagination, paginationHandlers] = useTablePagination(10);
+  const [pagination, paginationHandlers] = useTablePagination(50);
   const { page, rowsPerPage, totalItems } = pagination;
   const { handleChangePage, handleChangeRowsPerPage, setTotalItems } = paginationHandlers;
 
