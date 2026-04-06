@@ -334,6 +334,53 @@ export default function KanbanCard({
 
           {/* Metadata Icons - Right Side */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.875, ml: "auto" }}>
+            {/* Subtasks */}
+            {card.subtasks && card.subtasks.length > 0 && (
+              <Tooltip title={`${card.subtasks.filter(st => st.completed).length}/${card.subtasks.length} subtarefas concluídas`}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.375,
+                    px: 0.75,
+                    py: 0.375,
+                    borderRadius: 1,
+                    bgcolor: card.subtasks.filter(st => st.completed).length === card.subtasks.length
+                      ? "rgba(76, 175, 80, 0.08)"
+                      : "rgba(130, 112, 255, 0.08)",
+                    transition: "all 0.15s ease",
+                    "&:hover": {
+                      bgcolor: card.subtasks.filter(st => st.completed).length === card.subtasks.length
+                        ? "rgba(76, 175, 80, 0.12)"
+                        : "rgba(130, 112, 255, 0.12)",
+                    },
+                  }}
+                >
+                  <CheckBoxOutlineBlankIcon
+                    sx={{
+                      fontSize: "0.813rem",
+                      color: card.subtasks.filter(st => st.completed).length === card.subtasks.length
+                        ? "#4caf50"
+                        : "#8270FF"
+                    }}
+                  />
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: card.subtasks.filter(st => st.completed).length === card.subtasks.length
+                        ? "#4caf50"
+                        : "#8270FF",
+                      fontSize: "0.688rem",
+                      fontWeight: 600,
+                      letterSpacing: "0.01em",
+                    }}
+                  >
+                    {card.subtasks.filter(st => st.completed).length}/{card.subtasks.length}
+                  </Typography>
+                </Box>
+              </Tooltip>
+            )}
+
             {/* Delivery Date */}
             {card.delivery_date && (
               <Tooltip title={`Entrega: ${format(new Date(card.delivery_date + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR })}`}>
