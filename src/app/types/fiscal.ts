@@ -46,6 +46,6 @@ export interface InitiateUploadResponse {
 }
 
 export interface AtualizarStatusNotaRequest {
-  status: 'APROVADA' | 'REPROVADA';
+  status: 'APROVADA' | 'REPROVADA' | 'PAGA' | 'PENDENTE';
   motivo_rejeicao?: string;
 }
