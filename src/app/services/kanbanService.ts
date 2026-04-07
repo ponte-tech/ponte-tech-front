@@ -46,6 +46,11 @@ class KanbanService {
     await api.delete(`/api/kanban/boards/${encodeURIComponent(boardId)}`);
   }
 
+  async getBoardFull(boardId: string): Promise<{ board: Board; columns: Array<{ column_id: string; board_id: string; name: string; position: number; created_by: string; created_at: string; updated_at: string; cards: Card[] }> }> {
+    const response = await api.get(`/api/kanban/boards/${encodeURIComponent(boardId)}/full`);
+    return response.data;
+  }
+
   // Column operations
   async listColumnsByBoard(boardId: string): Promise<ListColumnsResponse> {
     const response = await api.get<ListColumnsResponse>(

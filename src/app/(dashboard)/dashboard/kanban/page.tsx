@@ -64,10 +64,27 @@ import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import { useAuth } from "@/app/hooks/useAuth";
 import { useRouter, useSearchParams } from "next/navigation";
 import kanbanService from "@/app/services/kanbanService";
-import clienteService from "@/app/services/clienteService";
-import contratoService from "@/app/services/contratoService";
-import colaboradoresService from "@/app/services/colaboradoresService";
 import { Board, Column, Card } from "@/app/types/kanban";
+import {
+  useBoards,
+  useBoardFull,
+  useCreateBoard,
+  useUpdateBoard,
+  useDeleteBoard,
+  useCreateColumn,
+  useUpdateColumn,
+  useDeleteColumn,
+  useCreateCard,
+  useUpdateCard,
+  useDeleteCard,
+  useMoveCard,
+  useAddObservation,
+  useClientes,
+  useContratos,
+  useColaboradores,
+  kanbanKeys,
+} from "@/app/hooks/useKanbanQueries";
+import { useQueryClient } from "@tanstack/react-query";
 import { Cliente, Contrato, Colaborador } from "@/app/types/api";
 import KanbanColumn from "./components/KanbanColumn";
 import KanbanCard from "./components/KanbanCard";
@@ -86,14 +103,54 @@ function KanbanPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // React Query Hooks
+  const { data: boards = [], isLoading: loadingBoards } = useBoards();
+  const { data: clientes = [] } = useClientes();
+  const { data: contratos = [] } = useContratos();
+  const { data: colaboradores = [] } = useColaboradores();
+
+  // QueryClient for cache invalidation
+  const queryClient = useQueryClient();
+
   // State
-  const [boards, setBoards] = useState<Board[]>([]);
   const [selectedBoardId, setSelectedBoardId] = useState<string>("");
   const [columns, setColumns] = useState<Column[]>([]);
   const [cards, setCards] = useState<Card[]>([]);
-  const [clientes, setClientes] = useState<Cliente[]>([]);
-  const [contratos, setContratos] = useState<Contrato[]>([]);
-  const [colaboradores, setColaboradores] = useState<any[]>([]);
+
+  // Board Full Query (columns + cards)
+  const { data: boardFullData, isLoading: loadingColumns } = useBoardFull(selectedBoardId);
+
+  // Sync React Query data with local state
+  useEffect(() => {
+    if (boardFullData?.columns) {
+      const columnsList = boardFullData.columns.map((col: any) => ({
+        column_id: col.column_id,
+        board_id: col.board_id,
+        name: col.name,
+        position: col.position,
+        created_by: col.created_by,
+        created_at: col.created_at,
+        updated_at: col.updated_at,
+      }));
+      setColumns(columnsList);
+
+      const allCards: Card[] = boardFullData.columns.flatMap((col: any) => col.cards || []);
+      setCards(allCards);
+    }
+  }, [boardFullData]);
+
+  // Mutations
+  const createBoardMutation = useCreateBoard();
+  const updateBoardMutation = useUpdateBoard();
+  const deleteBoardMutation = useDeleteBoard();
+  const createColumnMutation = useCreateColumn();
+  const updateColumnMutation = useUpdateColumn();
+  const deleteColumnMutation = useDeleteColumn();
+  const createCardMutation = useCreateCard();
+  const updateCardMutation = useUpdateCard();
+  const deleteCardMutation = useDeleteCard();
+  const moveCardMutation = useMoveCard();
+  const addObservationMutation = useAddObservation();
 
   // Auto-scroll refs
   const boardContainerRef = React.useRef<HTMLDivElement>(null);
@@ -104,8 +161,7 @@ function KanbanPageContent() {
   const [showRightArrow, setShowRightArrow] = useState(false);
 
   // Loading states
-  const [loading, setLoading] = useState(true);
-  const [loadingColumns, setLoadingColumns] = useState(false);
+  const [loading, setLoading] = useState(false); // Changed to false - React Query handles loading now
 
   // Modal states
   const [cardModalOpen, setCardModalOpen] = useState(false);
@@ -309,20 +365,12 @@ function KanbanPageContent() {
     }
   }, [isAuthenticated, user, router]);
 
-  // Load boards and clientes
+  // Select first board when boards load
   useEffect(() => {
-    if (isAuthenticated && (user?.userType === "admin" || user?.userType === "colaborador")) {
-      loadInitialData();
+    if (boards.length > 0 && !selectedBoardId) {
+      setSelectedBoardId(boards[0].board_id);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, user?.userType]);
-
-  // Load columns when board changes
-  useEffect(() => {
-    if (selectedBoardId) {
-      loadBoardData(selectedBoardId);
-    }
-  }, [selectedBoardId]);
+  }, [boards, selectedBoardId]);
 
   // Abrir modal de card quando houver card_id na URL
   useEffect(() => {
@@ -345,98 +393,21 @@ function KanbanPageContent() {
     }
   }, [searchParams, cards]);
 
-  const loadInitialData = async () => {
-    try {
-      setLoading(true);
-
-      // Always load boards (kanban API)
-      const boardsRes = await kanbanService.listBoards();
-      const boardsList = (boardsRes as any).data?.boards || boardsRes.boards || [];
-      setBoards(boardsList);
-
-      // Load clientes, contratos and colaboradores for all users (admin and colaborador)
-      // These endpoints are now accessible by both profiles for kanban functionality
-      const [clientesRes, contratosRes, colaboradoresRes] = await Promise.all([
-        clienteService.list(),
-        contratoService.list(),
-        colaboradoresService.list(),
-      ]);
-
-      setClientes(clientesRes.clientes || []);
-      setContratos(contratosRes.contratos || []);
-
-      // Include ALL colaboradores (active and inactive) for history lookup
-      const allColaboradores = colaboradoresRes.colaboradores || [];
-      setColaboradores(allColaboradores);
-
-      // Select first board if exists
-      if (boardsList && boardsList.length > 0) {
-        setSelectedBoardId(boardsList[0].board_id);
-      } else {
-        // Create default board
-        const response = await kanbanService.createBoard({
-          name: "Meu Board",
-          description: "Board principal",
-        });
-        // Handle wrapped response
-        const newBoard = (response as any).data || response;
-        setBoards([newBoard]);
-        setSelectedBoardId(newBoard.board_id);
-      }
-    } catch (error: any) {
-    // console.error("Erro ao carregar dados iniciais:", error);
-      setSnackbar({
-        open: true,
-        message: error.message || "Erro ao carregar dados",
-        severity: "error",
-      });
-      setLoading(false); // Ensure loading is set to false on error
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadBoardData = async (boardId: string) => {
-    try {
-      setLoadingColumns(true);
-      const columnsRes = await kanbanService.listColumnsByBoard(boardId);
-
-      // Handle wrapped response
-      const columnsList = (columnsRes as any).data?.columns || columnsRes.columns || [];
-      setColumns(columnsList);
-
-      // Load cards for all columns
-      const allCards: Card[] = [];
-      for (const column of columnsList) {
-        const cardsRes = await kanbanService.listCardsByColumn(column.column_id);
-        const cardsList = (cardsRes as any).data?.cards || cardsRes.cards || [];
-        allCards.push(...cardsList);
-      }
-      setCards(allCards);
-
-      // Verificar se há parâmetro 'card' na URL (compartilhamento)
+  // Check due today cards when board data loads
+  useEffect(() => {
+    if (boardFullData?.columns && colaboradores.length > 0) {
       const hasCardParam = searchParams.get('card');
+      const allCards: Card[] = boardFullData.columns.flatMap((col: any) => col.cards || []);
 
-      // Verificar tasks com vencimento hoje (passar columnsList ao invés de usar state)
-      // NÃO mostrar alerta se houver link compartilhado na URL
-      if (!hasCardParam) {
-        checkDueTodayCards(allCards, columnsList);
+      if (!hasCardParam && allCards.length > 0) {
+        checkDueTodayCards(allCards, columns);
       }
 
-      // Calcular tarefas urgentes por colaborador
-      calculateUrgentTasksByColaborador(allCards, columnsList);
-    } catch (error: any) {
-    // console.error("Erro ao carregar board:", error);
-      setSnackbar({
-        open: true,
-        message: error.message || "Erro ao carregar board",
-        severity: "error",
-      });
-      setLoadingColumns(false); // Ensure loading is set to false on error
-    } finally {
-      setLoadingColumns(false);
+      if (allCards.length > 0) {
+        calculateUrgentTasksByColaborador(allCards, columns);
+      }
     }
-  };
+  }, [boardFullData, colaboradores, searchParams]);
 
   const checkDueTodayCards = (cardsList: Card[], columnsList: Column[]) => {
     // Buscar o colaborador_id do usuário logado
@@ -643,8 +614,8 @@ function KanbanPageContent() {
             message: error.message || "Erro ao reordenar coluna",
             severity: "error",
           });
-          // Reload on error
-          loadBoardData(selectedBoardId);
+          // Reload board data on error
+          queryClient.invalidateQueries({ queryKey: kanbanKeys.boardFull(selectedBoardId) });
         }
       }
       return;
@@ -713,8 +684,8 @@ function KanbanPageContent() {
         message: error.message || "Erro ao mover card",
         severity: "error",
       });
-      // Reload on error
-      loadBoardData(selectedBoardId);
+      // Reload board data on error
+      queryClient.invalidateQueries({ queryKey: kanbanKeys.boardFull(selectedBoardId) });
     }
   };
 

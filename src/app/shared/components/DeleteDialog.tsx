@@ -193,54 +193,28 @@ export default function DeleteDialog({
           px: 3,
           pb: 3,
           pt: 1,
-          gap: 1.5,
+          gap: 1,
           justifyContent: "center",
+          flexDirection: "column",
         }}
       >
-        <Button
-          onClick={handleCancel}
-          disabled={loading}
-          fullWidth
-          sx={{
-            py: 1.25,
-            px: 3,
-            borderRadius: 2,
-            textTransform: "none",
-            fontSize: "0.938rem",
-            fontWeight: 600,
-            color: "#64748b",
-            bgcolor: "transparent",
-            border: "1.5px solid #e2e8f0",
-            transition: "all 0.2s",
-            "&:hover": {
-              bgcolor: "#f8fafc",
-              borderColor: "#cbd5e1",
-              color: "#475569",
-            },
-            "&.Mui-disabled": {
-              color: "#cbd5e1",
-              borderColor: "#f1f5f9",
-            },
-          }}
-        >
-          Cancelar
-        </Button>
-
         <Button
           onClick={handleConfirm}
           disabled={loading}
           fullWidth
           variant="contained"
           sx={{
-            py: 1.25,
+            height: "48px",
+            py: 0,
             px: 3,
-            borderRadius: 2,
+            borderRadius: "24px",
             textTransform: "none",
-            fontSize: "0.938rem",
+            fontSize: "1rem",
             fontWeight: 600,
+            letterSpacing: "0.75px",
             bgcolor: "#ef4444",
             color: "#fff",
-            boxShadow: `0 4px 12px ${alpha("#ef4444", 0.3)}`,
+            boxShadow: "none",
             transition: "all 0.2s",
             "&:hover": {
               bgcolor: "#dc2626",
@@ -251,9 +225,10 @@ export default function DeleteDialog({
               transform: "translateY(0)",
             },
             "&.Mui-disabled": {
-              bgcolor: "#e2e8f0",
-              color: "#94a3b8",
+              bgcolor: "#2e3555",
+              color: "#64748b",
               boxShadow: "none",
+              opacity: 1,
             },
           }}
         >
@@ -263,8 +238,38 @@ export default function DeleteDialog({
               <span>Excluindo...</span>
             </Box>
           ) : (
-            "Excluir"
+            "Sim, excluir"
           )}
+        </Button>
+
+        <Button
+          onClick={handleCancel}
+          disabled={loading}
+          fullWidth
+          sx={{
+            py: 1.25,
+            px: 0,
+            background: "transparent",
+            border: 0,
+            textTransform: "none",
+            fontSize: "0.875rem",
+            fontWeight: 500,
+            lineHeight: "24px",
+            color: "#0f172a",
+            transition: "opacity 0.2s",
+            "&:hover": {
+              bgcolor: "transparent",
+              opacity: 0.85,
+            },
+            "&:active": {
+              opacity: 0.7,
+            },
+            "&.Mui-disabled": {
+              color: "#cbd5e1",
+            },
+          }}
+        >
+          Cancelar e voltar
         </Button>
       </DialogActions>
     </Dialog>
