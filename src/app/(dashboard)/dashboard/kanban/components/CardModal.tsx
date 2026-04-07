@@ -152,6 +152,29 @@ export default function CardModal({
   // Combined history (server + localStorage)
   const [combinedHistory, setCombinedHistory] = useState<any[]>([]);
 
+  // Prevent default drag/drop behavior on document
+  useEffect(() => {
+    if (!open) return;
+
+    const preventDefaults = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    // Prevent default drag/drop on entire document when modal is open
+    document.addEventListener('dragover', preventDefaults);
+    document.addEventListener('drop', preventDefaults);
+    document.addEventListener('dragenter', preventDefaults);
+    document.addEventListener('dragleave', preventDefaults);
+
+    return () => {
+      document.removeEventListener('dragover', preventDefaults);
+      document.removeEventListener('drop', preventDefaults);
+      document.removeEventListener('dragenter', preventDefaults);
+      document.removeEventListener('dragleave', preventDefaults);
+    };
+  }, [open]);
+
   useEffect(() => {
     if (card) {
       setFormData({
