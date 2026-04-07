@@ -131,6 +131,7 @@ export default function CardModal({
   const [attachments, setAttachments] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Share snackbar state
   const [shareSnackbarOpen, setShareSnackbarOpen] = useState(false);
@@ -332,6 +333,82 @@ export default function CardModal({
     } finally {
       setUploading(false);
       setUploadProgress(0);
+    }
+  };
+
+  // Handle file drop (drag and drop)
+  const handleFileDrop = async (file: File) => {
+    if (!card) return;
+
+    const validation = kanbanService.validateFile(file);
+    if (!validation.valid) {
+      alert(validation.error);
+      return;
+    }
+
+    try {
+      setUploading(true);
+      setUploadProgress(0);
+
+      // Step 1: Initiate upload
+      const initResponse = await kanbanService.initiateAttachmentUpload(card.card_id, {
+        nome_arquivo: file.name,
+        tamanho_bytes: file.size,
+        content_type: file.type,
+      });
+
+      setUploadProgress(50);
+
+      // Step 2: Upload to S3
+      await kanbanService.uploadFileToS3(initResponse.upload_url, file);
+
+      setUploadProgress(100);
+
+      // Reload attachments
+      const response = await kanbanService.listAttachments(card.card_id);
+      setAttachments(response.attachments || []);
+    } catch (error) {
+    // console.error("Error uploading file:", error);
+      alert("Erro ao fazer upload do arquivo");
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
+    }
+  };
+
+  // Drag and drop handlers
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!uploading) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!uploading) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    if (uploading) return;
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      handleFileDrop(files[0]);
     }
   };
 
@@ -1301,12 +1378,13 @@ export default function CardModal({
                 {/* Upload Area */}
                 <Box
                   sx={{
-                    border: "2px dashed #e0e0e0",
+                    border: isDragging ? "2px dashed #8270FF" : "2px dashed #e0e0e0",
                     borderRadius: 2,
                     p: 3,
                     textAlign: "center",
-                    bgcolor: alpha("#8270FF", 0.02),
+                    bgcolor: isDragging ? alpha("#8270FF", 0.1) : alpha("#8270FF", 0.02),
                     cursor: uploading ? "not-allowed" : "pointer",
+                    transition: "all 0.2s ease",
                     "&:hover": {
                       borderColor: uploading ? "#e0e0e0" : "#8270FF",
                       bgcolor: uploading ? alpha("#8270FF", 0.02) : alpha("#8270FF", 0.05),
@@ -1317,6 +1395,10 @@ export default function CardModal({
                       document.getElementById("file-upload-input")?.click();
                     }
                   }}
+                  onDragOver={handleDragOver}
+                  onDragEnter={handleDragEnter}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
                 >
                   <input
                     id="file-upload-input"
@@ -1325,9 +1407,21 @@ export default function CardModal({
                     onChange={handleFileUpload}
                     disabled={uploading}
                   />
-                  <CloudUploadIcon sx={{ fontSize: 48, color: "#8270FF", mb: 1 }} />
+                  <CloudUploadIcon
+                    sx={{
+                      fontSize: 48,
+                      color: isDragging ? "#8270FF" : "#8270FF",
+                      mb: 1,
+                      transform: isDragging ? "scale(1.1)" : "scale(1)",
+                      transition: "transform 0.2s ease",
+                    }}
+                  />
                   <Typography variant="body2" sx={{ color: "#666", fontWeight: 500 }}>
-                    {uploading ? "Fazendo upload..." : "Clique para selecionar um arquivo"}
+                    {uploading
+                      ? "Fazendo upload..."
+                      : isDragging
+                        ? "Solte o arquivo aqui"
+                        : "Clique ou arraste um arquivo aqui"}
                   </Typography>
                   <Typography variant="caption" sx={{ color: "#999", display: "block", mt: 0.5 }}>
                     Tamanho máximo: 10MB
