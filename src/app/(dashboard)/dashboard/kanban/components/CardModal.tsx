@@ -46,6 +46,8 @@ import {
   CheckCircle as CheckCircleIcon,
   RadioButtonUnchecked as RadioButtonUncheckedIcon,
   Close as CloseIcon,
+  Visibility as VisibilityIcon,
+  VisibilityOff as VisibilityOffIcon,
 } from "@mui/icons-material";
 import ConfirmDialog from "@/app/shared/components/ConfirmDialog";
 import { Card } from "@/app/types/kanban";
@@ -123,6 +125,7 @@ export default function CardModal({
   const [activeTab, setActiveTab] = useState(0);
   const [selectedColumnId, setSelectedColumnId] = useState(columnId);
   const [lastCardId, setLastCardId] = useState<string | null>(null);
+  const [descriptionVisible, setDescriptionVisible] = useState(true);
 
   // Attachment state
   const [attachments, setAttachments] = useState<any[]>([]);
@@ -247,33 +250,19 @@ export default function CardModal({
       if (card?.card_id) {
         try {
           const response = await kanbanService.listSubtasks(card.card_id);
-          setSubtasks(response.subtasks || []);
+          const loadedSubtasks = response.subtasks || [];
+          console.log("Loaded subtasks:", loadedSubtasks.map(s => ({ id: s.subtask_id, title: s.title })));
+          setSubtasks(loadedSubtasks);
         } catch (error: any) {
-          // If API is not implemented (404), try localStorage first, then card's subtasks
-          if (error?.response?.status === 404) {
-            const storageKey = `subtasks_${card.card_id}`;
-            const storedSubtasks = localStorage.getItem(storageKey);
-
-            if (storedSubtasks) {
-              try {
-                setSubtasks(JSON.parse(storedSubtasks));
-              } catch {
-                setSubtasks(card?.subtasks || []);
-              }
-            } else {
-              setSubtasks(card?.subtasks || []);
-            }
-          } else {
-    // console.error("Error loading subtasks:", error);
-            setSubtasks(card?.subtasks || []);
-          }
+          console.error("Error loading subtasks:", error);
+          setSubtasks([]);
         }
       } else {
         setSubtasks([]);
       }
     };
     loadSubtasks();
-  }, [card?.card_id, card?.subtasks]);
+  }, [card?.card_id]);
 
   // Load and combine history (server + localStorage)
   useEffect(() => {
@@ -438,48 +427,28 @@ export default function CardModal({
 
   // Subtask handlers
   const handleCreateSubtask = async () => {
-    if (!card || !newSubtaskTitle.trim()) return;
+    console.log("handleCreateSubtask called", { card, newSubtaskTitle });
+    if (!card || !newSubtaskTitle.trim()) {
+      console.log("Validation failed:", { hasCard: !!card, titleTrimmed: newSubtaskTitle.trim() });
+      return;
+    }
 
     try {
+      console.log("Creating subtask...");
       const newSubtask = await kanbanService.createSubtask({
         card_id: card.card_id,
         title: newSubtaskTitle,
         description: newSubtaskDescription || undefined,
       });
+      console.log("Subtask created:", newSubtask);
 
       setSubtasks([...subtasks, newSubtask]);
       setNewSubtaskTitle("");
       setNewSubtaskDescription("");
     } catch (error: any) {
-      // Fallback: store locally if API not implemented
-      if (error?.response?.status === 404) {
-        const localSubtask = {
-          subtask_id: `SUBTASK#${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          card_id: card.card_id,
-          title: newSubtaskTitle,
-          description: newSubtaskDescription || undefined,
-          completed: false,
-          created_by: "current-user",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-
-        const updatedSubtasks = [...subtasks, localSubtask];
-        setSubtasks(updatedSubtasks);
-
-        // Store in localStorage
-        const storageKey = `subtasks_${card.card_id}`;
-        localStorage.setItem(storageKey, JSON.stringify(updatedSubtasks));
-
-        // Add history entry
-        addLocalHistoryEntry("Subtarefa criada", "", `"${newSubtaskTitle}"`);
-
-        setNewSubtaskTitle("");
-        setNewSubtaskDescription("");
-      } else {
-    // console.error("Error creating subtask:", error);
-        alert("Erro ao criar subtarefa");
-      }
+      console.error("Error creating subtask:", error);
+      console.error("Error details:", error.response?.data || error.message);
+      alert("Erro ao criar subtarefa: " + (error.response?.data?.message || error.message));
     }
   };
 
@@ -493,26 +462,8 @@ export default function CardModal({
 
       setSubtasks(subtasks.map((st) => (st.subtask_id === updated.subtask_id ? updated : st)));
     } catch (error: any) {
-      // Fallback: update locally
-      if (error?.response?.status === 404) {
-        const updatedSubtasks = subtasks.map((st) =>
-          st.subtask_id === subtask.subtask_id
-            ? { ...st, completed: !st.completed, updated_at: new Date().toISOString() }
-            : st
-        );
-        setSubtasks(updatedSubtasks);
-
-        // Store in localStorage
-        const storageKey = `subtasks_${card.card_id}`;
-        localStorage.setItem(storageKey, JSON.stringify(updatedSubtasks));
-
-        // Add history entry
-        const statusChange = subtask.completed ? "não concluída" : "concluída";
-        addLocalHistoryEntry("Status da subtarefa", `"${subtask.title}" - ${subtask.completed ? "concluída" : "não concluída"}`, `"${subtask.title}" - ${statusChange}`);
-      } else {
-    // console.error("Error toggling subtask:", error);
-        alert("Erro ao atualizar subtarefa");
-      }
+      console.error("Error toggling subtask:", error);
+      alert("Erro ao atualizar subtarefa");
     }
   };
 
@@ -536,29 +487,8 @@ export default function CardModal({
       setEditSubtaskTitle("");
       setEditSubtaskDescription("");
     } catch (error: any) {
-      // Fallback: update locally
-      if (error?.response?.status === 404) {
-        const updatedSubtasks = subtasks.map((st) =>
-          st.subtask_id === editingSubtask.subtask_id
-            ? { ...st, title: editSubtaskTitle, description: editSubtaskDescription, updated_at: new Date().toISOString() }
-            : st
-        );
-        setSubtasks(updatedSubtasks);
-
-        // Store in localStorage
-        const storageKey = `subtasks_${card.card_id}`;
-        localStorage.setItem(storageKey, JSON.stringify(updatedSubtasks));
-
-        // Add history entry
-        addLocalHistoryEntry("Subtarefa editada", `"${editingSubtask.title}"`, `"${editSubtaskTitle}"`);
-
-        setEditingSubtask(null);
-        setEditSubtaskTitle("");
-        setEditSubtaskDescription("");
-      } else {
-    // console.error("Error updating subtask:", error);
-        alert("Erro ao atualizar subtarefa");
-      }
+      console.error("Error updating subtask:", error);
+      alert("Erro ao atualizar subtarefa");
     }
   };
 
@@ -571,29 +501,16 @@ export default function CardModal({
   const handleDeleteSubtask = async (subtask: any) => {
     if (!card) return;
 
+    console.log("Deleting subtask:", subtask);
+
     try {
       await kanbanService.deleteSubtask(card.card_id, subtask.subtask_id);
+      console.log("Subtask deleted successfully");
       setSubtasks(subtasks.filter((st) => st.subtask_id !== subtask.subtask_id));
     } catch (error: any) {
-      // Fallback: delete locally
-      if (error?.response?.status === 404) {
-        const updatedSubtasks = subtasks.filter((st) => st.subtask_id !== subtask.subtask_id);
-        setSubtasks(updatedSubtasks);
-
-        // Store in localStorage
-        const storageKey = `subtasks_${card.card_id}`;
-        if (updatedSubtasks.length > 0) {
-          localStorage.setItem(storageKey, JSON.stringify(updatedSubtasks));
-        } else {
-          localStorage.removeItem(storageKey);
-        }
-
-        // Add history entry
-        addLocalHistoryEntry("Subtarefa excluída", `"${subtask.title}"`, "");
-      } else {
-    // console.error("Error deleting subtask:", error);
-        alert("Erro ao excluir subtarefa");
-      }
+      console.error("Error deleting subtask:", error);
+      console.error("Error details:", error.response?.data || error.message);
+      alert("Erro ao excluir subtarefa: " + (error.response?.data?.message || error.message));
     }
   };
 
@@ -647,7 +564,7 @@ export default function CardModal({
           bgcolor: "rgba(248, 250, 252, 0.5)",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flex: 1 }}>
           <Box
             sx={{
               width: 36,
@@ -657,21 +574,41 @@ export default function CardModal({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              flexShrink: 0,
             }}
           >
             <ArticleIcon sx={{ color: "#8270FF", fontSize: "1.25rem" }} />
           </Box>
-          <Box>
-            <Typography
+          <Box sx={{ flex: 1 }}>
+            <TextField
+              fullWidth
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              required
+              placeholder={card ? "Título do card..." : "Digite o título do novo card..."}
+              inputProps={{ maxLength: 500 }}
+              variant="standard"
               sx={{
-                fontWeight: 700,
-                fontSize: "1.125rem",
-                color: "#0f172a",
-                letterSpacing: "-0.02em",
+                "& .MuiInput-root": {
+                  fontSize: "1.125rem",
+                  fontWeight: 700,
+                  color: "#0f172a",
+                  letterSpacing: "-0.02em",
+                  "&:before": {
+                    borderBottom: "2px solid transparent",
+                  },
+                  "&:hover:before": {
+                    borderBottom: "2px solid rgba(130, 112, 255, 0.3) !important",
+                  },
+                  "&:after": {
+                    borderBottom: "2px solid #8270FF",
+                  },
+                },
+                "& .MuiInput-input": {
+                  padding: "4px 0",
+                },
               }}
-            >
-              {card ? "Detalhes do Card" : "Novo Card"}
-            </Typography>
+            />
             {card && (
               <Typography
                 variant="caption"
@@ -680,9 +617,25 @@ export default function CardModal({
                   fontSize: "0.813rem",
                   fontWeight: 500,
                   fontFamily: "monospace",
+                  display: "block",
+                  mt: 0.5,
                 }}
               >
-                #{card.card_id.replace("CARD#", "").substring(0, 8)}
+                #{card.card_id.replace("CARD#", "").substring(0, 8)} • {formData.title.length}/500
+              </Typography>
+            )}
+            {!card && formData.title && (
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "#64748b",
+                  fontSize: "0.813rem",
+                  fontWeight: 500,
+                  display: "block",
+                  mt: 0.5,
+                }}
+              >
+                {formData.title.length}/500
               </Typography>
             )}
           </Box>
@@ -747,53 +700,55 @@ export default function CardModal({
             {/* Detalhes Tab */}
             {activeTab === 0 && (
               <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                {/* Title Field */}
-                <Box>
-                  <Typography variant="caption" sx={{ color: "#64748b", fontWeight: 600, mb: 1, display: "block" }}>
-                    Título * ({formData.title.length}/500)
-                  </Typography>
-                  <TextField
-                    fullWidth
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    required
-                    placeholder="Digite o título do card..."
-                    inputProps={{ maxLength: 500 }}
-                    sx={{
-                      ...modernInputSx,
-                      "& .MuiOutlinedInput-input": {
-                        fontSize: "1rem",
-                        fontWeight: 600,
-                        color: "#0f172a",
-                      },
-                    }}
-                    InputProps={{
-                      sx: { height: 48 },
-                    }}
-                  />
-                </Box>
-
                 {/* Description Field */}
                 <Box>
-                  <Typography variant="caption" sx={{ color: "#64748b", fontWeight: 600, mb: 1, display: "block" }}>
-                    Descrição ({formData.description.length}/10000)
-                  </Typography>
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={4}
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Adicione uma descrição detalhada..."
-                    inputProps={{ maxLength: 10000 }}
-                    sx={{
-                      ...modernInputSx,
-                      "& .MuiOutlinedInput-input": {
-                        fontSize: "0.938rem",
-                        lineHeight: 1.6,
-                      },
-                    }}
-                  />
+                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+                    <Typography variant="caption" sx={{ color: "#64748b", fontWeight: 600 }}>
+                      Descrição ({formData.description.length}/10000)
+                    </Typography>
+                    <IconButton
+                      size="small"
+                      onClick={() => setDescriptionVisible(!descriptionVisible)}
+                      sx={{
+                        color: "#8270FF",
+                        padding: "4px",
+                        "&:hover": {
+                          bgcolor: "rgba(130, 112, 255, 0.08)",
+                        },
+                      }}
+                      title={descriptionVisible ? "Ocultar descrição" : "Mostrar descrição"}
+                    >
+                      {descriptionVisible ? (
+                        <VisibilityOffIcon sx={{ fontSize: "1.125rem" }} />
+                      ) : (
+                        <VisibilityIcon sx={{ fontSize: "1.125rem" }} />
+                      )}
+                    </IconButton>
+                  </Box>
+                  {descriptionVisible && (
+                    <TextField
+                      fullWidth
+                      multiline
+                      minRows={12}
+                      maxRows={30}
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      placeholder="Adicione uma descrição detalhada..."
+                      inputProps={{ maxLength: 10000 }}
+                      sx={{
+                        ...modernInputSx,
+                        "& .MuiOutlinedInput-root": {
+                          ...modernInputSx["& .MuiOutlinedInput-root"],
+                          alignItems: "flex-start",
+                        },
+                        "& .MuiOutlinedInput-input": {
+                          fontSize: "0.938rem",
+                          lineHeight: 1.6,
+                          overflowY: "auto !important",
+                        },
+                      }}
+                    />
+                  )}
                 </Box>
 
                 {/* Metadata Fields - Grid Layout */}
@@ -1084,10 +1039,11 @@ export default function CardModal({
                     {/* Subtasks List - Compact */}
                     {subtasks.length > 0 && (
                       <Box sx={{ maxHeight: 400, overflowY: "auto" }}>
-                        {subtasks.map((subtask) => (
-                          <Box
-                            key={subtask.subtask_id}
-                            sx={{
+                        {subtasks.map((subtask, index) => {
+                          return (
+                            <Box
+                              key={`subtask-${subtask.subtask_id || index}`}
+                              sx={{
                               display: "flex",
                               alignItems: "center",
                               gap: 1,
@@ -1157,7 +1113,7 @@ export default function CardModal({
                                 </Box>
                               </Box>
                             ) : (
-                              <>
+                              <Box sx={{ flex: 1, display: "flex", gap: 1, alignItems: "center" }}>
                                 <IconButton
                                   size="small"
                                   onClick={() => handleToggleSubtask(subtask)}
@@ -1223,10 +1179,11 @@ export default function CardModal({
                                     <DeleteIcon fontSize="small" />
                                   </IconButton>
                                 </Box>
-                              </>
+                              </Box>
                             )}
-                          </Box>
-                        ))}
+                            </Box>
+                          );
+                        })}
                       </Box>
                     )}
                   </Box>
