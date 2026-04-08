@@ -2086,7 +2086,7 @@ function KanbanPageContent() {
                       mb: 1,
                     }}
                   >
-                    {card.description}
+                    {card.description.replace(/<[^>]*>/g, "")}
                   </Typography>
                 )}
                 <Box sx={{ display: "flex", gap: 0.5, mt: 1 }}>

@@ -49,6 +49,7 @@ import {
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon,
 } from "@mui/icons-material";
+import MiniEditor from "./MiniEditor";
 import ConfirmDialog from "@/app/shared/components/ConfirmDialog";
 import { Card } from "@/app/types/kanban";
 import { Cliente } from "@/app/types/api";
@@ -811,7 +812,7 @@ export default function CardModal({
                 <Box>
                   <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
                     <Typography variant="caption" sx={{ color: "#64748b", fontWeight: 600 }}>
-                      Descrição ({formData.description.length}/10000)
+                      Descrição ({formData.description.replace(/<[^>]*>/g, "").length}/10000)
                     </Typography>
                     <IconButton
                       size="small"
@@ -833,27 +834,11 @@ export default function CardModal({
                     </IconButton>
                   </Box>
                   {descriptionVisible && (
-                    <TextField
-                      fullWidth
-                      multiline
-                      minRows={12}
-                      maxRows={30}
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    <MiniEditor
+                      content={formData.description}
+                      onChange={(html) => setFormData({ ...formData, description: html })}
                       placeholder="Adicione uma descrição detalhada..."
-                      inputProps={{ maxLength: 10000 }}
-                      sx={{
-                        ...modernInputSx,
-                        "& .MuiOutlinedInput-root": {
-                          ...modernInputSx["& .MuiOutlinedInput-root"],
-                          alignItems: "flex-start",
-                        },
-                        "& .MuiOutlinedInput-input": {
-                          fontSize: "0.938rem",
-                          lineHeight: 1.6,
-                          overflowY: "auto !important",
-                        },
-                      }}
+                      minHeight={200}
                     />
                   )}
                 </Box>
