@@ -36,6 +36,7 @@ import {
   Assignment as AssignmentIcon,
   MedicalServices as MedicalServicesIcon,
   Badge as BadgeIcon,
+  MenuBook as MenuBookIcon,
 } from "@mui/icons-material";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/app/hooks/useAuth";
@@ -107,6 +108,12 @@ const menuItems: MenuItem[] = [
       { text: "Insights", path: "/dashboard/insights" },
       { text: "Kanban", path: "/dashboard/kanban" },
     ]
+  },
+  {
+    text: "Documentação",
+    icon: <MenuBookIcon />,
+    path: "/dashboard/documentacao",
+    allowedRoles: ["admin", "colaborador", "aluno", "vendedor", "professor", "contador"],
   },
   {
     text: "Comunicação",
