@@ -398,13 +398,22 @@ function KanbanPageContent() {
     if (boardFullData?.columns && colaboradores.length > 0) {
       const hasCardParam = searchParams.get('card');
       const allCards: Card[] = boardFullData.columns.flatMap((col: any) => col.cards || []);
+      const columnsList: Column[] = boardFullData.columns.map((col: any) => ({
+        column_id: col.column_id,
+        board_id: col.board_id,
+        name: col.name,
+        position: col.position,
+        created_by: col.created_by,
+        created_at: col.created_at,
+        updated_at: col.updated_at,
+      }));
 
       if (!hasCardParam && allCards.length > 0) {
-        checkDueTodayCards(allCards, columns);
+        checkDueTodayCards(allCards, columnsList);
       }
 
       if (allCards.length > 0) {
-        calculateUrgentTasksByColaborador(allCards, columns);
+        calculateUrgentTasksByColaborador(allCards, columnsList);
       }
     }
   }, [boardFullData, colaboradores, searchParams]);
@@ -672,6 +681,14 @@ function KanbanPageContent() {
         column_id: newColumnId,
         position: newPosition,
       });
+
+      // Recalcular tarefas urgentes após mover card
+      const updatedCards = cards.map((c) =>
+        c.card_id === activeId
+          ? { ...c, column_id: newColumnId, position: newPosition }
+          : c
+      );
+      calculateUrgentTasksByColaborador(updatedCards, columns);
 
       setSnackbar({
         open: true,
@@ -2212,6 +2229,7 @@ function KanbanPageContent() {
                   <TableRow sx={{ bgcolor: "grey.50" }}>
                     <TableCell sx={{ fontWeight: 600 }}>Colaborador</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Tarefa</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Coluna</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>ID</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Vencimento</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
@@ -2252,6 +2270,18 @@ function KanbanPageContent() {
                           <Typography variant="body2" noWrap maxWidth={250}>
                             {task.card.title}
                           </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={columns.find(col => col.column_id === task.card.column_id)?.name || '—'}
+                            size="small"
+                            variant="outlined"
+                            sx={{
+                              height: 20,
+                              fontSize: "0.688rem",
+                              fontWeight: 500,
+                            }}
+                          />
                         </TableCell>
                         <TableCell>
                           <Typography variant="caption" fontFamily="monospace" color="text.secondary">
