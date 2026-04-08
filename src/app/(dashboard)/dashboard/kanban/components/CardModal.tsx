@@ -121,6 +121,8 @@ export default function CardModal({
     delivery_date: "",
     assigned_to: [] as string[],
   });
+  const [initialFormData, setInitialFormData] = useState<typeof formData | null>(null);
+  const [initialColumnId, setInitialColumnId] = useState<string>("");
   const [observation, setObservation] = useState("");
   const [activeTab, setActiveTab] = useState(0);
   const [selectedColumnId, setSelectedColumnId] = useState(columnId);
@@ -177,15 +179,18 @@ export default function CardModal({
 
   useEffect(() => {
     if (card) {
-      setFormData({
+      const data = {
         title: card.title,
         description: card.description || "",
         client_id: card.client_id || "",
         identificador_demanda_cliente: card.identificador_demanda_cliente || "",
         delivery_date: card.delivery_date || "",
         assigned_to: card.assigned_to || [],
-      });
+      };
+      setFormData(data);
+      setInitialFormData(data);
       setSelectedColumnId(card.column_id);
+      setInitialColumnId(card.column_id);
 
       // Only reset tab when opening modal or changing to a different card
       if (card.card_id !== lastCardId) {
@@ -204,7 +209,9 @@ export default function CardModal({
         delivery_date: "",
         assigned_to: defaultAssignedTo,
       });
+      setInitialFormData(null);
       setSelectedColumnId(columnId);
+      setInitialColumnId(columnId);
       setActiveTab(0);
       setLastCardId(null);
     }
@@ -1879,7 +1886,17 @@ export default function CardModal({
           <Button
             onClick={handleSubmit}
             variant="contained"
-            disabled={!formData.title.trim()}
+            disabled={
+              !formData.title.trim() ||
+              (card != null && initialFormData != null &&
+                formData.title === initialFormData.title &&
+                formData.description === initialFormData.description &&
+                formData.client_id === initialFormData.client_id &&
+                formData.identificador_demanda_cliente === initialFormData.identificador_demanda_cliente &&
+                formData.delivery_date === initialFormData.delivery_date &&
+                JSON.stringify(formData.assigned_to) === JSON.stringify(initialFormData.assigned_to) &&
+                selectedColumnId === initialColumnId)
+            }
             sx={{
               bgcolor: "#8270FF",
               color: "#fff",
