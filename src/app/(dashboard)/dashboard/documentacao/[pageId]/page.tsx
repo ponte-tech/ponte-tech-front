@@ -145,7 +145,7 @@ export default function WikiPageEditor() {
   }
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#fff" }}>
+    <Box sx={{ minHeight: "100vh", bgcolor: "#fff", width: "100%", mt: { xs: -2, sm: -3 }, mx: { xs: -2, sm: -3 } }}>
       {/* Top Bar */}
       <Box
         sx={{
@@ -157,7 +157,7 @@ export default function WikiPageEditor() {
           borderBottom: "1px solid",
           borderColor: alpha("#94a3b8", 0.1),
           px: { xs: 2, md: 3 },
-          py: 1,
+          py: 1.5,
         }}
       >
         <Stack direction="row" alignItems="center" justifyContent="space-between">
@@ -254,21 +254,22 @@ export default function WikiPageEditor() {
 
             <Button
               variant="contained"
-              size="small"
-              startIcon={saving ? <CircularProgress size={14} color="inherit" /> : <SaveIcon sx={{ fontSize: 16 }} />}
+              startIcon={saving ? <CircularProgress size={18} color="inherit" /> : <SaveIcon sx={{ fontSize: 20 }} />}
               onClick={handleSave}
               disabled={saving || !hasChanges}
               sx={{
                 textTransform: "none",
                 fontWeight: 600,
-                fontSize: "0.8125rem",
+                fontSize: "0.9rem",
                 bgcolor: "#8270FF",
                 borderRadius: 2,
-                px: 2,
-                height: 32,
-                boxShadow: hasChanges ? "0 1px 3px rgba(130,112,255,0.3)" : "none",
+                px: 3,
+                py: 1,
+                height: 40,
+                minWidth: 120,
+                boxShadow: hasChanges ? "0 2px 6px rgba(130,112,255,0.35)" : "none",
                 "&:hover": { bgcolor: "#6B5FCC" },
-                "&.Mui-disabled": { bgcolor: alpha("#94a3b8", 0.1), color: "#94a3b8" },
+                "&.Mui-disabled": { bgcolor: alpha("#94a3b8", 0.12), color: "#94a3b8" },
               }}
             >
               Salvar
@@ -278,7 +279,7 @@ export default function WikiPageEditor() {
       </Box>
 
       {/* Title */}
-      <Box sx={{ maxWidth: 820, mx: "auto", px: { xs: 2, md: 5 }, pt: 5, pb: 0 }}>
+      <Box sx={{ px: { xs: 2, md: 3 }, pt: 2, pb: 0 }}>
         {editMode ? (
           <TextField
             fullWidth
@@ -313,7 +314,7 @@ export default function WikiPageEditor() {
         )}
 
         {/* Meta */}
-        <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mt: 1.5, mb: 3 }}>
+        <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mt: 1, mb: 1 }}>
           <Typography variant="caption" color="#94a3b8" fontSize="0.75rem">
             Criado em {new Date(page.created_at).toLocaleDateString("pt-BR")}
           </Typography>

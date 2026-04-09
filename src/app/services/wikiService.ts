@@ -144,6 +144,28 @@ class WikiService {
   async deletePage(pageId: string): Promise<void> {
     await api.delete(`${this.baseUrl}/pages/${pageId}`);
   }
+
+  // --- Image Upload ---
+
+  async uploadImage(file: File): Promise<string> {
+    // 1. Get presigned URL
+    const initiateResponse = await api.post(`${this.baseUrl}/images/upload/initiate`, {
+      nome_arquivo: file.name,
+      content_type: file.type,
+      tamanho_bytes: file.size,
+    });
+
+    const { upload_url, image_url } = initiateResponse.data?.data || initiateResponse.data;
+
+    // 2. Upload directly to S3
+    await fetch(upload_url, {
+      method: "PUT",
+      body: file,
+      headers: { "Content-Type": file.type },
+    });
+
+    return image_url;
+  }
 }
 
 const wikiService = new WikiService();

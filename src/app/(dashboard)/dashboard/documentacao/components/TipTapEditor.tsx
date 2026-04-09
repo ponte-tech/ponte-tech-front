@@ -18,6 +18,8 @@ import {
   MenuItem,
   alpha,
   Paper,
+  CircularProgress,
+  Typography,
 } from "@mui/material";
 import {
   FormatBold,
@@ -40,7 +42,8 @@ import {
   FormatClear,
   DataObject as CodeBlockIcon,
 } from "@mui/icons-material";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
+import wikiService from "@/app/services/wikiService";
 
 interface TipTapEditorProps {
   content: string;
@@ -57,7 +60,7 @@ export default function TipTapEditor({ content, onChange, editable = true }: Tip
       Image.configure({ inline: true, allowBase64: true }),
       Link.configure({ openOnClick: false, autolink: true }),
       Underline,
-      TextAlign.configure({ types: ["heading", "paragraph"] }),
+      TextAlign.configure({ types: ["heading", "paragraph"], defaultAlignment: "left" }),
       Color,
       TextStyle,
       Highlight.configure({ multicolor: true }),
@@ -76,13 +79,50 @@ export default function TipTapEditor({ content, onChange, editable = true }: Tip
     }
   }, [content, editor]);
 
+  const [uploading, setUploading] = useState(false);
+
   const addImage = useCallback(() => {
-    if (!editor) return;
-    const url = window.prompt("URL da imagem:");
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
-    }
-  }, [editor]);
+    if (!editor || uploading) return;
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/jpeg,image/png,image/webp,image/gif";
+    input.onchange = async (event) => {
+      const file = (event.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      // Insert placeholder at cursor position
+      const placeholderId = `upload-${Date.now()}`;
+      editor.chain().focus().insertContent(
+        `<div id="${placeholderId}" data-upload-placeholder="true" style="display:flex;align-items:center;gap:8px;padding:16px 20px;margin:8px 0;background:#f0edff;border:1px dashed #8270FF;border-radius:8px;color:#8270FF;font-size:0.875rem;font-weight:500;">` +
+        `<span style="display:inline-block;width:20px;height:20px;border:2px solid #8270FF;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;"></span>` +
+        `Enviando imagem...` +
+        `</div>`
+      ).run();
+
+      try {
+        setUploading(true);
+        const imageUrl = await wikiService.uploadImage(file);
+
+        // Remove placeholder and insert real image
+        const placeholderEl = document.getElementById(placeholderId);
+        if (placeholderEl) {
+          placeholderEl.remove();
+        }
+        editor.chain().focus().setImage({ src: imageUrl }).run();
+      } catch (error) {
+        // Remove placeholder on error
+        const placeholderEl = document.getElementById(placeholderId);
+        if (placeholderEl) {
+          placeholderEl.remove();
+        }
+        console.error("Erro ao fazer upload da imagem:", error);
+        alert("Erro ao fazer upload da imagem. Tente novamente.");
+      } finally {
+        setUploading(false);
+      }
+    };
+    input.click();
+  }, [editor, uploading]);
 
   const addLink = useCallback(() => {
     if (!editor) return;
@@ -110,9 +150,11 @@ export default function TipTapEditor({ content, onChange, editable = true }: Tip
         onMouseDown={(e) => { e.preventDefault(); onClick(); }}
         sx={{
           borderRadius: 1.5,
-          color: isActive ? "#8270FF" : "#64748b",
-          bgcolor: isActive ? alpha("#8270FF", 0.1) : "transparent",
-          "&:hover": { bgcolor: isActive ? alpha("#8270FF", 0.15) : alpha("#64748b", 0.08) },
+          color: isActive ? "#8270FF" : "#334155",
+          bgcolor: isActive ? alpha("#8270FF", 0.1) : alpha("#94a3b8", 0.08),
+          border: "1px solid",
+          borderColor: isActive ? alpha("#8270FF", 0.3) : alpha("#94a3b8", 0.15),
+          "&:hover": { bgcolor: isActive ? alpha("#8270FF", 0.15) : alpha("#94a3b8", 0.18), borderColor: isActive ? alpha("#8270FF", 0.4) : alpha("#94a3b8", 0.3) },
           width: 34,
           height: 34,
           transition: "all 0.15s ease",
@@ -235,8 +277,8 @@ export default function TipTapEditor({ content, onChange, editable = true }: Tip
           <TB onClick={addLink} isActive={editor.isActive("link")} title="Link">
             <InsertLink fontSize="small" />
           </TB>
-          <TB onClick={addImage} title="Imagem">
-            <ImageIcon fontSize="small" />
+          <TB onClick={addImage} title={uploading ? "Enviando..." : "Imagem"}>
+            {uploading ? <CircularProgress size={16} sx={{ color: "#64748b" }} /> : <ImageIcon fontSize="small" />}
           </TB>
 
           <Box sx={{ flex: 1 }} />
@@ -253,19 +295,25 @@ export default function TipTapEditor({ content, onChange, editable = true }: Tip
         </Paper>
       )}
 
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
       {/* Editor Content */}
       <Box
         sx={{
+          display: "block",
+          "& .ProseMirror": {
+            outline: "none",
+          },
           "& .tiptap": {
             outline: "none",
             minHeight: editable ? 500 : 200,
-            maxWidth: 820,
-            mx: "auto",
-            px: { xs: 2, md: 5 },
-            py: 4,
+            px: { xs: 2, md: 3 },
+            pt: 1,
+            pb: 4,
             fontSize: "1rem",
             lineHeight: 1.75,
             color: "#1e293b",
+            textAlign: "left",
             "& h1": {
               fontSize: "2rem",
               fontWeight: 700,
