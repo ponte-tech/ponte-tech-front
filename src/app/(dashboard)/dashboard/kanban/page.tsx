@@ -1000,6 +1000,33 @@ function KanbanPageContent() {
     }
   };
 
+  const handleUpdateObservation = async (observationId: string, content: string) => {
+    if (!selectedCard) return;
+
+    try {
+      const response = await kanbanService.updateObservation(selectedCard.card_id, observationId, { content });
+      const updated = (response as any).data || response;
+
+      setCards((prev) =>
+        prev.map((c) => (c.card_id === selectedCard.card_id ? updated : c))
+      );
+
+      setSelectedCard(updated);
+
+      setSnackbar({
+        open: true,
+        message: "Observação atualizada",
+        severity: "success",
+      });
+    } catch (error: any) {
+      setSnackbar({
+        open: true,
+        message: error.message || "Erro ao atualizar observação",
+        severity: "error",
+      });
+    }
+  };
+
   const getClientName = (clientId?: string) => {
     if (!clientId) return "";
     const cliente = clientes.find((c) => c.cliente_id === clientId);
@@ -1847,6 +1874,7 @@ function KanbanPageContent() {
         onClose={() => setCardModalOpen(false)}
         onSave={handleSaveCard}
         onAddObservation={handleAddObservation}
+        onUpdateObservation={handleUpdateObservation}
         onChangeColumn={handleChangeColumn}
         card={selectedCard}
         columnId={selectedColumnForCard}

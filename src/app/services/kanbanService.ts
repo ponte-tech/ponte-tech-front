@@ -128,6 +128,14 @@ class KanbanService {
     return response.data;
   }
 
+  async updateObservation(cardId: string, observationId: string, data: { content: string }): Promise<Card> {
+    const response = await api.put<Card>(
+      `/api/kanban/cards/${encodeURIComponent(cardId)}/observations/${encodeURIComponent(observationId)}`,
+      data
+    );
+    return response.data;
+  }
+
   // Attachment operations
   async initiateAttachmentUpload(
     cardId: string,

@@ -62,6 +62,7 @@ interface CardModalProps {
   onClose: () => void;
   onSave: (data: any) => void;
   onAddObservation?: (content: string) => void;
+  onUpdateObservation?: (observationId: string, content: string) => void;
   onChangeColumn?: (cardId: string, newColumnId: string) => void;
   card?: Card | null;
   columnId: string;
@@ -111,6 +112,7 @@ export default function CardModal({
   colaboradores = [],
   onSave,
   onAddObservation,
+  onUpdateObservation,
   onChangeColumn,
   currentUserId,
 }: CardModalProps) {
@@ -125,6 +127,8 @@ export default function CardModal({
   const [initialFormData, setInitialFormData] = useState<typeof formData | null>(null);
   const [initialColumnId, setInitialColumnId] = useState<string>("");
   const [observation, setObservation] = useState("");
+  const [editingObservationId, setEditingObservationId] = useState<string | null>(null);
+  const [editingObservationContent, setEditingObservationContent] = useState("");
   const [activeTab, setActiveTab] = useState(0);
   const [selectedColumnId, setSelectedColumnId] = useState(columnId);
   const [lastCardId, setLastCardId] = useState<string | null>(null);
@@ -249,6 +253,24 @@ export default function CardModal({
     if (observation.trim() && card && onAddObservation) {
       onAddObservation(observation);
       setObservation("");
+    }
+  };
+
+  const handleStartEditObservation = (observationId: string, content: string) => {
+    setEditingObservationId(observationId);
+    setEditingObservationContent(content);
+  };
+
+  const handleCancelEditObservation = () => {
+    setEditingObservationId(null);
+    setEditingObservationContent("");
+  };
+
+  const handleSaveEditObservation = () => {
+    if (editingObservationId && editingObservationContent.trim() && onUpdateObservation) {
+      onUpdateObservation(editingObservationId, editingObservationContent);
+      setEditingObservationId(null);
+      setEditingObservationContent("");
     }
   };
 
@@ -1360,20 +1382,76 @@ export default function CardModal({
                           },
                         }}
                       >
-                        <ListItemText
-                          primary={obs.content}
-                          secondary={
-                            format(new Date(obs.created_at), "dd/MM/yyyy 'às' HH:mm", {
-                              locale: ptBR,
-                            })
-                          }
-                          primaryTypographyProps={{
-                            sx: { fontSize: "0.875rem", color: "#333" },
-                          }}
-                          secondaryTypographyProps={{
-                            sx: { fontSize: "0.75rem", color: "#999", mt: 0.5 },
-                          }}
-                        />
+                        {editingObservationId === obs.observation_id ? (
+                          <Box sx={{ display: "flex", flexDirection: "column", gap: 1, width: "100%" }}>
+                            <TextField
+                              fullWidth
+                              multiline
+                              rows={3}
+                              value={editingObservationContent}
+                              onChange={(e) => setEditingObservationContent(e.target.value)}
+                              sx={{
+                                "& .MuiOutlinedInput-root": {
+                                  borderRadius: 1.5,
+                                  backgroundColor: "#fff",
+                                  "& fieldset": {
+                                    borderColor: "#8270FF",
+                                    borderWidth: "1.5px",
+                                  },
+                                },
+                              }}
+                            />
+                            <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
+                              <Button
+                                size="small"
+                                onClick={handleCancelEditObservation}
+                                sx={{ color: "#666", textTransform: "none" }}
+                              >
+                                Cancelar
+                              </Button>
+                              <Button
+                                size="small"
+                                variant="contained"
+                                onClick={handleSaveEditObservation}
+                                disabled={!editingObservationContent.trim()}
+                                sx={{
+                                  bgcolor: "#8270FF",
+                                  textTransform: "none",
+                                  "&:hover": { bgcolor: alpha("#8270FF", 0.8) },
+                                }}
+                              >
+                                Salvar
+                              </Button>
+                            </Box>
+                          </Box>
+                        ) : (
+                          <>
+                            <ListItemText
+                              primary={obs.content}
+                              secondary={
+                                format(new Date(obs.created_at), "dd/MM/yyyy 'às' HH:mm", {
+                                  locale: ptBR,
+                                })
+                              }
+                              primaryTypographyProps={{
+                                sx: { fontSize: "0.875rem", color: "#333" },
+                              }}
+                              secondaryTypographyProps={{
+                                sx: { fontSize: "0.75rem", color: "#999", mt: 0.5 },
+                              }}
+                            />
+                            <IconButton
+                              size="small"
+                              onClick={() => handleStartEditObservation(obs.observation_id, obs.content)}
+                              sx={{
+                                color: "#999",
+                                "&:hover": { color: "#8270FF" },
+                              }}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                          </>
+                        )}
                       </ListItem>
                     ))}
                   </List>

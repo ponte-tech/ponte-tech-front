@@ -294,6 +294,18 @@ export function useAddObservation() {
   });
 }
 
+export function useUpdateObservation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ cardId, observationId, content }: { cardId: string; observationId: string; content: string }) =>
+      kanbanService.updateObservation(cardId, observationId, { content }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: kanbanKeys.all });
+    },
+  });
+}
+
 // ================== AUXILIARES ==================
 export function useClientes() {
   return useQuery({

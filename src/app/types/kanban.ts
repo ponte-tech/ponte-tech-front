@@ -116,6 +116,10 @@ export interface AddObservationRequest {
   content: string;
 }
 
+export interface UpdateObservationRequest {
+  content: string;
+}
+
 export interface CreateSubtaskRequest {
   card_id: string;
   title: string;
