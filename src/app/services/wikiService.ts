@@ -5,6 +5,8 @@ export interface WikiTopic {
   name: string;
   description?: string;
   icon?: string;
+  cliente_id?: string;
+  parent_topic_id?: string;
   position: number;
   page_count: number;
   created_by: string;
@@ -41,6 +43,8 @@ export interface CreateTopicRequest {
   name: string;
   description?: string;
   icon?: string;
+  cliente_id: string;
+  parent_topic_id?: string;
   position?: number;
 }
 

@@ -40,6 +40,8 @@ import wikiService, {
   WikiTopic,
   WikiPageSummary,
 } from "@/app/services/wikiService";
+import clienteService from "@/app/services/clienteService";
+import type { Cliente } from "@/app/types/cliente";
 
 function timeAgo(dateStr: string): string {
   const now = new Date();
@@ -60,10 +62,13 @@ export default function DocumentacaoPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+
   const [topicDialogOpen, setTopicDialogOpen] = useState(false);
   const [editingTopic, setEditingTopic] = useState<WikiTopic | null>(null);
   const [topicName, setTopicName] = useState("");
   const [topicDescription, setTopicDescription] = useState("");
+  const [topicClienteId, setTopicClienteId] = useState("");
 
   const [pageDialogOpen, setPageDialogOpen] = useState(false);
   const [newPageTopicId, setNewPageTopicId] = useState("");
@@ -101,7 +106,10 @@ export default function DocumentacaoPage() {
     }
   };
 
-  useEffect(() => { loadTopics(); }, []);
+  useEffect(() => {
+    loadTopics();
+    clienteService.list({ status: "ativo" }).then((res) => setClientes(res.clientes || [])).catch(() => {});
+  }, []);
 
   const handleCreateTopic = async () => {
     try {
@@ -109,16 +117,49 @@ export default function DocumentacaoPage() {
         await wikiService.updateTopic(editingTopic.topic_id, { name: topicName, description: topicDescription });
         setSnackbar({ open: true, message: "Tópico atualizado", severity: "success" });
       } else {
-        await wikiService.createTopic({ name: topicName, description: topicDescription, position: topics.length });
+        // Find or create parent topic for the selected client
+        const cliente = clientes.find((c) => c.cliente_id === topicClienteId);
+        if (!cliente) {
+          setSnackbar({ open: true, message: "Selecione um cliente", severity: "error" });
+          return;
+        }
+
+        const clienteName = cliente.nome_fantasia || cliente.razao_social;
+
+        // Check if parent topic already exists for this client
+        let parentTopic = topics.find((t) => t.cliente_id === topicClienteId && !t.parent_topic_id);
+
+        if (!parentTopic) {
+          // Create parent topic with client name
+          const created = await wikiService.createTopic({
+            name: clienteName,
+            description: `Documentação do cliente ${clienteName}`,
+            cliente_id: topicClienteId,
+            position: topics.length,
+          });
+          parentTopic = created as unknown as WikiTopic;
+        }
+
+        // Create subtopic under the parent
+        await wikiService.createTopic({
+          name: topicName,
+          description: topicDescription,
+          cliente_id: topicClienteId,
+          parent_topic_id: parentTopic.topic_id,
+          position: topics.length + 1,
+        });
+
         setSnackbar({ open: true, message: "Tópico criado", severity: "success" });
       }
       setTopicDialogOpen(false);
       setTopicName("");
       setTopicDescription("");
+      setTopicClienteId("");
       setEditingTopic(null);
       loadTopics(false);
-    } catch {
-      setSnackbar({ open: true, message: "Erro ao salvar tópico", severity: "error" });
+    } catch (error: any) {
+      const msg = error?.response?.data?.message || error?.message || "Erro ao salvar tópico";
+      setSnackbar({ open: true, message: msg, severity: "error" });
     }
   };
 
@@ -156,10 +197,25 @@ export default function DocumentacaoPage() {
     }
   };
 
-  const filteredTopics = topics.filter((topic) => {
+  // Separate parent topics (no parent_topic_id) and subtopics
+  const parentTopics = topics.filter((t) => !t.parent_topic_id);
+  const subtopicsByParent = topics.reduce((acc, t) => {
+    if (t.parent_topic_id) {
+      if (!acc[t.parent_topic_id]) acc[t.parent_topic_id] = [];
+      acc[t.parent_topic_id].push(t);
+    }
+    return acc;
+  }, {} as Record<string, WikiTopic[]>);
+
+  const filteredTopics = parentTopics.filter((topic) => {
     if (!search) return true;
     const q = search.toLowerCase();
     if (topic.name.toLowerCase().includes(q)) return true;
+    const children = subtopicsByParent[topic.topic_id] || [];
+    if (children.some((c) => c.name.toLowerCase().includes(q))) return true;
+    for (const child of children) {
+      if ((pagesByTopic[child.topic_id] || []).some((p) => p.title.toLowerCase().includes(q))) return true;
+    }
     return (pagesByTopic[topic.topic_id] || []).some((p) => p.title.toLowerCase().includes(q));
   });
 
@@ -218,6 +274,7 @@ export default function DocumentacaoPage() {
                   setEditingTopic(null);
                   setTopicName("");
                   setTopicDescription("");
+                  setTopicClienteId("");
                   setTopicDialogOpen(true);
                 }}
                 sx={{
@@ -331,7 +388,7 @@ export default function DocumentacaoPage() {
               <Button
                 variant="contained"
                 startIcon={<AddIcon />}
-                onClick={() => { setEditingTopic(null); setTopicName(""); setTopicDescription(""); setTopicDialogOpen(true); }}
+                onClick={() => { setEditingTopic(null); setTopicName(""); setTopicDescription(""); setTopicClienteId(""); setTopicDialogOpen(true); }}
                 sx={{
                   textTransform: "none",
                   fontWeight: 600,
@@ -349,16 +406,14 @@ export default function DocumentacaoPage() {
         ) : (
           /* Topics Tree */
           <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            {filteredTopics.map((topic) => {
-              const pages = pagesByTopic[topic.topic_id] || [];
-              const isExpanded = expandedTopics[topic.topic_id];
-              const filteredPages = search
-                ? pages.filter((p) => p.title.toLowerCase().includes(search.toLowerCase()))
-                : pages;
+            {filteredTopics.map((parentTopic) => {
+              const isParentExpanded = expandedTopics[parentTopic.topic_id];
+              const children = subtopicsByParent[parentTopic.topic_id] || [];
+              const parentPages = pagesByTopic[parentTopic.topic_id] || [];
 
               return (
-                <Box key={topic.topic_id}>
-                  {/* Topic Header */}
+                <Box key={parentTopic.topic_id}>
+                  {/* Parent Topic Header (Client) */}
                   <Box
                     sx={{
                       display: "flex",
@@ -372,27 +427,22 @@ export default function DocumentacaoPage() {
                       "&:hover": { bgcolor: alpha("#8270FF", 0.03) },
                       "&:hover .topic-actions": { opacity: 1 },
                     }}
-                    onClick={() => setExpandedTopics((prev) => ({ ...prev, [topic.topic_id]: !prev[topic.topic_id] }))}
+                    onClick={() => setExpandedTopics((prev) => ({ ...prev, [parentTopic.topic_id]: !prev[parentTopic.topic_id] }))}
                   >
                     <ChevronRightIcon
                       sx={{
                         fontSize: 20,
                         color: "#94a3b8",
                         transition: "transform 0.2s ease",
-                        transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
+                        transform: isParentExpanded ? "rotate(90deg)" : "rotate(0deg)",
                       }}
                     />
                     <FolderOpenIcon sx={{ fontSize: 20, color: "#8270FF" }} />
-                    <Typography variant="subtitle2" fontWeight={600} color="#1e293b" sx={{ flex: 1 }}>
-                      {topic.name}
+                    <Typography variant="subtitle2" fontWeight={700} color="#0f172a" sx={{ flex: 1 }}>
+                      {parentTopic.name}
                     </Typography>
-                    {topic.description && (
-                      <Typography variant="caption" color="#94a3b8" sx={{ mr: 1, display: { xs: "none", md: "block" } }}>
-                        {topic.description}
-                      </Typography>
-                    )}
                     <Chip
-                      label={pages.length}
+                      label={children.length + parentPages.length}
                       size="small"
                       sx={{
                         height: 20,
@@ -411,19 +461,10 @@ export default function DocumentacaoPage() {
                       sx={{ opacity: 0, transition: "opacity 0.15s" }}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <Tooltip title="Nova página" arrow>
-                        <IconButton
-                          size="small"
-                          onClick={() => { setNewPageTopicId(topic.topic_id); setNewPageTitle(""); setPageDialogOpen(true); }}
-                          sx={{ color: "#8270FF", width: 28, height: 28 }}
-                        >
-                          <NoteAddIcon sx={{ fontSize: 16 }} />
-                        </IconButton>
-                      </Tooltip>
                       <Tooltip title="Editar" arrow>
                         <IconButton
                           size="small"
-                          onClick={() => { setEditingTopic(topic); setTopicName(topic.name); setTopicDescription(topic.description || ""); setTopicDialogOpen(true); }}
+                          onClick={() => { setEditingTopic(parentTopic); setTopicName(parentTopic.name); setTopicDescription(parentTopic.description || ""); setTopicDialogOpen(true); }}
                           sx={{ color: "#64748b", width: 28, height: 28 }}
                         >
                           <EditIcon sx={{ fontSize: 16 }} />
@@ -432,7 +473,7 @@ export default function DocumentacaoPage() {
                       <Tooltip title="Excluir" arrow>
                         <IconButton
                           size="small"
-                          onClick={() => { setDeleteTarget({ type: "topic", id: topic.topic_id, name: topic.name }); setDeleteDialogOpen(true); }}
+                          onClick={() => { setDeleteTarget({ type: "topic", id: parentTopic.topic_id, name: parentTopic.name }); setDeleteDialogOpen(true); }}
                           sx={{ color: "#64748b", width: 28, height: 28, "&:hover": { color: "#ef4444" } }}
                         >
                           <DeleteIcon sx={{ fontSize: 16 }} />
@@ -441,35 +482,220 @@ export default function DocumentacaoPage() {
                     </Stack>
                   </Box>
 
-                  {/* Pages Grid */}
-                  <Collapse in={isExpanded} timeout={200}>
-                    <Box sx={{ pl: { xs: 2, md: 5.5 }, pt: 1, pb: 1 }}>
-                      {filteredPages.length === 0 ? (
-                        <Box
-                          sx={{
-                            py: 3,
-                            px: 2,
-                            border: "1px dashed",
-                            borderColor: alpha("#94a3b8", 0.2),
-                            borderRadius: 2,
-                            textAlign: "center",
-                          }}
-                        >
-                          <Typography variant="body2" color="#94a3b8" fontSize="0.8125rem">
-                            Nenhuma página neste tópico
-                          </Typography>
-                          <Button
-                            size="small"
-                            startIcon={<AddIcon sx={{ fontSize: 16 }} />}
-                            onClick={() => { setNewPageTopicId(topic.topic_id); setNewPageTitle(""); setPageDialogOpen(true); }}
-                            sx={{ mt: 1, textTransform: "none", color: "#8270FF", fontSize: "0.8125rem" }}
-                          >
-                            Criar página
-                          </Button>
-                        </Box>
-                      ) : (
-                        <Grid container spacing={1.5}>
-                          {filteredPages.map((page) => (
+                  {/* Subtopics and Pages */}
+                  <Collapse in={isParentExpanded} timeout={200}>
+                    <Box sx={{ pl: { xs: 2, md: 4 }, pt: 1 }}>
+                      {children.map((subtopic) => {
+                        const subPages = pagesByTopic[subtopic.topic_id] || [];
+                        const isSubExpanded = expandedTopics[subtopic.topic_id];
+                        const filteredSubPages = search
+                          ? subPages.filter((p) => p.title.toLowerCase().includes(search.toLowerCase()))
+                          : subPages;
+
+                        return (
+                          <Box key={subtopic.topic_id} sx={{ mb: 1 }}>
+                            {/* Subtopic Header */}
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                                px: 0.5,
+                                py: 0.5,
+                                cursor: "pointer",
+                                borderRadius: 1.5,
+                                transition: "all 0.15s ease",
+                                "&:hover": { bgcolor: alpha("#8270FF", 0.03) },
+                                "&:hover .topic-actions": { opacity: 1 },
+                              }}
+                              onClick={() => setExpandedTopics((prev) => ({ ...prev, [subtopic.topic_id]: !prev[subtopic.topic_id] }))}
+                            >
+                              <ChevronRightIcon
+                                sx={{
+                                  fontSize: 18,
+                                  color: "#94a3b8",
+                                  transition: "transform 0.2s ease",
+                                  transform: isSubExpanded ? "rotate(90deg)" : "rotate(0deg)",
+                                }}
+                              />
+                              <ArticleIcon sx={{ fontSize: 18, color: "#64748b" }} />
+                              <Typography variant="body2" fontWeight={600} color="#334155" sx={{ flex: 1 }}>
+                                {subtopic.name}
+                              </Typography>
+                              {subtopic.description && (
+                                <Typography variant="caption" color="#94a3b8" sx={{ mr: 1, display: { xs: "none", md: "block" } }}>
+                                  {subtopic.description}
+                                </Typography>
+                              )}
+                              <Chip
+                                label={subPages.length}
+                                size="small"
+                                sx={{
+                                  height: 18,
+                                  fontSize: "0.625rem",
+                                  fontWeight: 600,
+                                  bgcolor: alpha("#94a3b8", 0.08),
+                                  color: "#64748b",
+                                  "& .MuiChip-label": { px: 0.5 },
+                                }}
+                              />
+                              <Stack
+                                direction="row"
+                                spacing={0.25}
+                                className="topic-actions"
+                                sx={{ opacity: 0, transition: "opacity 0.15s" }}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Tooltip title="Nova página" arrow>
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => { setNewPageTopicId(subtopic.topic_id); setNewPageTitle(""); setPageDialogOpen(true); }}
+                                    sx={{ color: "#8270FF", width: 24, height: 24 }}
+                                  >
+                                    <NoteAddIcon sx={{ fontSize: 14 }} />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Editar" arrow>
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => { setEditingTopic(subtopic); setTopicName(subtopic.name); setTopicDescription(subtopic.description || ""); setTopicDialogOpen(true); }}
+                                    sx={{ color: "#64748b", width: 24, height: 24 }}
+                                  >
+                                    <EditIcon sx={{ fontSize: 14 }} />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Excluir" arrow>
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => { setDeleteTarget({ type: "topic", id: subtopic.topic_id, name: subtopic.name }); setDeleteDialogOpen(true); }}
+                                    sx={{ color: "#64748b", width: 24, height: 24, "&:hover": { color: "#ef4444" } }}
+                                  >
+                                    <DeleteIcon sx={{ fontSize: 14 }} />
+                                  </IconButton>
+                                </Tooltip>
+                              </Stack>
+                            </Box>
+
+                            {/* Subtopic Pages */}
+                            <Collapse in={isSubExpanded} timeout={200}>
+                              <Box sx={{ pl: { xs: 2, md: 4.5 }, pt: 1, pb: 1 }}>
+                                {filteredSubPages.length === 0 ? (
+                                  <Box
+                                    sx={{
+                                      py: 2,
+                                      px: 2,
+                                      border: "1px dashed",
+                                      borderColor: alpha("#94a3b8", 0.2),
+                                      borderRadius: 2,
+                                      textAlign: "center",
+                                    }}
+                                  >
+                                    <Typography variant="body2" color="#94a3b8" fontSize="0.8125rem">
+                                      Nenhuma página neste tópico
+                                    </Typography>
+                                    <Button
+                                      size="small"
+                                      startIcon={<AddIcon sx={{ fontSize: 16 }} />}
+                                      onClick={() => { setNewPageTopicId(subtopic.topic_id); setNewPageTitle(""); setPageDialogOpen(true); }}
+                                      sx={{ mt: 1, textTransform: "none", color: "#8270FF", fontSize: "0.8125rem" }}
+                                    >
+                                      Criar página
+                                    </Button>
+                                  </Box>
+                                ) : (
+                                  <Grid container spacing={1.5}>
+                                    {filteredSubPages.map((page) => (
+                                      <Grid item xs={12} sm={6} md={4} key={page.page_id}>
+                                        <Box
+                                          onClick={() => router.push(`/dashboard/documentacao/${page.page_id}`)}
+                                          sx={{
+                                            p: 2,
+                                            bgcolor: "#fff",
+                                            borderRadius: 2.5,
+                                            border: "1px solid",
+                                            borderColor: alpha("#94a3b8", 0.12),
+                                            cursor: "pointer",
+                                            transition: "all 0.2s ease",
+                                            position: "relative",
+                                            "&:hover": {
+                                              borderColor: alpha("#8270FF", 0.3),
+                                              boxShadow: `0 4px 12px ${alpha("#8270FF", 0.08)}`,
+                                              transform: "translateY(-1px)",
+                                            },
+                                            "&:hover .page-delete": { opacity: 1 },
+                                          }}
+                                        >
+                                          <Stack direction="row" alignItems="flex-start" spacing={1.25}>
+                                            <Box
+                                              sx={{
+                                                width: 32,
+                                                height: 32,
+                                                borderRadius: 1.5,
+                                                bgcolor: alpha("#8270FF", 0.06),
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                flexShrink: 0,
+                                                mt: 0.25,
+                                              }}
+                                            >
+                                              <ArticleIcon sx={{ fontSize: 18, color: "#8270FF" }} />
+                                            </Box>
+                                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                                              <Typography
+                                                variant="body2"
+                                                fontWeight={600}
+                                                color="#1e293b"
+                                                noWrap
+                                                sx={{ mb: 0.5, fontSize: "0.875rem" }}
+                                              >
+                                                {page.title}
+                                              </Typography>
+                                              <Stack direction="row" alignItems="center" spacing={0.5}>
+                                                <AccessTimeIcon sx={{ fontSize: 12, color: "#94a3b8" }} />
+                                                <Typography variant="caption" color="#94a3b8" fontSize="0.6875rem">
+                                                  {timeAgo(page.updated_at)}
+                                                </Typography>
+                                              </Stack>
+                                            </Box>
+                                          </Stack>
+                                          <IconButton
+                                            className="page-delete"
+                                            size="small"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setDeleteTarget({ type: "page", id: page.page_id, name: page.title });
+                                              setDeleteDialogOpen(true);
+                                            }}
+                                            sx={{
+                                              position: "absolute",
+                                              top: 6,
+                                              right: 6,
+                                              opacity: 0,
+                                              transition: "opacity 0.15s",
+                                              width: 24,
+                                              height: 24,
+                                              color: "#94a3b8",
+                                              "&:hover": { color: "#ef4444" },
+                                            }}
+                                          >
+                                            <DeleteIcon sx={{ fontSize: 14 }} />
+                                          </IconButton>
+                                        </Box>
+                                      </Grid>
+                                    ))}
+                                  </Grid>
+                                )}
+                              </Box>
+                            </Collapse>
+                          </Box>
+                        );
+                      })}
+
+                      {/* Pages directly under parent (legacy or direct pages) */}
+                      {parentPages.length > 0 && (
+                        <Grid container spacing={1.5} sx={{ mt: 0.5 }}>
+                          {parentPages.map((page) => (
                             <Grid item xs={12} sm={6} md={4} key={page.page_id}>
                               <Box
                                 onClick={() => router.push(`/dashboard/documentacao/${page.page_id}`)}
@@ -507,13 +733,7 @@ export default function DocumentacaoPage() {
                                     <ArticleIcon sx={{ fontSize: 18, color: "#8270FF" }} />
                                   </Box>
                                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                                    <Typography
-                                      variant="body2"
-                                      fontWeight={600}
-                                      color="#1e293b"
-                                      noWrap
-                                      sx={{ mb: 0.5, fontSize: "0.875rem" }}
-                                    >
+                                    <Typography variant="body2" fontWeight={600} color="#1e293b" noWrap sx={{ mb: 0.5, fontSize: "0.875rem" }}>
                                       {page.title}
                                     </Typography>
                                     <Stack direction="row" alignItems="center" spacing={0.5}>
@@ -551,6 +771,23 @@ export default function DocumentacaoPage() {
                           ))}
                         </Grid>
                       )}
+
+                      {children.length === 0 && parentPages.length === 0 && (
+                        <Box
+                          sx={{
+                            py: 3,
+                            px: 2,
+                            border: "1px dashed",
+                            borderColor: alpha("#94a3b8", 0.2),
+                            borderRadius: 2,
+                            textAlign: "center",
+                          }}
+                        >
+                          <Typography variant="body2" color="#94a3b8" fontSize="0.8125rem">
+                            Nenhum subtópico ou página neste cliente
+                          </Typography>
+                        </Box>
+                      )}
                     </Box>
                   </Collapse>
                 </Box>
@@ -573,10 +810,29 @@ export default function DocumentacaoPage() {
         </DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="#64748b" sx={{ mb: 2.5 }}>
-            {editingTopic ? "Atualize as informações do tópico." : "Tópicos organizam suas páginas em categorias."}
+            {editingTopic ? "Atualize as informações do tópico." : "Selecione o cliente e crie um subtópico para organizar a documentação."}
           </Typography>
+          {!editingTopic && (
+            <TextField
+              select
+              fullWidth
+              label="Cliente *"
+              value={topicClienteId}
+              onChange={(e) => setTopicClienteId(e.target.value)}
+              sx={{ mb: 2 }}
+              SelectProps={{ native: true }}
+              helperText="O tópico principal será criado automaticamente com o nome do cliente"
+            >
+              <option value="">Selecione um cliente</option>
+              {clientes.map((c) => (
+                <option key={c.cliente_id} value={c.cliente_id}>
+                  {c.nome_fantasia || c.razao_social}
+                </option>
+              ))}
+            </TextField>
+          )}
           <TextField
-            autoFocus
+            autoFocus={!!editingTopic}
             fullWidth
             label="Nome do tópico"
             placeholder="Ex: Guias de Onboarding"
@@ -601,7 +857,7 @@ export default function DocumentacaoPage() {
           <Button
             variant="contained"
             onClick={handleCreateTopic}
-            disabled={!topicName.trim()}
+            disabled={!topicName.trim() || (!editingTopic && !topicClienteId)}
             sx={{
               textTransform: "none",
               fontWeight: 600,
@@ -638,9 +894,12 @@ export default function DocumentacaoPage() {
             sx={{ mb: 2 }}
             SelectProps={{ native: true }}
           >
-            {topics.map((t) => (
-              <option key={t.topic_id} value={t.topic_id}>{t.name}</option>
-            ))}
+            <option value="">Selecione um tópico</option>
+            {topics.map((t) => {
+              const parent = t.parent_topic_id ? parentTopics.find((p) => p.topic_id === t.parent_topic_id) : null;
+              const label = parent ? `${parent.name} > ${t.name}` : t.name;
+              return <option key={t.topic_id} value={t.topic_id}>{label}</option>;
+            })}
           </TextField>
           <TextField
             autoFocus
