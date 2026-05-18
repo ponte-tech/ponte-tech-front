@@ -3,7 +3,7 @@ import { Star } from "../_shared/icons";
 import { Pill } from "../_shared/pill";
 
 export const Produtos = () => (
-  <section className={`${styles.produtos} ${styles.section}`}>
+  <section id="quem" className={`${styles.produtos} ${styles.section}`}>
     <div className={styles.mandalaSmall} />
     <h2>Produtos que transformam operações</h2>
     <p className={styles.sub}>
