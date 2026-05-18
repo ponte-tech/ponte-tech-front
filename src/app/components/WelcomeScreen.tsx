@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Box, Typography, Avatar, Fade, Grow, Zoom } from "@mui/material";
-import { keyframes } from "@mui/system";
+import { keyframes } from "@mui/material/styles";
 
 interface WelcomeScreenProps {
   userName: string;
