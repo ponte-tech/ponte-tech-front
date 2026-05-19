@@ -8,7 +8,9 @@ import { Academy } from "./sections/academy";
 import { Numbers } from "./sections/numbers";
 import { Prova } from "./sections/prova";
 import { Cta } from "./sections/cta";
+import { Contato } from "./sections/contato";
 import { Footer } from "./sections/footer";
+import { WhatsappFab } from "./_shared/whatsapp-fab";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -37,8 +39,10 @@ export default function HomePage() {
         <Numbers />
         <Prova />
         <Cta />
+        <Contato />
         <Footer />
       </div>
+      <WhatsappFab />
     </div>
   );
 }

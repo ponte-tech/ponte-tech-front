@@ -145,7 +145,6 @@
   position: relative;
   background: var(--bg-body);
   color: var(--fg);
-  overflow-x: hidden;
   font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
 }
 
@@ -155,7 +154,7 @@
   box-sizing: border-box;
 }
 .page a { color: inherit; text-decoration: none; }
-.page button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+.page :where(button) { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
 .page h1, .page h2, .page h3, .page h4, .page h5, .page p { margin: 0; }
 
 /* ============ PILL ============ */
@@ -244,6 +243,7 @@
   height: 16px;
   flex: none;
   display: block;
+  transform: translateY(1px);
 }
 .btn .ico svg { width: 100%; height: 100%; display: block; }
 
@@ -291,13 +291,16 @@
 .hero {
   position: relative;
   height: 1040px;
-  overflow: hidden;
   background: var(--bg-body);
   isolation: isolate;
 }
 .heroEllipse {
   position: absolute;
-  inset: -172px -172px;
+  top: -172px;
+  bottom: -172px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
   background:
     radial-gradient(60% 50% at 78% 42%, rgba(120, 110, 240, 0.18) 0%, rgba(60, 50, 180, 0.05) 45%, transparent 70%),
     radial-gradient(45% 40% at 30% 30%, rgba(50, 70, 200, 0.10) 0%, transparent 70%);
@@ -306,7 +309,11 @@
 }
 .heroDarken {
   position: absolute;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
   background: linear-gradient(180deg, transparent 60%, rgba(3, 2, 19, 0.6) 100%);
   pointer-events: none;
   z-index: 2;
@@ -905,6 +912,124 @@
   opacity: 0.95;
 }
 
+/* ============ CONTATO (form) ============ */
+.contato {
+  padding: 48px 120px 96px;
+  text-align: center;
+}
+.contato > .pill { margin-bottom: 24px; }
+.contato h2 {
+  font-weight: 600;
+  font-size: 50px;
+  line-height: normal;
+  letter-spacing: -2px;
+  color: var(--fg);
+  max-width: 800px;
+  margin: 0 auto 24px;
+}
+.contato .sub {
+  font-size: 20px;
+  line-height: 30px;
+  color: var(--fg-70);
+  max-width: 700px;
+  margin: 0 auto 48px;
+}
+.contatoCard {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 40px;
+  border-radius: var(--r-lg);
+  background: var(--bg-card);
+  border: 1px solid var(--fg-07);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  transition: border-color 0.2s, background 0.2s;
+}
+.fieldRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fieldLabel {
+  font-size: var(--ds-font-caption-size);
+  font-weight: var(--ds-font-caption-weight);
+  line-height: var(--ds-font-caption-line-height);
+  color: var(--fg-70);
+}
+.input,
+.textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--fg);
+  background: var(--fg-03);
+  border: 1px solid var(--fg-10);
+  border-radius: var(--r-md);
+  padding: 12px 16px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.input::placeholder,
+.textarea::placeholder { color: var(--fg-40); }
+.input:hover,
+.textarea:hover { border-color: var(--fg-40); }
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.04);
+}
+.textarea {
+  resize: vertical;
+  min-height: 132px;
+}
+.contatoActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.contatoStatus {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--fg-70);
+  margin-right: auto;
+}
+
+/* ============ WHATSAPP FAB ============ */
+.waFab {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 1000;
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #25D366;
+  color: #FFFFFF;
+  box-shadow: 0 10px 24px rgba(37, 211, 102, 0.35), 0 2px 8px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+.waFab:hover {
+  background: #1DA851;
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(37, 211, 102, 0.45), 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+.waFab:active { transform: translateY(0); }
+.waFab svg { width: 30px; height: 30px; display: block; }
+
 /* ============ FOOTER ============ */
 .footer {
   height: 414px;
@@ -1073,6 +1198,11 @@
   .cta h2 { font-size: 60px; max-width: 100%; }
   .cta .ctaBody { font-size: 20px; line-height: 30px; max-width: 100%; margin: 0 0 42px; }
   .ctaPattern { width: 285px; height: 285px; }
+
+  .contato { padding: 32px 40px 80px; }
+  .contato h2 { font-size: 50px; max-width: 800px; }
+  .contato .sub { font-size: 20px; line-height: 30px; max-width: 700px; }
+  .contatoCard { max-width: 100%; padding: 32px; }
 
   .footer { height: 414px; padding: 81px 20px 32px; }
   .footerGrid {
@@ -1286,6 +1416,15 @@
   .ctaCtas { justify-content: center; gap: 16px; flex-wrap: wrap; margin-bottom: 28px; }
   .ctaContact { flex-direction: row; flex-wrap: wrap; gap: 24px; font-size: 16px; justify-content: center; align-items: center; }
   .ctaPattern { width: 285px; height: 285px; margin: 0 auto; }
+
+  .contato { padding: 24px 20px 64px; }
+  .contato h2 { font-size: 40px; letter-spacing: -1.6px; }
+  .contato .sub { font-size: 18px; line-height: 27px; margin-bottom: 32px; }
+  .contatoCard { padding: 24px; gap: 20px; }
+  .fieldRow { grid-template-columns: 1fr; gap: 20px; }
+  .contatoActions { justify-content: stretch; flex-direction: column; align-items: stretch; }
+  .contatoActions .btn { width: 100%; }
+  .contatoStatus { margin-right: 0; text-align: center; }
 
   .footer { height: 772px; padding: 41px 20px 0; }
   .footerGrid {
