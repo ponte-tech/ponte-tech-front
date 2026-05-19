@@ -8,13 +8,31 @@ export const Footer = () => (
         <Logo />
         <p className={styles.brandBlurb}>Tecnologia de alto nível para empresas que não aceitam menos.</p>
         <div className={styles.socials}>
-          <a className={styles.social} href="#" aria-label="LinkedIn">
+          <a
+            className={styles.social}
+            href="https://www.linkedin.com/company/pontetech"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="LinkedIn"
+          >
             <img src="/assets/landing/linkedin.svg" alt="" aria-hidden="true" />
           </a>
-          <a className={styles.social} href="#" aria-label="Instagram">
+          <a
+            className={styles.social}
+            href="https://www.instagram.com/pontetechoficial/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Instagram"
+          >
             <img src="/assets/landing/instagram.svg" alt="" aria-hidden="true" />
           </a>
-          <a className={styles.social} href="#" aria-label="GitHub">
+          <a
+            className={styles.social}
+            href="https://github.com/ponte-tech"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub"
+          >
             <img src="/assets/landing/github.svg" alt="" aria-hidden="true" />
           </a>
         </div>

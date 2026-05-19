@@ -8,9 +8,9 @@ export const Nav = () => (
       <a href="#quem">Quem Somos</a>
       <a href="#servicos">Serviços</a>
       <a href="#academy">Ponte Academy</a>
-      <a href="#contato">Contato</a>
+      <a href="#contato-form">Contato</a>
     </div>
-    <a className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSm} ${styles.navCta}`} href="#contato">
+    <a className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSm} ${styles.navCta}`} href="#contato-form">
       Fale com um especialista
     </a>
   </nav>
