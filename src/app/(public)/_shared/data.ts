@@ -80,4 +80,14 @@ export const testimonialsRow2: TestimonialItem[] = [
   },
 ];
 
-export const empresas = ["NEXORA", "STRATIX", "ORBITECH", "VAULTEX", "PRISMA", "AXIOM"];
+export const empresas = [
+  "Bentec",
+  "Multilog",
+  "Leroy",
+  "Banco BTG",
+  "APISUL",
+  "Philipis",
+  "Comerc energia",
+  "Matrix energia",
+  "hospital Sabin Sinai",
+];
