@@ -29,10 +29,12 @@ export const Hero = () => (
 
     <div className={styles.heroCompanies}>
       <p className={styles.label}>Empresas que confiam na nossa tecnologia</p>
-      <div className={styles.logos}>
-        {empresas.map((b) => (
-          <span key={b} className={styles.brand}>{b}</span>
-        ))}
+      <div className={styles.logosMarquee} aria-hidden={false}>
+        <div className={styles.logosTrack}>
+          {[...empresas, ...empresas].map((b, i) => (
+            <span key={`${b}-${i}`} className={styles.brand}>{b}</span>
+          ))}
+        </div>
       </div>
     </div>
   </section>
