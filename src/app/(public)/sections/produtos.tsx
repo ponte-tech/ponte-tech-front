@@ -12,7 +12,7 @@ export const Produtos = () => (
 
     <div className={styles.produtosGrid}>
       {/* DENTRIXA */}
-      <article className={styles.pcard}>
+      <article className={`${styles.pcard} ${styles.pcardFeatured}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           className={styles.productLogo}
@@ -44,7 +44,7 @@ export const Produtos = () => (
       </article>
 
       {/* CRETOR */}
-      <article className={styles.pcard}>
+      <article className={`${styles.pcard} ${styles.pcardFeatured}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           className={styles.productAvatar}
@@ -58,7 +58,7 @@ export const Produtos = () => (
       </article>
 
       {/* CASA DIGITAL */}
-      <article className={styles.pcard}>
+      <article className={`${styles.pcard} ${styles.pcardFeatured}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           className={styles.productLogo}
