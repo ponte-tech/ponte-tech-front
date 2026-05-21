@@ -473,10 +473,10 @@
   display: flex;
   align-items: center;
   width: max-content;
-  animation: logosScroll 32s linear infinite;
+  animation: logosScroll 40s linear infinite;
 }
 .heroCompanies .logosTrack .brand {
-  margin-right: 48px;
+  margin-right: 56px;
 }
 .heroCompanies .logosMarquee:hover .logosTrack {
   animation-play-state: paused;
@@ -486,16 +486,31 @@
   to { transform: translateX(-50%); }
 }
 .heroCompanies .brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   font-weight: 700;
-  font-size: 30px;
-  letter-spacing: 0;
+  font-size: 14px;
+  letter-spacing: 0.02em;
   line-height: 1;
   color: var(--fg);
   text-transform: uppercase;
   white-space: nowrap;
   transition: opacity 0.15s;
+  opacity: 0.6;
 }
-.heroCompanies .brand:hover { opacity: 0.8; }
+.heroCompanies .brand:hover { opacity: 1; }
+.brandLogo {
+  height: 32px;
+  width: auto;
+  max-width: 100px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
+  transition: opacity 0.15s;
+}
+.heroCompanies .brand:hover .brandLogo { opacity: 1; }
 
 /* ============ SECTION ============ */
 .section { position: relative; z-index: 2; }
@@ -1246,7 +1261,8 @@
   }
   .heroCompanies { padding: 0 40px; bottom: 16px; }
   .heroCompanies .label { margin-bottom: 40px; }
-  .heroCompanies .brand { font-size: 22px; }
+  .heroCompanies .brand { font-size: 12px; }
+  .brandLogo { height: 26px; max-width: 80px; }
   .heroCompanies .logosTrack .brand { margin-right: 32px; }
 
   .produtos { padding: 0 8px 48px; height: auto; }
@@ -1400,7 +1416,8 @@
     padding: 56px 20px 48px;
   }
   .heroCompanies .label { margin-bottom: 40px; }
-  .heroCompanies .brand { font-size: 22px; }
+  .heroCompanies .brand { font-size: 12px; }
+  .brandLogo { height: 26px; max-width: 80px; }
   .heroCompanies .logosTrack .brand { margin-right: 32px; }
 
   .produtos { padding: 0 20px 32px; height: auto; }

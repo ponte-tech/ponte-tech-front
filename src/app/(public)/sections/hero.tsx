@@ -32,7 +32,15 @@ export const Hero = () => (
       <div className={styles.logosMarquee} aria-hidden={false}>
         <div className={styles.logosTrack}>
           {[...empresas, ...empresas].map((b, i) => (
-            <span key={`${b}-${i}`} className={styles.brand}>{b}</span>
+            <span key={`${b.name}-${i}`} className={styles.brand}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={b.logo}
+                alt={b.name}
+                className={styles.brandLogo}
+              />
+              {b.name}
+            </span>
           ))}
         </div>
       </div>

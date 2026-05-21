@@ -80,14 +80,22 @@ export const testimonialsRow2: TestimonialItem[] = [
   },
 ];
 
-export const empresas = [
-  "Bentec",
-  "Multilog",
-  "Leroy",
-  "Banco BTG",
-  "APISUL",
-  "Philipis",
-  "Comerc energia",
-  "Matrix energia",
-  "hospital Sabin Sinai",
+export type Empresa = {
+  name: string;
+  logo: string;
+};
+
+export const empresas: Empresa[] = [
+  { name: "Bentec", logo: "/assets/landing/logos/bentec.svg" },
+  { name: "Multilog", logo: "/assets/landing/logos/multilog.jpg" },
+  { name: "Leroy Merlin", logo: "/assets/landing/logos/leroy.svg" },
+  { name: "Banco BTG", logo: "/assets/landing/logos/btg.svg" },
+  { name: "APISUL", logo: "/assets/landing/logos/apisul.svg" },
+  { name: "Philips", logo: "/assets/landing/logos/philips.png" },
+  { name: "Comerc Energia", logo: "/assets/landing/logos/comerc.png" },
+  { name: "Matrix Energia", logo: "/assets/landing/logos/matrix.webp" },
+  { name: "Hospital Sabin Sinai", logo: "/assets/landing/logos/sabin.svg" },
 ];
+
+/** @deprecated Use empresas[].name instead */
+export const empresasNomes = empresas.map((e) => e.name);

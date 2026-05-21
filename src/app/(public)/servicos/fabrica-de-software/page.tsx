@@ -13,7 +13,7 @@ import { MobileNav } from "../mobile-nav";
 const inter = Inter({ subsets: ["latin"], weight: ["400","500","600","700"], variable: "--font-inter", display: "swap" });
 const mono = Roboto_Mono({ subsets: ["latin"], weight: ["400","500"], variable: "--font-mono", display: "swap" });
 
-const logos = ["Bentec","Multilog","Leroy","Banco BTG","APISUL","Comerc Energia","Matrix Energia"];
+import { empresas } from "../../_shared/data";
 const wa = "https://wa.me/5511915788441";
 
 export default function FabricaPage() {
@@ -48,7 +48,13 @@ export default function FabricaPage() {
         <div className={s.logos}>
           <p>Empresas que j&aacute; confiaram na gente</p>
           <div className={s.logosMarquee}>
-            <div className={s.logosTrack}>{[...logos, ...logos].map((l, i)=><span key={`${l}-${i}`}>{l}</span>)}</div>
+            <div className={s.logosTrack}>{[...empresas, ...empresas].map((e, i)=>(
+              <span key={`${e.name}-${i}`}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={e.logo} alt={e.name} className={s.brandLogo}/>
+                {e.name}
+              </span>
+            ))}</div>
           </div>
         </div>
 
