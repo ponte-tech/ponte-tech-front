@@ -11,14 +11,21 @@ export const Produtos = () => (
     </p>
 
     <div className={styles.produtosGrid}>
+      {/* DENTRIXA */}
       <article className={styles.pcard}>
-        <div className={styles.topSpacer} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          className={styles.productLogo}
+          src="/assets/landing/logo-dentrixa.svg"
+          alt="Dentrixa"
+        />
         <Pill><Star />SaaS</Pill>
-        <h3>Dentrixa - Solução para clinicas odontologicas</h3>
-        <p>Plataforma de gestão de leads e relacionamento para o setor imobiliário. Converta mais com inteligência.</p>
-        <a className={`${styles.btn} ${styles.btnPrimary}`} href="https://www.dentrixa.com/" target="_blank" rel="noopener noreferrer">Ver mais detalhes</a>
+        <h3>Dentrixa - Solução para clínicas odontológicas</h3>
+        <p>Plataforma de gestão completa para clínicas odontológicas. Agenda, prontuário, financeiro e WhatsApp integrados.</p>
+        <a className={`${styles.btn} ${styles.btnPrimary}`} href="https://app.dentrixa.com.br/" target="_blank" rel="noopener noreferrer">Ver mais detalhes</a>
       </article>
 
+      {/* MAGUS */}
       <article className={`${styles.pcard} ${styles.pcardFeatured}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -36,12 +43,32 @@ export const Produtos = () => (
         </a>
       </article>
 
+      {/* CRETOR */}
       <article className={styles.pcard}>
-        <div className={styles.topSpacer} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          className={styles.productAvatar}
+          src="/assets/landing/daniel-krammes.png"
+          alt="Daniel Krammes"
+        />
         <Pill><Star />SaaS</Pill>
         <h3>Cretor — Plataforma inteligente para corretores</h3>
         <p>Gestão financeira integrada e automatizada para empresas de tecnologia em crescimento.</p>
         <a className={`${styles.btn} ${styles.btnPrimary}`} href="https://danielkrammes.com/" target="_blank" rel="noopener noreferrer">Ver mais detalhes</a>
+      </article>
+
+      {/* CASA DIGITAL */}
+      <article className={styles.pcard}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          className={styles.productLogo}
+          src="/assets/landing/logo-casa-digital.svg"
+          alt="Casa Digital"
+        />
+        <Pill><Star />SaaS</Pill>
+        <h3>Casa Digital — Captação inteligente de leads imobiliários</h3>
+        <p>QR Code na fachada do imóvel que transforma visitas em leads qualificados. Inteligência de vizinhança e automação para corretores.</p>
+        <a className={`${styles.btn} ${styles.btnPrimary}`} href="https://dev.casa-digital.net/" target="_blank" rel="noopener noreferrer">Ver mais detalhes</a>
       </article>
     </div>
   </section>

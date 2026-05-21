@@ -79,18 +79,20 @@ export default function SaasPage() {
         {/* PRODUTOS */}
         <section id="produtos" className={`${s.sec} ${s.secC}`}>
           <Pill><Star />Produtos</Pill>
-          <h2 className={s.secH}>3 plataformas para 3 mercados</h2>
+          <h2 className={s.secH}>4 plataformas para 4 mercados</h2>
           <p className={s.secP}>Cada uma resolve um problema real, de forma simples e eficiente.</p>
 
           <div className={s.products}>
             <Reveal as="article" className={s.product}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/assets/landing/logo-dentrixa.svg" alt="Dentrixa" className={s.productLogo}/>
               <Pill muted>Cl&iacute;nicas</Pill>
               <h3>Dentrixa</h3>
               <p>Sistema completo para cl&iacute;nicas odontol&oacute;gicas. Agenda com confirma&ccedil;&atilde;o autom&aacute;tica pelo WhatsApp, ficha do paciente digital, controle financeiro. Menos faltas, mais organiza&ccedil;&atilde;o.</p>
               <div className={s.tags}>
                 {["Agenda","WhatsApp","Financeiro","Prontuário"].map(t=><Pill key={t} muted>{t}</Pill>)}
               </div>
-              <a className={`${landing.btn} ${landing.btnPrimary}`} href="https://www.dentrixa.com/" target="_blank" rel="noopener noreferrer">Conhecer<ChevronRight /></a>
+              <a className={`${landing.btn} ${landing.btnPrimary}`} href="https://app.dentrixa.com.br/" target="_blank" rel="noopener noreferrer">Conhecer<ChevronRight /></a>
             </Reveal>
 
             <Reveal as="article" className={`${s.product} ${s.productFeat}`} delay={100}>
@@ -106,6 +108,8 @@ export default function SaasPage() {
             </Reveal>
 
             <Reveal as="article" className={s.product} delay={200}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/assets/landing/daniel-krammes.png" alt="Daniel Krammes" className={s.productAvatar}/>
               <Pill muted>Im&oacute;veis</Pill>
               <h3>Cretor</h3>
               <p>Plataforma para corretores de im&oacute;veis. Organiza todos os seus contatos, cria an&uacute;ncios com intelig&ecirc;ncia artificial e mostra quantos neg&oacute;cios voc&ecirc; tem em andamento.</p>
@@ -113,6 +117,18 @@ export default function SaasPage() {
                 {["CRM","IA","Anúncios","Funil"].map(t=><Pill key={t} muted>{t}</Pill>)}
               </div>
               <a className={`${landing.btn} ${landing.btnPrimary}`} href="https://danielkrammes.com/" target="_blank" rel="noopener noreferrer">Conhecer<ChevronRight /></a>
+            </Reveal>
+
+            <Reveal as="article" className={s.product} delay={300}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/assets/landing/logo-casa-digital.svg" alt="Casa Digital" className={s.productLogo}/>
+              <Pill muted>Imobili&aacute;rio</Pill>
+              <h3>Casa Digital</h3>
+              <p>QR Code na fachada do im&oacute;vel que transforma visitas em leads qualificados. Intelig&ecirc;ncia de vizinhan&ccedil;a e automa&ccedil;&atilde;o para corretores.</p>
+              <div className={s.tags}>
+                {["QR Code","Leads","IA","Corretores"].map(t=><Pill key={t} muted>{t}</Pill>)}
+              </div>
+              <a className={`${landing.btn} ${landing.btnPrimary}`} href="https://dev.casa-digital.net/" target="_blank" rel="noopener noreferrer">Conhecer<ChevronRight /></a>
             </Reveal>
           </div>
         </section>

@@ -544,8 +544,8 @@
 }
 .produtosGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 32px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
 }
 .pcard {
   position: relative;
@@ -595,6 +595,23 @@
   height: 39px;
   display: block;
   margin-bottom: 42px;
+}
+.productLogo {
+  height: 36px;
+  width: auto;
+  max-width: 160px;
+  display: block;
+  object-fit: contain;
+  margin-bottom: 42px;
+  filter: brightness(0) invert(1);
+}
+.productAvatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  margin-bottom: 28px;
 }
 
 /* ============ O QUE FAZEMOS ============ */
@@ -1268,7 +1285,7 @@
   .produtos { padding: 0 8px 48px; height: auto; }
   .produtos h2 { font-size: 50px; }
   .produtos .sub { font-size: 18px; line-height: 27px; max-width: 700px; }
-  .produtosGrid { gap: 14px; grid-template-columns: repeat(3, 1fr); }
+  .produtosGrid { gap: 14px; grid-template-columns: repeat(2, 1fr); }
   .pcard { padding: 32px; min-height: 373px; }
   .pcard h3 { font-size: 20px; }
   .pcard p { font-size: 14px; line-height: 20px; max-width: 100%; }

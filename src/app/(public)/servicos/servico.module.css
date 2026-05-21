@@ -689,7 +689,7 @@
 /* ============ PRODUCTS (SaaS) ============ */
 .products {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
 }
 .product {
@@ -722,6 +722,23 @@
 .productFeat {
   background: linear-gradient(180deg, rgba(88,86,214,0.06) 0%, var(--surface) 100%);
   border-color: var(--border-accent);
+}
+.productLogo {
+  height: 32px;
+  width: auto;
+  max-width: 140px;
+  display: block;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+  margin-bottom: 4px;
+}
+.productAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  margin-bottom: 4px;
 }
 .product h3 { font-weight: 700; font-size: 20px; letter-spacing: -0.4px; line-height: 1.2; }
 .product p { font-size: 14px; line-height: 21px; color: var(--fg-2); flex: 1; }
