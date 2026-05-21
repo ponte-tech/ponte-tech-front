@@ -8,6 +8,7 @@ import { WhatsappFab } from "../../_shared/whatsapp-fab";
 import { Reveal } from "../../_shared/reveal";
 import { CountUp } from "../../_shared/count-up";
 import { IconClock, IconDollar, IconTarget, IconUsers, IconCap, IconUser, IconChartUp } from "../../_shared/bento-icons";
+import { MobileNav } from "../mobile-nav";
 
 const inter = Inter({ subsets: ["latin"], weight: ["400","500","600","700"], variable: "--font-inter", display: "swap" });
 const mono = Roboto_Mono({ subsets: ["latin"], weight: ["400","500"], variable: "--font-mono", display: "swap" });
@@ -25,7 +26,11 @@ export default function OutsourcingPage() {
           <div className={s.navLinks}>
             <a href="/#quem">Quem Somos</a><a href="/#servicos">Servi&ccedil;os</a><a href="/#academy">Academy</a><a href="#contato-form">Contato</a>
           </div>
-          <a className={`${landing.btn} ${landing.btnPrimary} ${landing.btnSm} ${s.navCta}`} href="#contato-form">Fale conosco</a>
+          <div className={s.navCta} style={{ display: "flex", gap: "12px" }}>
+            <a className={`${landing.btn} ${landing.btnGhost} ${landing.btnSm} ${s.hideOnMobile}`} href="/login">&Aacute;rea logada</a>
+            <a className={`${landing.btn} ${landing.btnPrimary} ${landing.btnSm} ${s.hideOnMobile}`} href="#contato-form">Fale conosco</a>
+          </div>
+          <MobileNav />
         </nav>
 
         {/* HERO — dor: contratar tecnologia é demorado e arriscado */}
