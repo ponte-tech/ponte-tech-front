@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import s from "./servico.module.css";
+import landing from "../landing.module.css";
+import { Pill } from "../_shared/pill";
+import { ChevronRight, Star } from "../_shared/icons";
 
 type FormState = { email: string; telefone: string; comentario: string };
 const INITIAL: FormState = { email: "", telefone: "", comentario: "" };
@@ -21,10 +24,8 @@ export const ContatoForm = () => {
   };
 
   return (
-    <section id="contato" className={`${s.sec} ${s.secC} ${s.formSection}`}>
-      <span className={s.pill}>
-        <span className={s.star}>&#10022;</span> Fale conosco
-      </span>
+    <section id="contato-form" className={`${s.sec} ${s.secC} ${s.formSection}`}>
+      <Pill><Star />Fale conosco</Pill>
       <h2 className={s.secH}>Envie sua mensagem</h2>
       <p className={s.secP}>
         Preencha o formul&aacute;rio e nossa equipe responde em at&eacute; 48h.
@@ -77,13 +78,9 @@ export const ContatoForm = () => {
               Mensagem enviada. Em breve entraremos em contato.
             </span>
           )}
-          <button type="submit" className={`${s.btn} ${s.btnP}`}>
+          <button type="submit" className={`${landing.btn} ${landing.btnPrimary}`}>
             Enviar mensagem
-            <span className={s.ico}>
-              <svg viewBox="0 0 16 16" fill="none">
-                <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </span>
+            <ChevronRight />
           </button>
         </div>
       </form>
