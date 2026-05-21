@@ -23,7 +23,7 @@ export const OFazemos = () => (
             <Pill key={t} muted>{t}</Pill>
           ))}
         </div>
-        <a className={`${styles.btn} ${styles.btnGhost}`} href="#">
+        <a className={`${styles.btn} ${styles.btnGhost}`} href="/servicos/fabrica-de-software">
           Saiba mais
           <ChevronRight />
         </a>
@@ -41,7 +41,7 @@ export const OFazemos = () => (
             <Pill key={t} muted>{t}</Pill>
           ))}
         </div>
-        <a className={`${styles.btn} ${styles.btnGhost}`} href="#">
+        <a className={`${styles.btn} ${styles.btnGhost}`} href="/servicos/outsourcing">
           Saiba mais
           <ChevronRight />
         </a>
@@ -59,7 +59,7 @@ export const OFazemos = () => (
             <Pill key={t} muted>{t}</Pill>
           ))}
         </div>
-        <a className={`${styles.btn} ${styles.btnGhost}`} href="#">
+        <a className={`${styles.btn} ${styles.btnGhost}`} href="/servicos/saas">
           Saiba mais
           <ChevronRight />
         </a>
