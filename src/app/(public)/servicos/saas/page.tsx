@@ -121,7 +121,7 @@ export default function SaasPage() {
 
             <Reveal as="article" className={s.product} delay={300}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/assets/landing/logo-casa-digital.svg" alt="Casa Digital" className={s.productLogo}/>
+              <img src="/assets/landing/logo-casa-digital.png" alt="Casa Digital" className={s.productLogo}/>
               <Pill muted>Imobili&aacute;rio</Pill>
               <h3>Casa Digital</h3>
               <p>QR Code na fachada do im&oacute;vel que transforma visitas em leads qualificados. Intelig&ecirc;ncia de vizinhan&ccedil;a e automa&ccedil;&atilde;o para corretores.</p>

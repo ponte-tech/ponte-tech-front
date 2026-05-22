@@ -736,6 +736,8 @@
   max-width: 160px;
   display: block;
   object-fit: contain;
+  object-position: left;
+  align-self: flex-start;
   margin-bottom: 42px;
   filter: brightness(0) invert(1);
 }

@@ -62,7 +62,7 @@ export const Produtos = () => (
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           className={styles.productLogo}
-          src="/assets/landing/logo-casa-digital.svg"
+          src="/assets/landing/logo-casa-digital.png"
           alt="Casa Digital"
         />
         <Pill><Star />SaaS</Pill>
