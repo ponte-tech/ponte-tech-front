@@ -9,18 +9,54 @@ import { ChevronRight, Star } from "../_shared/icons";
 type FormState = { email: string; telefone: string; comentario: string };
 const INITIAL: FormState = { email: "", telefone: "", comentario: "" };
 
-export const ContatoForm = () => {
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
+
+export const ContatoForm = ({ origem = "lp-servico" }: { origem?: string }) => {
   const [form, setForm] = useState<FormState>(INITIAL);
   const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const maskPhone = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+    if (digits.length <= 2) return digits.length ? `(${digits}` : "";
+    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  };
 
   const update = (field: keyof FormState) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
+  ) => {
+    const value = field === "telefone" ? maskPhone(e.target.value) : e.target.value;
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSent(true);
-    setForm(INITIAL);
+    setError("");
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${API_URL}/api/public/leads`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: form.email,
+          telefone: form.telefone,
+          comentario: form.comentario,
+          origem,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Erro ao enviar mensagem");
+
+      setSent(true);
+      setForm(INITIAL);
+    } catch {
+      setError("Erro ao enviar. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -42,6 +78,7 @@ export const ContatoForm = () => {
               placeholder="voce@empresa.com"
               value={form.email}
               onChange={update("email")}
+              pattern="[^@\s]+@[^@\s]+\.[^@\s]+"
               className={s.formInput}
             />
           </label>
@@ -78,9 +115,14 @@ export const ContatoForm = () => {
               Mensagem enviada. Em breve entraremos em contato.
             </span>
           )}
-          <button type="submit" className={`${landing.btn} ${landing.btnPrimary}`}>
-            Enviar mensagem
-            <ChevronRight />
+          {error && (
+            <span className={s.formStatus} role="alert" style={{ color: "#ef4444" }}>
+              {error}
+            </span>
+          )}
+          <button type="submit" className={`${landing.btn} ${landing.btnPrimary}`} disabled={loading}>
+            {loading ? "Enviando..." : "Enviar mensagem"}
+            {!loading && <ChevronRight />}
           </button>
         </div>
       </form>

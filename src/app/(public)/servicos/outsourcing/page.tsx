@@ -182,7 +182,7 @@ export default function OutsourcingPage() {
         </section>
 
         {/* FORM */}
-        <ContatoForm />
+        <ContatoForm origem="lp-outsourcing" />
 
         {/* CTA */}
         <section className={s.cta}>
